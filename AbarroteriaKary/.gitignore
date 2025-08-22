@@ -1,0 +1,33 @@
+﻿# --- Visual Studio / usuario ---
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# --- Build / Compilados ---
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+*.log
+
+# --- Paquetes NuGet locales ---
+packages/
+*.nupkg
+
+# --- Frontend (si usa gestores) ---
+node_modules/
+# Si usa LibMan/NPM para restaurar, podría ignorar /wwwroot/lib/
+# wwwroot/lib/
+# NOTA: Si USTED copiará Bootstrap manualmente en wwwroot/lib/bootstrap,
+#       NO ignore /wwwroot/lib/ para que se suba al repo.
+
+# --- Secretos y ajustes locales ---
+appsettings.Development.json
+appsettings.*.local.json
+secrets.json
+*.pfx
+*.cer
+
+# --- EF Core Migraciones ---
+# Si utiliza migraciones, NO ignore /Migrations (déjelo rastreado).
