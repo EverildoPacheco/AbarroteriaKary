@@ -1,0 +1,65 @@
+﻿@using Microsoft.AspNetCore.Http
+@{
+    var nombreSesion = Context.Session.GetString("UsuarioNombre") ?? "Usuario";
+}
+
+<header id="app-header" class="hdr">
+
+    <!-- Zona derecha: Botón hamburguesa -->
+    <div class="hdr__right">
+        <button id="btnSidebarToggle"
+                class="kary-header__burger"
+                aria-label="Abrir o cerrar menú"
+                aria-expanded="false"
+                aria-controls="karySidebar">
+            <i class="fa-solid fa-bars"></i>
+        </button>
+
+    </div>
+
+
+
+
+    <!-- Zona centro: Logo centrado -->
+    <div class="hdr__center">
+        @* Reemplace el src por su logo *@
+        <img src="~/img/LOGO LOGO - copia.png"
+             alt="Abarrotería Kary"
+             class="hdr__logo" />
+    </div>
+
+
+    <div class="hdr__left hdr__user">
+        <!-- Botón avatar que abre/cierra el menú -->
+        <button id="btnUserMenu"
+                type="button"
+                class="hdr__userbtn"
+                aria-haspopup="true"
+                aria-expanded="false"
+                aria-controls="userMenu">
+            <img src="~/img/Useruser.png" alt="Usuario" class="hdr__avatar" />
+        </button>
+
+        <!-- Menú flotante -->
+        <div id="userMenu" class="hdr__menu" hidden>
+            <!-- Fila informativa: nombre -->
+            <div class="hdr__menu-header">
+                <img src="~/img/header/usuario.png" class="hdr__menu-ico" alt="" />
+                <span>@nombreSesion</span>
+            </div>
+
+            <!-- Fila acción: Cerrar sesión (POST seguro a Login/Logout) -->
+            <form action="@Url.Action("Logout","Login")" method="post" class="hdr__menu-item">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="hdr__menu-btn">
+                    <img src="~/img/header/Salir.png" class="hdr__menu-ico" alt="" />
+                    <span>Cerrar Sesión</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+  
+    
+</header>

@@ -1,4 +1,4 @@
-﻿@model AbarroteriaKary.Models.USUARIO
+﻿@model AbarroteriaKary.Models.AREA
 
 @{
     Layout = null;
@@ -14,44 +14,20 @@
 <body>
 
 <div>
-    <h4>USUARIO</h4>
+    <h4>AREA</h4>
     <hr />
     <dl class="row">
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.USUARIO_NOMBRE)
+            @Html.DisplayNameFor(model => model.AREA_NOMBRE)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.USUARIO_NOMBRE)
+            @Html.DisplayFor(model => model.AREA_NOMBRE)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.USUARIO_CONTRASENA)
+            @Html.DisplayNameFor(model => model.AREA_DESCRIPCION)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.USUARIO_CONTRASENA)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.USUARIO_SALT)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.USUARIO_SALT)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.USUARIO_FECHAREGISTRO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.USUARIO_FECHAREGISTRO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.USUARIO_CAMBIOINICIAL)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.USUARIO_CAMBIOINICIAL)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.USUARIO_CORREO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.USUARIO_CORREO)
+            @Html.DisplayFor(model => model.AREA_DESCRIPCION)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.CREADO_POR)
@@ -101,22 +77,10 @@
         <dd class = "col-sm-10">
             @Html.DisplayFor(model => model.ESTADO)
         </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EMPLEADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EMPLEADO.EMPLEADO_ID)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ROL)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ROL.ROL_ID)
-        </dd>
     </dl>
 </div>
 <div>
-    <a asp-action="Edit" asp-route-id="@Model?.USUARIO_ID">Edit</a> |
+    <a asp-action="Edit" asp-route-id="@Model?.AREA_ID">Edit</a> |
     <a asp-action="Index">Back to List</a>
 </div>
 </body>

@@ -1,0 +1,47 @@
+﻿using System.Threading;
+using System.Threading.Tasks;
+
+namespace AbarroteriaKary.Services.Correlativos
+{
+    /// <summary>
+    /// Servicio para generar correlativos/códigos por entidad.
+    /// Nota: expongo métodos "peek" (solo para mostrar en GET)
+    /// y "next" (para usar dentro de la transacción en el POST).
+    /// </summary>
+    //public interface ICorrelativoService
+    //{
+    //    /// <summary>
+    //    /// Calcula el próximo ID de Área, solo para mostrar (no bloquea).
+    //    /// </summary>
+    //    Task<string> PeekNextAreaIdAsync(CancellationToken ct = default);
+
+    //    /// <summary>
+    //    /// Calcula el próximo ID de Área. Úselo dentro de la MISMA transacción
+    //    /// donde hará el INSERT definitivo.
+    //    /// </summary>
+    //    Task<string> NextAreaIdAsync(CancellationToken ct = default);
+    //}
+
+
+    /// <summary>
+    /// Servicio para generar correlativos por entidad.
+    /// Peek = solo mostrar en GET (no bloquea);
+    /// Next = usar dentro de la transacción en POST (insert real).
+    /// </summary>
+    public interface ICorrelativoService
+    {
+        // AREA (AREA000001)
+        Task<string> PeekNextAreaIdAsync(CancellationToken ct = default);
+        Task<string> NextAreaIdAsync(CancellationToken ct = default);
+
+        // PUESTO (PUE0000001)
+        Task<string> PeekNextPuestoIdAsync(CancellationToken ct = default);
+        Task<string> NextPuestoIdAsync(CancellationToken ct = default);
+
+        // Ejemplos para otras entidades (cuando las necesite):
+        // Task<string> PeekNextRolIdAsync(CancellationToken ct = default);
+        // Task<string> NextRolIdAsync(CancellationToken ct = default);
+        // Task<string> PeekNextEmpleadoIdAsync(CancellationToken ct = default);
+        // Task<string> NextEmpleadoIdAsync(CancellationToken ct = default);
+    }
+}

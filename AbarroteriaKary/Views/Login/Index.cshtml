@@ -1,0 +1,117 @@
+﻿@model AbarroteriaKary.ModelsPartial.LoginViewModels
+
+@{
+    // Pantalla de login sin barra superior/inferior (no usa _Layout)
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Abarrotería Kary - Login</title>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Tu CSS de fondo degradado y estilos del login -->
+    <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
+</head>
+
+<body>
+    <!-- Header fijo arriba-derecha -->
+    <header class="auth-header">
+        <nav class="auth-nav">
+            <a href="#">Contacto</a>
+            <a href="#">Ayuda</a>
+        </nav>
+    </header>
+
+    <!-- Contenido principal en dos columnas: izquierda logo, derecha formulario -->
+@*     <div class="container-fluid px-5 px-lg-5">
+ *@       
+           <div class="container-xxl login-wrap px-4 px-xl-5">
+            <div class="row min-vh-100 align-items-center gy-5 gx-5 login-row">
+            <!-- Columna izquierda: tu imagen/logo -->
+            <div class="col-lg-7 text-center text-lg-start">
+                <!-- Ajusta el ancho con la clase brand-img (en el CSS) -->
+                <img src="~/img/LOGO LOGO - copia.png" alt="Abarrotería Kary" class="brand-img img-fluid logo-up" />
+            </div>
+
+            <!-- Columna derecha: tarjeta del Login -->
+            <div class="col-lg-5">
+                <div class="card login-card shadow-lg border-0 p-4 p-md-5">
+                    <!-- Espacio para TU ícono/avatar (pon tu archivo) -->
+                    <div class="login-avatar">
+                        <!-- Si ya tienes el icono, reemplaza la ruta: -->
+                         <img src="~/img/usuario.png" alt="Avatar" class="avatar-img" /> 
+                        <!-- Placeholder si aún no lo pones: -->
+@*                         <div class="avatar-placeholder"></div>
+ *@                    </div>
+
+                    <h2 class="text-center mb-4 login-title mt-5">Iniciar Sesión</h2>
+
+                    <form asp-action="Index" asp-controller="Login" method="post" novalidate class="vstack gap-4">
+                        @Html.AntiForgeryToken()
+
+                        <!-- Errores globales (ValidationSummary) -->
+@*                         <div asp-validation-summary="All" class="alert alert-danger d-none" data-valmsg-summary="true"></div>
+ *@
+
+                        @if (ViewData.ModelState.ErrorCount > 0 && ViewData.ModelState["Usuario"]?.Errors.Count == 0 && ViewData.ModelState["Password"]?.Errors.Count == 0)
+                        {
+                            @Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })
+                        }
+                        <!-- Usuario -->
+                        <div>
+
+                            <label asp-for="Usuario" class="form-label fw-bold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-person-fill"></i></span>
+                                <input asp-for="Usuario" class="form-control" placeholder="Ingrese su usuario" autocomplete="username" />
+                            </div>
+                            <span asp-validation-for="Usuario" class="text-danger small"></span>
+
+                        </div>
+
+                        <!-- Contraseña -->
+                        <div>
+
+                            <label asp-for="Password" class="form-label fw-bold"></label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="bi bi-key-fill"></i></span>
+                                <input asp-for="Password" class="form-control" placeholder="Ingrese su contraseña" autocomplete="current-password" />
+                                @* <button type="button" class="btn btn-outline-secondary" id="togglePwd" title="Mostrar/Ocultar">
+                                    <i class="bi bi-eye"></i>
+                                </button> *@
+                            </div>
+                            <span asp-validation-for="Password" class="text-danger small"></span>
+                            <div class="text-end mt-1">
+                                <a href="#" class="small text-muted">¿Olvidaste tu contraseña?</a>
+                            </div>
+                            
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 fw-bold">
+                            <i class="fa-solid fa-right-to-bracket me-2"></i> Ingresar
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- jQuery + Validación unobtrusive (para asp-validation-*) -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.12/dist/jquery.validate.unobtrusive.min.js"></script>
+
+</body>
+</html>
+

@@ -1,0 +1,97 @@
+﻿@model AbarroteriaKary.ModelsPartial.AreasViewModel
+@{
+    ViewData["Title"] = "Nueva Área";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container py-4">
+
+    <div class="text-center mb-5 mt-4">
+        <h1 class="">Ingresar nueva área</h1>
+    </div>
+
+    <div class="ak-form-shell">
+        <div class="row justify-content-center">
+            <div class="col-12 col-sm-10 col-md-8 col-lg-1 col-xl-6">
+                <div class="card ak-card shadow-sm">
+                    <div class="card-body ak-form">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <form asp-action="Create" method="post" id="form-create-area" novalidate>
+                            @Html.AntiForgeryToken()
+
+                            <!-- Código (solo lectura; lo define el servidor en POST) -->
+                            <div class="mb-3">
+                                <label asp-for="areaId" class="form-label">Código</label>
+                                <input asp-for="areaId" class="form-control" readonly />
+                                <div class="form-text">Se genera automáticamente.</div>
+                            </div>
+
+                            <!-- Nombre -->
+                            <div class="mb-3">
+                                <label asp-for="areaNombre" class="form-label">Nombre*</label>
+                                <input asp-for="areaNombre" class="form-control" placeholder="Ej. Ventas" />
+                                <span asp-validation-for="areaNombre" class="text-danger"></span>
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="mb-3">
+                                <label asp-for="areaDescripcion" class="form-label">Descripción *</label>
+                                <textarea asp-for="areaDescripcion" class="form-control" rows="3" placeholder="Los cajeros"></textarea>
+                                <span asp-validation-for="areaDescripcion" class="text-danger"></span>
+                            </div>
+
+                            <!-- Estado (solo informativo en este flujo; si luego lo quiere editable, cámbielo a <select>) -->
+                            <div class="mb-4">
+                                <select asp-for="estadoArea" class="form-select">
+                                    <option>ACTIVO</option>
+                                    <option>INACTIVO</option>
+                                </select>
+                            </div>
+
+                            <!-- Acciones -->
+                            <div class="d-flex justify-content-center gap-4 flex-wrap mt-2">
+                                <!-- Derecha: Cancelar / Limpiar / Guardar -->
+                                <div class="d-flex ak-actions">
+                                    <a asp-action="Index" class="btn btn-ak btn-ak-cancel">
+                                        <i class="fa-solid fa-xmark ak-icon"></i>
+                                        Cancelar
+                                    </a>
+
+                                    <button type="reset" class="btn btn-ak btn-ak-success">
+                                        <i class="fa-solid fa-eraser ak-icon"></i>
+                                        Limpiar
+                                    </button>
+
+                                    <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                                        <i class="fa-solid fa-floppy-disk ak-icon"></i>
+                                        Guardar
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div><!--/card-->
+
+            </div>
+        </div>
+    </div><!--/ak-form-shell-->
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Evitar doble envío accidental
+        (function () {
+            const form = document.getElementById('form-create-area');
+            const btn = document.getElementById('btn-guardar');
+            if (!form || !btn) return;
+
+            form.addEventListener('submit', function () {
+                if (!form.checkValidity()) return;
+                btn.disabled = true;
+                btn.innerText = 'Guardando...';
+            });
+        })();
+    </script>
+}

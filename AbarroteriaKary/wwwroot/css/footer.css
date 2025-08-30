@@ -1,0 +1,60 @@
+﻿/* =============================
+   footer.css
+   - Control de color por variables
+   - “Pegado” al borde inferior
+   - Participa en el grid .kary-shell
+============================= */
+
+/* 1) Reset mínimo: evita “hueco” por márgenes del body */
+html, body {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+}
+
+/* 2) Colores del footer (ajuste aquí) */
+:root {
+    /* Ejemplo: use su paleta Kary */
+    /*--ft-bg: #8FB1BE;*/ /* <- COLOR DE FONDO DEL FOOTER (cámbielo aquí) */
+    --ft-bg: #efefef; /* <- COLOR DE FONDO DEL FOOTER (cámbielo aquí) */
+    --ft-ink: #0b1f2a; /* color del texto */
+    --ft-h: 64px; /* alto mínimo */
+}
+
+/* 3) Footer en el grid */
+.kary-footer {
+    grid-area: footer;
+    background: var(--ft-bg);
+    color: var(--ft-ink);
+    min-height: var(--ft-h);
+    display: flex;
+    align-items: center;
+    /* garantías de “pegado” abajo */
+    margin: 0;
+    border-top: 0; /* evite doble borde si ya hay uno en el contenido */
+}
+
+/* Contenido interno: 3 columnas centradas */
+.kary-footer__inner {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    width: 100%;
+    place-items: center;
+    font-weight: 600;
+    padding: 12px 16px;
+}
+
+.kary-footer__col {
+    text-align: center;
+}
+
+@media (max-width: 576px) {
+    .kary-footer__inner {
+        grid-template-columns: 1fr;
+        gap: 6px;
+        font-weight: 500;
+    }
+}

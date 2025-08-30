@@ -1,0 +1,308 @@
+﻿/* -----------------------------------------
+   header.css
+   - Gradiente y layout con CSS Grid (3 columnas)
+   - Sticky al top, con z-index alto
+   - Colores en variables para ajustar rápido
+------------------------------------------ */
+
+/* Paleta del header (ajústela si desea otro tono) */
+:root {
+    --hdr-bg-start: #94acb6; /* azul grisáceo claro (lado izquierdo)  */
+    --hdr-bg-mid: #9fb6c2; /* transición                              */
+    --hdr-bg-end: #b3b9ce; /* toque hacia lila/gris (lado derecho)    */
+    --hdr-line: rgba(0,0,0,.35); /* línea/borde inferior */
+    --hdr-ink: #0b1f2a; /* color de íconos/barras */
+    --hdr-avatar-size: 56px; /* << Auméntelo para que se vea más grande (48, 56, 64...) */
+}
+
+/* Contenedor principal del header */
+.hdr {
+    position: sticky; /* se queda pegado arriba al hacer scroll */
+    top: 0;
+    z-index: 1030;
+    /* Fondo con mezcla de linear + sutil radial para efecto suave como la imagen */
+    background: radial-gradient(120% 140% at 10% 0%, rgba(255,255,255,.08) 0%, rgba(255,255,255,0) 45%), linear-gradient(90deg, var(--hdr-bg-start) 0%, var(--hdr-bg-mid) 50%, var(--hdr-bg-end) 100%);
+    border-bottom: 1px solid var(--hdr-line);
+    box-shadow: 0 2px 4px rgba(0,0,0,.06);
+    /* 3 columnas:  izquierda (fija), centro flexible, derecha (fija) */
+    display: grid;
+    grid-template-columns: 56px 1fr 56px;
+    align-items: center;
+    min-height: 72px;
+    padding: 8px 16px;
+}
+
+/* Zonas */
+.hdr__left {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.hdr__center {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hdr__right {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+/* Tamaños de imágenes */
+.hdr__icon {
+    width: 60px;
+    height: 60px;
+    object-fit: contain;
+}
+
+.hdr__logo {
+    max-height: 60px;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Botón hamburguesa “pastilla” */
+.hdr__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,.15);
+    background: rgba(255,255,255,.15); /* leve translúcido */
+    cursor: pointer;
+    transition: background .2s ease, transform .08s ease;
+}
+
+    .hdr__btn:hover {
+        background: rgba(255,255,255,.25);
+    }
+
+    .hdr__btn:active {
+        transform: scale(.98);
+    }
+
+/* 3 barras de la hamburguesa */
+.hdr__burger,
+.hdr__burger::before,
+.hdr__burger::after {
+    content: "";
+    display: block;
+    width: 24px;
+    height: 2px;
+    background: var(--hdr-ink);
+    border-radius: 1px;
+    position: relative;
+}
+
+    .hdr__burger::before {
+        position: absolute;
+        top: -6px;
+    }
+
+    .hdr__burger::after {
+        position: absolute;
+        top: 6px;
+    }
+
+/* Responsivo */
+@media (max-width: 576px) {
+    .hdr {
+        grid-template-columns: 48px 1fr 48px;
+        min-height: 60px;
+        padding: 6px 10px;
+    }
+
+    .hdr__logo {
+        max-height: 38px;
+    }
+}
+
+
+/*----------------------------------------------*/
+/* ====== Menú de usuario (avatar y dropdown) ====== */
+.hdr__user {
+    position: relative;
+}
+/* ancla del menú */
+
+.hdr__userbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 6px; /* mantiene área clickeable */
+    background: transparent; /* << quita el “cuadro” gris */
+    border: 0; /* << sin borde/contorno */
+    border-radius: 0; /* << sin esquinas redondeadas visibles */
+    box-shadow: none; /* << sin sombra */
+    cursor: pointer;
+}
+
+    .hdr__userbtn:hover {
+        background: rgba(255,255,255,.25);
+    }
+
+    .hdr__userbtn:active {
+        transform: scale(.98);
+    }
+
+.hdr__avatar {
+    width: var(--hdr-avatar-size);
+    height: var(--hdr-avatar-size);
+    object-fit: contain; /* respeta transparencia del PNG/SVG */
+}
+
+.hdr {
+    /* si antes tenía grid-template-columns: 56px 1fr 56px; use auto para que se ajuste */
+    grid-template-columns: auto 1fr auto;
+    min-height: calc(var(--hdr-avatar-size) + 16px); /* margen superior/inferior */
+}
+
+
+
+/* Panel flotante (estilo según su captura: violeta claro) */
+.hdr__menu {
+    position: absolute;
+    top: calc(100% - 6px); /* pegado a la parte baja del header */
+    right: -16px; /* alineado al borde derecho del avatar */
+    width: 170px;
+    background: #b595c9; /* violeta */
+    color: #111;
+    border: 1px solid rgba(0,0,0,.2);
+    border-radius: 1px 0 0 1px; /* borde redondeado del lado izquierdo */
+    box-shadow: 0 6px 8px rgba(0,0,0,.18);
+    overflow: hidden;
+    z-index: 2000;
+}
+
+/* Fila con el nombre (no clickeable) */
+.hdr__menu-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    font-weight: 600;
+    background: rgba(255,255,255,.12);
+    border-bottom: 1px solid rgba(0,0,0,.12);
+}
+
+/* Fila clickeable (cerrar sesión) */
+.hdr__menu-item {
+    margin: 0;
+}
+
+.hdr__menu-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    font: inherit;
+    color: inherit;
+}
+
+    .hdr__menu-btn:hover {
+        background: rgba(255,255,255,.2);
+    }
+
+/* Iconos pequeños dentro del menú */
+.hdr__menu-ico {
+    width: 18px;
+    height: 18px;
+    object-fit: contain;
+}
+
+/* Accesibilidad foco teclado */
+.hdr__userbtn:focus-visible,
+.hdr__menu-btn:focus-visible {
+    outline: 2px solid #222;
+    outline-offset: 2px;
+}
+
+/* Responsivo */
+@media (max-width: 576px) {
+    .hdr__avatar {
+        width: 32px;
+        height: 32px;
+    }
+
+    .hdr__menu {
+        width: 220px;
+    }
+}
+
+/* --- Alias para que el botón con clase .kary-header__burger luzca como .hdr__btn --- */
+.kary-header__burger {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    border-radius: 12px;
+    border: 1px solid rgba(0,0,0,.15);
+    background: rgba(255,255,255,.15);
+    cursor: pointer;
+    transition: background .2s ease, transform .08s ease;
+    width: 44px;
+    height: 44px;
+}
+
+    .kary-header__burger:hover {
+        background: rgba(255,255,255,.25);
+    }
+
+    .kary-header__burger:active {
+        transform: scale(.98);
+    }
+
+    .kary-header__burger i {
+        font-size: 18px;
+        color: var(--hdr-ink);
+    }
+
+/* (Opcional) mueva un poquito el menú del avatar a la derecha sin tocar 'right' */
+:root {
+    --menu-offset-x: 8px;
+}
+
+.hdr__menu {
+    transform: translateX(var(--menu-offset-x));
+}
+
+
+
+
+
+/* El header participa en el grid general */
+.hdr {
+    grid-area: header;
+}
+
+
+/* Hamburguesa sin fondo */
+.kary-header__burger {
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 8px; /* deja área clickeable */
+    border-radius: 0 !important;
+}
+
+    .kary-header__burger:hover,
+    .kary-header__burger:active {
+        background: transparent !important;
+        transform: none !important;
+    }
+
+    /* Icono (las 3 barritas) */
+    .kary-header__burger i {
+        font-size: 35px; /*CAmbio de tamaño de burguer*/
+        line-height: 1;
+        color: var(--hdr-ink, #0b1f2a); /* usa el color de su header */
+    }

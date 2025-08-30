@@ -1,0 +1,82 @@
+﻿@model AbarroteriaKary.ModelsPartial.CambioContrasenaViewModel
+@{
+    // Vista sin layout para controlar 100% el diseño
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Abarrotería Kary - Crear nueva Contraseña</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="~/css/cambioContrasena.css" asp-append-version="true" />
+</head>
+
+<body class="cc-body">
+    <div class="cc-band"></div>
+
+    <div class="container cc-wrap d-flex align-items-center justify-content-center">
+        <div class="cc-card shadow">
+       
+            <div class="cc-avatar">
+                <img src="~/img/LOGO.png" alt="logo" class="cc-avatar-img" />
+            </div>
+
+
+            <h2 class="cc-title text-center">Crear nueva Contraseña</h2>
+
+            <p class="cc-help">
+                Ingrese su contraseña.<br />
+                La contraseña debe tener al menos 8 caracteres, incluir un número,
+                un carácter, una letra mayúscula y una letra minúscula.
+            </p>
+
+
+            <form asp-action="CambiarContrasena" method="post" class="vstack gap-3" novalidate>
+                @Html.AntiForgeryToken()
+
+
+                @* <div asp-validation-summary="All" class="alert alert-danger d-none" data-valmsg-summary="true"></div> *@
+                @if (ViewData.ModelState.ErrorCount > 0 && ViewData.ModelState["NuevaContrasena"]?.Errors.Count == 0 @* && ViewData.ModelState["Password"]?.Errors.Count == 0 *@)
+                {
+                    @Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })
+                }
+
+                <div>
+                    <label asp-for="NuevaContrasena" class="form-label fw-semibold">Contraseña nueva</label>
+                    <input asp-for="NuevaContrasena" class="form-control cc-input" placeholder="Contraseña nueva" />
+                    <span asp-validation-for="NuevaContrasena" class="text-danger small"></span>
+                </div>
+
+                <div>
+                    <label asp-for="ConfirmarContrasena" class="form-label fw-semibold">Confirme su contraseña</label>
+                    <input asp-for="ConfirmarContrasena" class="form-control cc-input" placeholder="Contraseña nueva" />
+                    <span asp-validation-for="ConfirmarContrasena" class="text-danger small"></span>
+                </div>
+
+   
+                <button type="submit" class="btn cc-btn w-100 mt-2">
+                    <i class="fa-solid fa-rotate me-2"></i> Cambiar
+                </button>
+            </form>
+        </div>
+    </div>
+
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.12/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+
+
+
+
+
+
+
+

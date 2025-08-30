@@ -1,31 +1,41 @@
-using Microsoft.AspNetCore.Authentication.Cookies;
-using Microsoft.EntityFrameworkCore;
+
 using AbarroteriaKary.Data;
-using AbarroteriaKary.Services;
+using AbarroteriaKary.Models;
+using Microsoft.EntityFrameworkCore;
+using System;
+using AbarroteriaKary.Services.Correlativos; 
+
+
+
 
 var builder = WebApplication.CreateBuilder(args);
 
-// DbContext (ya lo tiene; asegúrese del nombre real del contexto)
-builder.Services.AddDbContext<KaryDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Autenticación por Cookies
-builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-    .AddCookie(options =>
-    {
-        options.LoginPath = "/Account/Login";          // redirección si no está autenticado
-        options.AccessDeniedPath = "/Account/Denied";  // opcional
-        options.Cookie.Name = "Kary.Auth";
-        options.ExpireTimeSpan = TimeSpan.FromMinutes(60);
-        options.SlidingExpiration = true;
-    });
 
-builder.Services.AddAuthorization();
 
-// Servicio de Login / Seguridad
-builder.Services.AddScoped<ILoginService, LoginService>();
 
+// MVC
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddDbContext<KaryDbContext>(option =>
+option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+
+// Registro del servicio de correlativos
+builder.Services.AddScoped<ICorrelativoService, CorrelativoService>();
+
+
+
+// Session
+builder.Services.AddSession(options =>
+{
+    options.Cookie.Name = ".Kary.Session";
+    options.IdleTimeout = TimeSpan.FromMinutes(30); // ajuste según su política
+    options.Cookie.IsEssential = true;
+});
+
+// Antiforgery (opcional, ya usamos [ValidateAntiForgeryToken])
+builder.Services.AddAntiforgery();
 
 var app = builder.Build();
 
@@ -40,17 +50,13 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-app.UseAuthentication(); // <— Importante: antes de UseAuthorization
-app.UseAuthorization();
+app.UseSession(); // <-- importante: antes de UseEndpoints
 
 app.MapControllerRoute(
     name: "default",
-    pattern: "{controller=Account}/{action=Login}/{id?}");
+    pattern: "{controller=Login}/{action=Index}/{id?}");
 
 app.Run();
-
-
-
 
 
 
@@ -93,6 +99,6 @@ app.Run();
 
 //app.MapControllerRoute(
 //    name: "default",
-//    pattern: "{controller=Usuarios}/{action=Index}/{id?}");
+//    pattern: "{controller=Login}/{action=Index}/{id?}");
 
 //app.Run();

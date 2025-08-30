@@ -1,0 +1,150 @@
+﻿/* kary-form.css  |  Estilo universal para formularios Kary (Bootstrap-friendly) */
+
+/* ============ Variables de color (paleta Abarrotería Kary) ============ */
+:root {
+    --ak-lila: #ac8cb6; /* fondo título / detalles */
+    --ak-lila-1: #d8c7dd; /* lila con 26% de opacidad (AA=0x42)   #C5A3CF42*/
+    --ak-cafe-p: #b6978c; /* botón cancelar */
+    --ak-cafe-cl: #cfafa3; /* hover cancelar / bordes suaves */
+    --ak-verde: #9fc095; /* botón regresar */
+    --ak-celeste: #95b5c0; /* botón guardar */
+    --ak-text: #2b2b2b; /* texto primario */
+    --ak-muted: #6b6b6b; /* texto secundario */
+    --ak-btn-text: #111; /* texto negro en botones */
+}
+
+/* ============ Shell del formulario ============ */
+.ak-form-shell {
+    /* antes: background: var(--ak-lila-1); */
+    background: transparent; /* hace que el fondo no se “derrame” */
+    border-radius: 0; /* sin borde/redondo fuera del card */
+    padding: 0; /* el padding lo maneja el wrap o la grid */
+    box-shadow: none; /* sin sombra externa */
+}
+
+
+.ak-form-wrap {
+    max-width: 920px; /* ajuste global de ancho del formulario */
+    margin: 0 auto;
+    padding: 8px 12px;
+}
+
+@media (min-width: 1200px) {
+    .ak-form-wrap {
+        max-width: 840px;
+    }
+    /* más compacto en pantallas grandes */
+}
+
+
+/* Encabezado */
+.ak-form-title {
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    color: var(--ak-text);
+}
+
+/* Cards adentro del shell (opcional) */
+.ak-card {
+    background: var(--ak-lila-1); /* lila del diseño, queda solo en el card */
+    border: 0;
+    border-radius: 14px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.08);
+}
+
+
+
+    .ak-card .card-body {
+        padding: 24px; /* acolchado interno agradable */
+    }
+
+/* Labels e inputs */
+.ak-form .form-label {
+    font-weight: 600;
+    color: var(--ak-text);
+}
+
+.ak-form .form-control,
+.ak-form .form-select,
+.ak-form textarea {
+    border-radius: 10px;
+    border-color: #e5ddea;
+}
+
+    .ak-form .form-control:focus,
+    .ak-form .form-select:focus,
+    .ak-form textarea:focus {
+        border-color: var(--ak-celeste);
+        box-shadow: 0 0 0 .2rem rgba(149,181,192, .25);
+    }
+
+/* Texto de ayuda/validación */
+.ak-form .form-text {
+    color: var(--ak-muted);
+}
+
+/* ============ Botones (extienden Bootstrap) ============ */
+.btn-ak {
+    border-radius: 12px;
+    font-weight: 600;
+    padding: .6rem 1rem;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+}
+
+.btn-ak-primary { /* Guardar */
+    background: var(--ak-celeste);
+    border-color: var(--ak-celeste);
+    color: var(--ak-white);
+}
+
+    .btn-ak-primary:hover {
+        filter: brightness(.95);
+    }
+
+.btn-ak-success { /* Regresar */
+    background: var(--ak-verde);
+    border-color: var(--ak-verde);
+    color: var(--ak-white);
+}
+
+    .btn-ak-success:hover {
+        filter: brightness(.95);
+    }
+
+.btn-ak-cancel {
+    background: var(--ak-cafe-p);
+    border-color: var(--ak-cafe-p);
+    color: var(--ak-btn-text);
+}
+
+    .btn-ak-cancel:hover {
+        background: var(--ak-cafe-cl);
+        border-color: var(--ak-cafe-cl);
+        color: var(--ak-btn-text);
+    }
+
+.btn-ak-outline { /* Limpiar */
+    background: transparent;
+    border-color: var(--ak-muted);
+    color: var(--ak-text);
+}
+
+    .btn-ak-outline:hover {
+        background: rgba(0,0,0,.03);
+    }
+
+/* Separador de botones en mobile */
+.ak-actions {
+    gap: .75rem;
+    flex-wrap: wrap;
+}
+
+/* Pequeñas mejoras visuales */
+.ak-icon {
+    width: 1.15em;
+    height: 1.15em;
+    display: inline-block;
+}

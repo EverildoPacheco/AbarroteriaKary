@@ -1,0 +1,141 @@
+﻿/* ==================== PERILLAS (ajustes rápidos) ==================== */
+/* Ancho del card, tamaño del avatar y alto de la franja superior       */
+:root {
+    --cc-card-w: 410px; /* ← ancho del card (sube/baja según necesites) */
+    --cc-avatar: 180px; /* ← tamaño del logo/avatar de arriba            */
+    --cc-band-h: 110px; /* ← altura de la franja lavanda superior        */
+
+    --cc-primary: #6f95a1; /* color del botón */
+    --cc-primary-hover: #5e8390;
+    --cc-border-dark: #0f172a; /* borde oscuro del botón */
+}
+
+/* Fondo gris muy claro, como en el mock */
+.cc-body {
+    background: #efefef;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Franja superior lavanda */
+.cc-band {
+    height: var(--cc-band-h);
+    background: #c9aad1;
+    width: 100%;
+}
+
+/* Card centrado con esquinas redondeadas y sombra */
+.cc-card {
+    position: relative;
+    width: min(100%, var(--cc-card-w));
+    margin-top: calc(var(--cc-avatar) / 2); /* para que el avatar no tape el borde superior */
+    background: #fff;
+    border-radius: 22px;
+    padding: 36px 32px 28px;
+    box-shadow: 8px 8px 0 rgba(0,0,0,.05), 0 20px 40px rgba(0,0,0,.18);
+}
+
+.cc-avatar {
+    position: absolute;
+    top: calc(-1.1 * var(--cc-avatar) / 2); /* lo deja “colgando” del borde del card */
+    left: 49%;
+    transform: translateX(-50%);
+    width: var(--cc-avatar);
+    height: var(--cc-avatar);
+    /* Quitar círculo/fondo/borde */
+    background: transparent; /* antes: #fff */
+    border: 0; /* sin aro */
+    border-radius: 0; /* sin forma circular */
+    box-shadow: none;
+    display: grid;
+    place-items: center;
+    overflow: visible; /* por si tu imagen sobresale un poco */
+}
+
+
+/* Imagen del avatar (tú colocas tu archivo). 
+   Si quieres borde alrededor del logo, activa box-shadow como abajo */
+.cc-avatar-img {
+    width: var(--cc-avatar); /* ocupa todo el ancho del área */
+    height: var(--cc-avatar); /* ocupa todo el alto del área */
+    object-fit: contain; /* mantiene proporción */
+    display: block;
+}
+
+
+/* Título principal */
+.cc-title {
+    margin-top: 25px; /* separación respecto al avatar */
+    margin-bottom: 40px;
+    font-size: 28px;
+    color: #111;
+}
+
+/* Texto de ayuda debajo del título */
+.cc-help {
+    color: #7b7b7b;
+    font-size: 14px;
+    line-height: 1.35;
+    margin-bottom: 18px;
+}
+
+/* Inputs redondeados y suaves */
+.cc-input {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 10px 12px;
+}
+
+    .cc-input:focus {
+        border-color: #94a3b8;
+        box-shadow: 0 0 0 4px rgba(148,163,184,.25);
+    }
+
+/* Botón “Cambiar” con estilo de tu paleta */
+.cc-btn {
+    background: var(--cc-primary);
+    color: #fff;
+    border: 1px solid var(--cc-border-dark);
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 700;
+}
+
+    .cc-btn:hover {
+        background: var(--cc-primary-hover);
+    }
+
+/* Responsive: en móviles, que el card respire bien */
+@media (max-width: 576px) {
+    :root {
+        --cc-card-w: 92vw;
+        --cc-avatar: 100px;
+    }
+
+    .cc-card {
+        padding: 28px 20px 24px;
+    }
+
+    .cc-title {
+        font-size: 24px;
+    }
+}
+
+/* ↓ Cuántos px quieres bajar el card */
+:root {
+    --cc-drop: 80px;
+}
+/* prueba 40–80px */
+
+/* Mueve solo el card hacia abajo sin romper el centrado */
+.cc-card {
+    transform: translateY(var(--cc-drop));
+}
+
+@media (max-width: 576px) {
+    .cc-card {
+        transform: translateY(16px);
+    }
+    /* menos en móvil */
+}

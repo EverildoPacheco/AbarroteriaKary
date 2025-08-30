@@ -1,0 +1,182 @@
+﻿@{
+    var ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
+    var act = (ViewContext.RouteData.Values["action"]?.ToString() ?? "").ToLower();
+
+    Func<string, string, string> active = (c, a) =>
+    {
+        var isCtrl = ctrl == (c?.ToLower() ?? "");
+        var isAct = string.IsNullOrWhiteSpace(a) || act == a.ToLower();
+        return (isCtrl && isAct) ? " is-active " : "";
+    };
+}
+
+<aside class="kary-sidebar" id="karySidebar" aria-label="Menú principal">
+    <div class="kary-sidebar__card">
+        <nav class="kary-menu">
+
+
+        <a class="kary-menu__item @active("Home", "Inicio")"
+           asp-controller="Home" asp-action="Inicio">
+            @* <i class="fa-solid fa-house"></i> *@
+                <img src="~/img/sidebar/homee.png" class="kary-icon" alt="" asp-append-version="true" />
+                <span><strong>INICIO</strong></span>
+        </a>
+
+
+                                     @* VENTAS *@
+            <div class="kary-menu__group" data-group="ventas">
+                <button type="button"
+                        class="kary-menu__item js-submenu-toggle"
+                        aria-expanded="false"
+                        aria-controls="sm-ventas">
+                    <img src="~/img/sidebar/VENTAS.png" class="kary-icon" alt="" asp-append-version="true" />
+                    <span class="kary-menu__title"><strong>VENTAS </strong></span>
+                </button>
+
+                <div id="sm-ventas" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Venta", "Index")"
+                       asp-controller="ventas" asp-action="Index">Ventas</a>      
+
+                </div>
+            </div>
+
+
+                                    @* INVENTARIO *@
+            <div class="kary-menu__group" data-group="inventario">
+                <button type="button"
+                        class="kary-menu__item js-submenu-toggle"
+                        aria-expanded="false"
+                        aria-controls="sm-inventario">
+                    <img src="~/img/sidebar/Inventario.png" class="kary-icon" alt="" asp-append-version="true" />
+                    <span class="kary-menu__title"><strong>INVENTARIO </strong></span>
+                </button>
+
+                <div id="sm-inventario" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Producto", "Index")"
+                       asp-controller="Stock" asp-action="Index">Stock</a>
+
+                    <a class="kary-submenu__item @active("Categoria", "Index")"
+                       asp-controller="Pedido" asp-action="Index">Pedido</a>
+
+                </div>
+            </div>
+
+                                        @* PRODUCTOS *@    
+            <div class="kary-menu__group" data-group="productos">
+                <button type="button"
+                        class="kary-menu__item js-submenu-toggle"
+                        aria-expanded="false"
+                        aria-controls="sm-productos">
+                    <img src="~/img/sidebar/Productos.png" class="kary-icon" alt="" asp-append-version="true" />
+                    <span class="kary-menu__title"><strong>PRODUCTOS</strong></span>
+                </button>
+
+                <div id="sm-productos" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Producto", "Index")"
+                       asp-controller="Producto" asp-action="Index">Producto</a>
+
+                    <a class="kary-submenu__item @active("Categoria", "Index")"
+                       asp-controller="Categoria" asp-action="Index">Categoría</a>
+
+                    <a class="kary-submenu__item @active("SubCategoria", "Index")"
+                       asp-controller="SubCategoria" asp-action="Index">Sub-Categorías</a>
+                </div>
+            </div>
+
+                                       @* PROVEEDORES *@  
+            <div class="kary-menu__group" data-group="Proveedor">
+                <button type="button"
+                        class="kary-menu__item js-submenu-toggle"
+                        aria-expanded="false"
+                        aria-controls="sm-proveedor">
+                    <img src="~/img/sidebar/proveedor.png" class="kary-icon" alt="" asp-append-version="true" />
+                    <span class="kary-menu__title"><strong>PROVEEDOR</strong></span>
+                </button>
+
+                <div id="sm-Proveedor" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Proveedor", "Index")"
+                       asp-controller="Proveedor" asp-action="Index">Proveedor</a>
+
+                </div>
+            </div>
+
+
+
+                                    @* EMPLEADOS *@  
+            <div class="kary-menu__group" data-group="Empleado">
+                <button type="button"
+                        class="kary-menu__item js-submenu-toggle"
+                        aria-expanded="false"
+                        aria-controls="sm-Empleado">
+                    <img src="~/img/sidebar/trabajar.png" class="kary-icon" alt="" asp-append-version="true" />
+                    <span class="kary-menu__title"><strong>EMPLEADO</strong></span>
+                </button>
+
+                <div id="sm-Empleado" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Empleado", "Index")"
+                       asp-controller="Empleado" asp-action="Index">Empleado</a>
+
+                    <a class="kary-submenu__item @active("Empleado", "Index")"
+                       asp-controller="Puesto" asp-action="Index">Puesto</a>
+
+                    <a class="kary-submenu__item @active("Areas", "Index")"
+                       asp-controller="Areas" asp-action="Index">Areas</a>
+
+                </div>
+            </div>
+
+
+
+
+            <div class="kary-menu__group" data-group="Usuario">
+                <button type="button"
+                        class="kary-menu__item js-submenu-toggle"
+                        aria-expanded="false"
+                        aria-controls="sm-Usuario">
+                    <img src="~/img/sidebar/usuario.png" class="kary-icon" alt="" asp-append-version="true" />
+                    <span class="kary-menu__title"><strong>USUARIO</strong></span>
+                </button>
+
+                <div id="sm-Usuario" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Usuario", "Index")"
+                       asp-controller="Usuario" asp-action="Index">Usuario</a>
+
+                    <a class="kary-submenu__item @active("Rol", "Index")"
+                       asp-controller="Rol" asp-action="Index">Rol</a>
+
+                </div>
+            </div>
+
+
+
+
+            <div class="kary-menu__group" data-group="Permisos">
+                <button type="button"
+                        class="kary-menu__item js-submenu-toggle"
+                        aria-expanded="false"
+                        aria-controls="sm-Permisos">
+                    <img src="~/img/sidebar/permiso.png" class="kary-icon" alt="" asp-append-version="true" />
+                    <span class="kary-menu__title"><strong>PERMISO</strong></span>
+                </button>
+
+                <div id="sm-Permisos" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Permiso", "Index")"
+                       asp-controller="Permisos" asp-action="Index">Permiso</a>
+
+
+                </div>
+            </div>
+
+
+@*         <a class="kary-menu__item @active("Permisos", "Index")"
+           asp-controller="Permisos" asp-action="Index">
+                <img src="~/img/sidebar/permiso.png" class="kary-icon" alt="" asp-append-version="true" />
+            <span>Permisos</span>
+        </a> *@
+
+    </nav>
+    </div>
+</aside>
+
+<!-- Capa oscura para móvil cuando el sidebar está abierto -->
+<div class="kary-overlay" id="karyOverlay" aria-hidden="true"></div>

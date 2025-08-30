@@ -20,6 +20,8 @@
 
   <ItemGroup>
     <Folder Include="Data\" />
+    <Folder Include="ModelsMetadata\" />
+    <Folder Include="wwwroot\img\sidebar\" />
   </ItemGroup>
 
 </Project>

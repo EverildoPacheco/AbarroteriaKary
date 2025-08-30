@@ -1,4 +1,4 @@
-﻿@model IEnumerable<AbarroteriaKary.Models.USUARIO>
+﻿@model IEnumerable<AbarroteriaKary.Models.AREA>
 
 @{
     Layout = null;
@@ -19,22 +19,10 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.USUARIO_NOMBRE)
+                @Html.DisplayNameFor(model => model.AREA_NOMBRE)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.USUARIO_CONTRASENA)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.USUARIO_SALT)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.USUARIO_FECHAREGISTRO)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.USUARIO_CAMBIOINICIAL)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.USUARIO_CORREO)
+                @Html.DisplayNameFor(model => model.AREA_DESCRIPCION)
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.CREADO_POR)
@@ -60,12 +48,6 @@
             <th>
                 @Html.DisplayNameFor(model => model.ESTADO)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EMPLEADO)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ROL)
-            </th>
             <th></th>
         </tr>
     </thead>
@@ -73,22 +55,10 @@
 @foreach (var item in Model) {
         <tr>
             <td>
-                @Html.DisplayFor(modelItem => item.USUARIO_NOMBRE)
+                @Html.DisplayFor(modelItem => item.AREA_NOMBRE)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.USUARIO_CONTRASENA)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.USUARIO_SALT)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.USUARIO_FECHAREGISTRO)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.USUARIO_CAMBIOINICIAL)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.USUARIO_CORREO)
+                @Html.DisplayFor(modelItem => item.AREA_DESCRIPCION)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.CREADO_POR)
@@ -115,15 +85,9 @@
                 @Html.DisplayFor(modelItem => item.ESTADO)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.EMPLEADO.EMPLEADO_ID)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ROL.ROL_ID)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.USUARIO_ID">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.USUARIO_ID">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.USUARIO_ID">Delete</a>
+                <a asp-action="Edit" asp-route-id="@item.AREA_ID">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.AREA_ID">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.AREA_ID">Delete</a>
             </td>
         </tr>
 }

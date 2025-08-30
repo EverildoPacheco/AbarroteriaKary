@@ -1,0 +1,289 @@
+﻿/* ===========================================
+   sidebar.css  (Abarrotería Kary)
+   - Grid layout en escritorio: el footer se empuja por el mayor alto (sidebar o main)
+   - Tarjeta "flotante" con sombra y bordes
+   - Offcanvas en móvil con overlay
+=========================================== */
+
+/* Variables compartidas (ajuste el alto del header si cambia) */
+:root {
+    --hdr-h: 72px;
+    /* Sidebar (track de la columna) */
+    --sb-w: 260px; /* ancho expandido */
+    --sb-w-collapsed: 78px; /* ancho colapsado (solo iconos) */
+    /* Gaps para el efecto flotante */
+    --sb-gap-x: 24px; /* separación lateral (izq/der) */
+    --sb-gap-top: 20px; /* separación superior */
+    --sb-gap-bottom: 20px; /* separación inferior */
+    /* Apariencia de la tarjeta */
+    --sb-bg: #a78273; /* fondo de la tarjeta */
+    --sb-text: #000000; /* texto sobre la tarjeta (blanco como su mock) */
+    --sb-divider: rgba(0,0,0,.25); /* línea divisoria entre items */
+    /*    --sb-radius: 1px;
+*/
+    --sb-shadow: 0 10px 24px rgba(0,0,0,.18);
+    --sb-border: rgba(0,0,0,.15);
+    --z-sidebar: 1700;
+    --z-overlay: 1600;
+
+    --sb-divider: rgba(0,0,0,.25); /* color de la línea */
+    --sb-sep-w: 2px; /* <— grosor del separador (1px, 2px, 3px...) */
+}
+
+/* ===== Shell del layout (GRID) ===== */
+.kary-shell {
+    display: grid;
+    grid-template-columns: var(--sb-w) 1fr; /* sidebar | contenido */
+    grid-template-rows: auto 1fr auto; /* header | (sidebar+main) | footer */
+    grid-template-areas:
+        "header header"
+        "sidebar main"
+        "footer footer";
+    min-height: 100vh; /* asegura que el footer pegue abajo */
+    min-height: 100svh; /* unidades “seguras” para móviles */
+    background: #f5f5f7;
+    /* opcional: separación entre columnas
+  column-gap: 24px;
+  */
+}
+
+/* Áreas del grid */
+.kary-main {
+    grid-area: main;
+}
+
+.kary-sidebar {
+    grid-area: sidebar;
+}
+
+.kary-footer {
+    grid-area: footer;
+}
+
+/* ===== Sidebar (ESCRITORIO – en flujo normal) ===== */
+.kary-sidebar {
+    /* Para el look flotante: el aside solo pone padding/gap y NO pinta banda completa */
+    background: transparent;
+    color: var(--sb-text);
+    position: relative; /* en flujo normal, empuja footer si crece */
+    align-self: start; /* alinea arriba dentro de la celda */
+    padding: var(--sb-gap-top) var(--sb-gap-x) var(--sb-gap-bottom);
+    border-right: 0;
+    box-shadow: none;
+}
+
+/* Tarjeta flotante que contiene el menú */
+.kary-sidebar__card {
+    background: var(--sb-bg);
+    color: var(--sb-text);
+/*    border-radius: var(--sb-radius);*/
+    box-shadow: var(--sb-shadow);
+    overflow: hidden; /* hace efectivo el borde redondeado */
+    border: 1px solid var(--sb-border);
+}
+
+/* ===== Menú “flush” como en la imagen ===== */
+.kary-menu {
+    display: flex;
+    flex-direction: column;
+    /* sin gap para que los separadores formen “bloques” planos */
+}
+
+/* cada fila del menú */
+.kary-menu__item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 16px;
+    text-decoration: none;
+    color: inherit; /* usa var(--sb-text) */
+    background: transparent; /* mismo color que la tarjeta */
+    border: 0;
+    border-bottom: 1px solid var(--sb-divider); /* separador entre filas */
+    transition: background-color .15s ease, transform .06s ease;
+    border-bottom: var(--sb-sep-w) solid var(--sb-divider);
+}
+
+    .kary-menu__item:last-child {
+        border-bottom: 0;
+    }
+
+    .kary-menu__item i {
+        width: 22px;
+        text-align: center;
+        font-size: 18px;
+    }
+
+    .kary-menu__item:hover {
+        background: rgba(255,255,255,.08);
+        transform: translateY(-1px);
+    }
+
+    /* estado activo con banda lateral sutil */
+    .kary-menu__item.is-active {
+        background: rgba(255,255,255,.14);
+        box-shadow: inset 3px 0 0 rgba(255,255,255,.55);
+    }
+
+/* ===== Colapsado (ESCRITORIO) =====
+   El script agrega --sidebar-collapsed al <body> */
+body.--sidebar-collapsed .kary-shell {
+    grid-template-columns: var(--sb-w-collapsed) 1fr;
+}
+
+body.--sidebar-collapsed .kary-menu__item span {
+    display: none;
+}
+
+body.--sidebar-collapsed .kary-menu__item {
+    justify-content: center;
+}
+
+/* ===== MÓVIL: offcanvas con overlay ===== */
+@media (max-width: 992px) {
+    .kary-shell {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "header"
+            "main"
+            "footer";
+    }
+
+    /* En móvil sacamos el sidebar del grid y lo hacemos offcanvas,
+     pero conservamos el padding para mantener el look "flotante" */
+    .kary-sidebar {
+        position: fixed;
+        top: var(--hdr-h);
+        left: 0;
+        bottom: 0;
+        width: var(--sb-w);
+        transform: translateX(-100%);
+        transition: transform .2s ease-out;
+        z-index: var(--z-sidebar);
+        padding: var(--sb-gap-top) var(--sb-gap-x) var(--sb-gap-bottom);
+    }
+
+    body.--sidebar-open .kary-sidebar {
+        transform: translateX(0);
+    }
+
+    /* Overlay */
+    .kary-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,.35);
+        z-index: var(--z-overlay);
+    }
+}
+
+/* Accesibilidad foco */
+.kary-menu__item:focus-visible {
+    outline: 2px solid #222;
+    outline-offset: 2px;
+}
+
+/* Tamaño y alineación consistentes */
+.kary-icon {
+    width: 22px;
+    height: 22px;
+    object-fit: contain; /* no deforma */
+    flex: 0 0 22px; /* reserva el ancho fijo */
+}
+
+/* Si sus SVG son monocromos y quiere que hereden el color del texto:
+   1) Exporte los SVG con fill="currentColor" y
+   2) (opcional) suba el contraste en activo */
+.kary-menu__item.is-active .kary-icon {
+    transform: translateY(-1px) scale(1.02);
+}
+
+/* ===== Submenús (grupos colapsables) ===== */
+
+/* contenedor del grupo: nos sirve para marcar estado abierto/cerrado */
+.kary-menu__group {
+    margin-bottom: 8px;
+}
+
+/* caret (flecha) que rota al abrir */
+.kary-menu__item .kary-caret {
+    margin-left: auto;
+    transition: transform .2s ease;
+}
+
+.kary-menu__group.is-open .kary-caret {
+    transform: rotate(180deg);
+}
+
+/* panel del submenú: animación con max-height */
+.kary-submenu {
+    background: rgba(0,0,0,.06); /* leve contraste dentro de la tarjeta */
+    /* border-top: 1px solid var(--sb-divider);*/
+    border-top: var(--sb-sep-w) solid var(--sb-divider);
+    border-bottom: var(--sb-sep-w) solid var(--sb-divider);
+    overflow: hidden; /* necesario para la animación */
+    max-height: 0; /* cerrado por defecto */
+    transition: max-height .22s ease;
+}
+
+/* links del submenú (sangría para alinear bajo el icono del padre) */
+.kary-submenu__item {
+    display: block;
+    padding: 12px 16px 12px 54px; /* 22px icono + 16 + 16 aprox */
+    color: var(--sb-text);
+    text-decoration: none;
+    border-bottom: 1px solid var(--sb-divider);
+}
+
+    .kary-submenu__item:last-child {
+        border-bottom: 0;
+    }
+
+    .kary-submenu__item:hover {
+        background: rgba(255,255,255,.08);
+    }
+
+/* cuando el grupo está abierto, permitimos crecer el panel
+   (JS pondrá la altura exacta para una animación suave) */
+.kary-menu__group.is-open .kary-submenu {
+    /* el JS establece max-height dinámico; esta regla solo activa la transición */
+}
+
+/* si el sidebar está colapsado, ocultamos los submenús (solo iconos) */
+body.--sidebar-collapsed .kary-submenu {
+    display: none !important;
+}
+
+/* --- Que cada item use todo el ancho (la línea llega hasta el borde) --- */
+.kary-menu__item {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.js-submenu-toggle {
+    width: 100%;
+}
+/* el botón del grupo */
+
+/* --- Al abrir un grupo, el borde inferior lo pinta el submenú (no el botón) --- */
+.kary-menu__group.is-open > .kary-menu__item {
+    border-bottom: 0; /* evita el “corte” debajo de PRODUCTOS */
+}
+
+/* --- El panel del submenú dibuja líneas arriba y abajo --- */
+.kary-submenu {
+    border-top: 1px solid var(--sb-divider);
+    border-bottom: 1px solid var(--sb-divider); /* separa Sub-Categorías de Proveedor */
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height .22s ease;
+}
+
+/* (ya lo tenía) ocultamos submenú cuando el sidebar está colapsado */
+body.--sidebar-collapsed .kary-submenu {
+    display: none !important;
+}
+
+
+.kary-menu__group.is-open + .kary-menu__item {
+    border-top: var(--sb-sep-w) solid var(--sb-divider);
+}
