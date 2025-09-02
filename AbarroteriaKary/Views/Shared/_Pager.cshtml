@@ -1,0 +1,96 @@
+﻿@using System.Collections.Generic
+@using Microsoft.AspNetCore.Routing
+@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoBase
+
+@{
+    // Acción / controlador actuales
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString() ?? "Index";
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+
+    // Ventana de páginas
+    var window = 5;
+    var start = Math.Max(1, Model.Page - 2);
+    var end = Math.Min(Model.TotalPages, start + window - 1);
+    if ((end - start + 1) < window) start = Math.Max(1, end - window + 1);
+
+    // RouteValues originales (object?) -> a diccionario string
+    var baseRv = Model.RouteValues ?? new Dictionary<string, object?>();
+    var baseRoute = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+    foreach (var kv in baseRv)
+    {
+        if (kv.Value is null) continue;
+        baseRoute[kv.Key] = kv.Value?.ToString() ?? "";
+    }
+    baseRoute["pageSize"] = Model.PageSize.ToString();
+
+    string BuildUrl(int page)
+    {
+        var rvd = new RouteValueDictionary();
+        foreach (var kv in baseRoute) rvd[kv.Key] = kv.Value;
+        rvd["page"] = page.ToString();
+        rvd["pageSize"] = Model.PageSize.ToString();
+        return Url.Action(currentAction, currentController, rvd) ?? "#";
+    }
+}
+
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-3 my-3">
+
+    <!-- Selector de tamaño de página -->
+    <form method="get" class="d-inline-flex align-items-center gap-2" action="@Url.Action(currentAction, currentController)">
+        <label class="mb-0">Mostrar:</label>
+
+        @{
+            var sizes = new[] { 10, 25, 50, 100 };
+        }
+        <select name="pageSize" class="form-select form-select-sm" onchange="this.form.submit()">
+            @foreach (var n in sizes)
+            {
+                if (Model.PageSize == n)
+                {
+                    <text>
+                    <option value="@n" selected>@n</option></text>
+                }
+                else
+                {
+                    <text>
+                    <option value="@n">@n</option></text>
+                }
+            }
+        </select>
+        <span class="text-nowrap">registros por página</span>
+
+        @* Preservar filtros *@
+        @foreach (var kv in baseRoute)
+        {
+            if (kv.Key.Equals("pageSize", System.StringComparison.OrdinalIgnoreCase)) { continue; }
+            <input type="hidden" name="@kv.Key" value="@kv.Value" />
+        }
+        <input type="hidden" name="page" value="1" />
+    </form>
+
+    <!-- Paginador numérico -->
+    <nav>
+        <ul class="pagination mb-0 ak-pagination">
+            <li class="page-item @(Model.HasPrev ? "" : "disabled")">
+                <a class="page-link" href="@(Model.HasPrev? BuildUrl(1) : "#")">«</a>
+            </li>
+            <li class="page-item @(Model.HasPrev ? "" : "disabled")">
+                <a class="page-link" href="@(Model.HasPrev? BuildUrl(Model.Page - 1) : "#")">‹</a>
+            </li>
+
+            @for (var p = start; p <= end; p++)
+            {
+                <li class="page-item @(p == Model.Page ? "active" : "")">
+                    <a class="page-link" href="@BuildUrl(p)">@p</a>
+                </li>
+            }
+
+            <li class="page-item @(Model.HasNext ? "" : "disabled")">
+                <a class="page-link" href="@(Model.HasNext? BuildUrl(Model.Page + 1) : "#")">›</a>
+            </li>
+            <li class="page-item @(Model.HasNext ? "" : "disabled")">
+                <a class="page-link" href="@(Model.HasNext? BuildUrl(Model.TotalPages) : "#")">»</a>
+            </li>
+        </ul>
+    </nav>
+</div>

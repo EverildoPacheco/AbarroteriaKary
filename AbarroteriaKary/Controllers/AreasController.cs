@@ -8,9 +8,11 @@ using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-
+using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T>
+using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
 
 
 namespace AbarroteriaKary.Controllers
@@ -28,14 +30,246 @@ namespace AbarroteriaKary.Controllers
 
         }
 
-        // GET: Areas
-        public async Task<IActionResult> Index()
-        {
-            return View(await _context.AREA.ToListAsync());
+        //// GET: Areas
+        //public async Task<IActionResult> Index()
+        //{
+        //    return View(await _context.AREA.ToListAsync());
 
-        }
+        //}
+
+        // GET: /Areas
+        //[HttpGet]
+        //public async Task<IActionResult> Index(string? estado, string? q = null, string? fDesde = null, string? fHasta = null)
+        //{
+        //    // ---------------------------
+        //    // 0) Normalización del estado
+        //    // ---------------------------
+        //    // Fallback robusto: si viene null, vacío o un valor inválido -> ACTIVO
+        //    var estadoNorm = (estado ?? "ACTIVO").Trim().ToUpperInvariant();
+        //    if (estadoNorm != "ACTIVO" && estadoNorm != "INACTIVO" && estadoNorm != "TODOS")
+        //        estadoNorm = "ACTIVO";
+
+        //    // --------------------------------------------
+        //    // 1) Parseo flexible de fechas (dd/MM/yyyy o yyyy-MM-dd)
+        //    // --------------------------------------------
+        //    DateTime? desde = ParseDate(fDesde);
+        //    DateTime? hasta = ParseDate(fHasta);
+
+        //    // --------------------------------------------
+        //    // 2) Base query: ignoramos eliminados lógicos
+        //    // --------------------------------------------
+        //    var qry = _context.AREA
+        //        .AsNoTracking()
+        //        .Where(a => !a.ELIMINADO);
+
+        //    // --------------------------------------------
+        //    // 3) Filtro por estado (ACTIVO/INACTIVO) o TODOS
+        //    // --------------------------------------------
+        //    if (estadoNorm == "ACTIVO" || estadoNorm == "INACTIVO")
+        //        qry = qry.Where(a => a.ESTADO == estadoNorm);
+        //    // Si es "TODOS", no se filtra por ESTADO.
+
+        //    // --------------------------------------------
+        //    // 4) Búsqueda por ID o Nombre (contains)
+        //    // --------------------------------------------
+        //    if (!string.IsNullOrWhiteSpace(q))
+        //    {
+        //        var term = q.Trim();
+        //        qry = qry.Where(a =>
+        //            a.AREA_ID.Contains(term) ||
+        //            a.AREA_NOMBRE.Contains(term));
+        //    }
+
+        //    // --------------------------------------------
+        //    // 5) Filtro de fechas por FECHA_CREACION (rango inclusivo)
+        //    // --------------------------------------------
+        //    if (desde.HasValue) qry = qry.Where(a => a.FECHA_CREACION >= desde.Value.Date);
+        //    if (hasta.HasValue) qry = qry.Where(a => a.FECHA_CREACION < hasta.Value.Date.AddDays(1));
+
+        //    // --------------------------------------------
+        //    // 6) Proyección a ViewModel y orden
+        //    // --------------------------------------------
+        //    var lista = await qry
+        //        .OrderBy(a => a.AREA_ID)
+        //        .Select(a => new AreasViewModel
+        //        {
+        //            areaId = a.AREA_ID,
+        //            areaNombre = a.AREA_NOMBRE,
+        //            areaDescripcion = a.AREA_DESCRIPCION,
+        //            estadoArea = a.ESTADO,
+        //            FechaCreacion = a.FECHA_CREACION
+        //        })
+        //        .ToListAsync();
+
+        //    // --------------------------------------------
+        //    // 7) Variables para la Vista (mantener valores en inputs/estilos)
+        //    // --------------------------------------------
+        //    ViewBag.Estado = estadoNorm;                             // ACTIVO / INACTIVO / TODOS
+        //    ViewBag.Q = q;
+        //    ViewBag.FDesde = desde?.ToString("yyyy-MM-dd");          // <input type="date"> o hidden
+        //    ViewBag.FHasta = hasta?.ToString("yyyy-MM-dd");
+
+        //    return View(lista);
+        //}
+
+        //// --------------------------------------------
+        //// Utilidad privada para parsear fechas del querystring
+        //// --------------------------------------------
+        //private static DateTime? ParseDate(string? input)
+        //{
+        //    if (string.IsNullOrWhiteSpace(input)) return null;
+
+        //    var formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd" };
+        //    if (DateTime.TryParseExact(input, formats,
+        //            CultureInfo.GetCultureInfo("es-GT"),
+        //            DateTimeStyles.None, out var d))
+        //        return d;
+
+        //    // Fallback genérico
+        //    if (DateTime.TryParse(input, out d)) return d;
+        //    return null;
+        //}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // GET: Areas/Details/5
+
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> Index(
+    string? estado,
+    string? q = null,
+    string? fDesde = null,
+    string? fHasta = null,
+    int page = 1,
+    int pageSize = 10)
+        {
+            // ---------------------------
+            // 0) Normalización del estado
+            // ---------------------------
+            var estadoNorm = (estado ?? "ACTIVO").Trim().ToUpperInvariant();
+            if (estadoNorm != "ACTIVO" && estadoNorm != "INACTIVO" && estadoNorm != "TODOS")
+                estadoNorm = "ACTIVO";
+
+            // --------------------------------------------
+            // 1) Parseo flexible de fechas (dd/MM/yyyy o yyyy-MM-dd)
+            // --------------------------------------------
+            DateTime? desde = ParseDate(fDesde);
+            DateTime? hasta = ParseDate(fHasta);
+
+            // --------------------------------------------
+            // 2) Base query: ignoramos eliminados lógicos
+            // --------------------------------------------
+            var qry = _context.AREA
+                .AsNoTracking()
+                .Where(a => !a.ELIMINADO);
+
+            // --------------------------------------------
+            // 3) Filtro por estado (ACTIVO/INACTIVO) o TODOS
+            // --------------------------------------------
+            if (estadoNorm == "ACTIVO" || estadoNorm == "INACTIVO")
+                qry = qry.Where(a => a.ESTADO == estadoNorm);
+            // Si es "TODOS", no se filtra por ESTADO.
+
+            // --------------------------------------------
+            // 4) Búsqueda por ID o Nombre (contains)
+            // --------------------------------------------
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var term = q.Trim();
+                qry = qry.Where(a =>
+                    a.AREA_ID.Contains(term) ||
+                    a.AREA_NOMBRE.Contains(term));
+            }
+
+            // --------------------------------------------
+            // 5) Filtro de fechas por FECHA_CREACION (rango inclusivo)
+            // --------------------------------------------
+            if (desde.HasValue) qry = qry.Where(a => a.FECHA_CREACION >= desde.Value.Date);
+            if (hasta.HasValue) qry = qry.Where(a => a.FECHA_CREACION < hasta.Value.Date.AddDays(1));
+
+            // --------------------------------------------
+            // 6) Proyección a ViewModel + orden
+            //    (IMPORTANTE: ordene ANTES de paginar)
+            // --------------------------------------------
+            var proyectado = qry
+                .OrderBy(a => a.AREA_ID)
+                .Select(a => new AreasViewModel
+                {
+                    areaId = a.AREA_ID,
+                    areaNombre = a.AREA_NOMBRE,
+                    areaDescripcion = a.AREA_DESCRIPCION,
+                    estadoArea = a.ESTADO,
+                    FechaCreacion = a.FECHA_CREACION
+                });
+
+            // --------------------------------------------
+            // 7) Paginación (normalizamos pageSize permitido)
+            // --------------------------------------------
+            var permitidos = new[] { 10, 25, 50, 100 };
+            pageSize = permitidos.Contains(pageSize) ? pageSize : 10;
+
+            var resultado = await proyectado.ToPagedAsync(page, pageSize);
+
+            // --------------------------------------------
+            // 8) RouteValues para el paginador (preservar filtros)
+            // --------------------------------------------
+            resultado.RouteValues["estado"] = estadoNorm;
+            resultado.RouteValues["q"] = q;
+            resultado.RouteValues["fDesde"] = desde?.ToString("yyyy-MM-dd");
+            resultado.RouteValues["fHasta"] = hasta?.ToString("yyyy-MM-dd");
+
+            // (Opcional) Variables para su toolbar actual
+            ViewBag.Estado = estadoNorm;
+            ViewBag.Q = q;
+            ViewBag.FDesde = resultado.RouteValues["fDesde"];
+            ViewBag.FHasta = resultado.RouteValues["fHasta"];
+
+            return View(resultado); // ← ahora la vista recibe PaginadoViewModel<AreasViewModel>
+        }
+
+        // --------------------------------------------
+        // Utilidad privada para parsear fechas del querystring
+        // --------------------------------------------
+        private static DateTime? ParseDate(string? input)
+        {
+            if (string.IsNullOrWhiteSpace(input)) return null;
+
+            var formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd" };
+            if (DateTime.TryParseExact(input, formats,
+                    CultureInfo.GetCultureInfo("es-GT"),
+                    DateTimeStyles.None, out var d))
+                return d;
+
+            // Fallback genérico
+            if (DateTime.TryParse(input, out d)) return d;
+            return null;
+        }
+
+
+
+
+
+
+
+
+
+
         public async Task<IActionResult> Details(string id)
         {
             if (id == null)
@@ -77,23 +311,20 @@ namespace AbarroteriaKary.Controllers
         // =======================
         // POST: /Areas/Create
         // =======================
-        [HttpPost] // <-- importante para evitar ambigüedad
+        [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(AreasViewModel vm)
         {
             if (!ModelState.IsValid)
             {
-                // Reponer el ID tentativo si hay errores
                 if (string.IsNullOrWhiteSpace(vm.areaId))
                     vm.areaId = await _correlativos.PeekNextAreaIdAsync();
-
                 return View(vm);
             }
 
             var userName = User?.Identity?.Name ?? "Sistema";
 
-            // Genere el ID definitivo y guarde en la MISMA transacción:
-            await using var tx = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
             try
             {
                 var nuevoId = await _correlativos.NextAreaIdAsync();
@@ -103,40 +334,35 @@ namespace AbarroteriaKary.Controllers
                     AREA_ID = nuevoId,
                     AREA_NOMBRE = (vm.areaNombre ?? string.Empty).Trim(),
                     AREA_DESCRIPCION = vm.areaDescripcion?.Trim(),
-
-                    ESTADO = "ACTIVO",
+                    ESTADO = vm.estadoActivo ? "ACTIVO" : "INACTIVO",
                     ELIMINADO = false,
-
-                    // Auditoría
                     CREADO_POR = userName,
-                    FECHA_CREACION = DateTime.Now,
-                    MODIFICADO_POR = null,
-                    FECHA_MODIFICACION = null,
-                    ELIMINADO_POR = null,
-                    FECHA_ELIMINACION = null
+                    FECHA_CREACION = DateTime.Now
                 };
 
                 _context.Add(entidad);
                 await _context.SaveChangesAsync();
                 await tx.CommitAsync();
 
-                TempData["Creado"] = true;
-                return RedirectToAction(nameof(Index));
+                // para el modal de éxito
+                TempData["SavedOk"] = true;
+                TempData["SavedName"] = entidad.AREA_NOMBRE;
+
+                // Volvemos a GET Create (PRG) => allí lanzamos el modal
+                return RedirectToAction(nameof(Create));
             }
-            catch (DbUpdateException)
+            catch (DbUpdateException ex)
             {
                 await tx.RollbackAsync();
-                ModelState.AddModelError(string.Empty, "Ocurrió un error al guardar el Área. Inténtelo nuevamente.");
-
-                // Reponer ID tentativo para que la vista no quede vacía
+                ModelState.AddModelError(string.Empty, $"Error BD: {ex.GetBaseException().Message}");
                 vm.areaId = await _correlativos.PeekNextAreaIdAsync();
                 return View(vm);
             }
         }
-    
 
 
- 
+
+
 
         // GET: Areas/Edit/5
         public async Task<IActionResult> Edit(string id)

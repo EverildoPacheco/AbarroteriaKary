@@ -1,90 +1,173 @@
-﻿/* kary-form.css  |  Estilo universal para formularios Kary (Bootstrap-friendly) */
+﻿/* =========================================================
+   kary-form.css  |  Estilo universal (Bootstrap-friendly)
+   ========================================================= */
 
-/* ============ Variables de color (paleta Abarrotería Kary) ============ */
+/* ============ 1) Variables (paleta / tipografía) ============ */
 :root {
-    --ak-lila: #ac8cb6; /* fondo título / detalles */
-    --ak-lila-1: #d8c7dd; /* lila con 26% de opacidad (AA=0x42)   #C5A3CF42*/
-    --ak-cafe-p: #b6978c; /* botón cancelar */
-    --ak-cafe-cl: #cfafa3; /* hover cancelar / bordes suaves */
-    --ak-verde: #9fc095; /* botón regresar */
-    --ak-celeste: #95b5c0; /* botón guardar */
+    --ak-lila: #ac8cb6; /* detalles */
+    --ak-lila-1: #c8abd1; /* lila base sólido */
+    --ak-form-bg: rgba(200,171,209,.40); /* fondo translúcido para cards */
+    --ak-form-bg-ca: rgba(200,171,209,.30);
+    --ak-cafe-p: #b6978c; /* cancelar */
+    --ak-cafe-cl: #cfafa3; /* hover cancelar */
+    --ak-verde: #9fc095; /* regresar */
+    --ak-celeste: #95b5c0; /* guardar */
+
     --ak-text: #2b2b2b; /* texto primario */
+    --ak-text-fo: #3e3e3e;
     --ak-muted: #6b6b6b; /* texto secundario */
-    --ak-btn-text: #111; /* texto negro en botones */
+    --ak-btn-text: #111; /* texto en botones */
 }
 
-/* ============ Shell del formulario ============ */
-.ak-form-shell {
-    /* antes: background: var(--ak-lila-1); */
-    background: transparent; /* hace que el fondo no se “derrame” */
-    border-radius: 0; /* sin borde/redondo fuera del card */
-    padding: 0; /* el padding lo maneja el wrap o la grid */
-    box-shadow: none; /* sin sombra externa */
+/* ============ 2) Estructura de página (3 franjas) ============ */
+.ak-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
+.ak-header {
+    padding: 18px 0;
+}
 
+.ak-main {
+    flex: 1 1 auto;
+    display: flex;
+}
+
+/* Margen interior general (si usas sidebar) */
+.kary-content {
+    padding: 12px 25px 24px 20px;
+}
+
+/* ============ 3) Contenedores de formulario ============ */
 .ak-form-wrap {
-    max-width: 920px; /* ajuste global de ancho del formulario */
+    width: min(100%, 860px);
     margin: 0 auto;
-    padding: 8px 12px;
+    padding: 0 12px;
 }
 
-@media (min-width: 1200px) {
+@media (min-width:1400px) {
     .ak-form-wrap {
-        max-width: 840px;
+        width: min(100%, 820px);
     }
-    /* más compacto en pantallas grandes */
 }
 
-
-/* Encabezado */
-.ak-form-title {
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: .5px;
-    color: var(--ak-text);
+/* Shell externo sin fondo (evita “derrame” de color) */
+.ak-form-shell {
+    background: transparent;
+    border-radius: 0;
+    padding: 0;
+    box-shadow: none;
 }
 
-/* Cards adentro del shell (opcional) */
+/* Card base y variantes */
 .ak-card {
-    background: var(--ak-lila-1); /* lila del diseño, queda solo en el card */
+    background: var(--ak-lila-1);
     border: 0;
-    border-radius: 14px;
+    border-radius: 5px;
     box-shadow: 0 8px 18px rgba(0,0,0,.08);
 }
 
-
-
     .ak-card .card-body {
-        padding: 24px; /* acolchado interno agradable */
+        padding: 24px;
     }
 
-/* Labels e inputs */
+    /* Card con fondo translúcido (para el formulario) */
+    .ak-card.translucent {
+        background: var(--ak-form-bg);
+    }
+
+/* Card inferior sólo para botones */
+.ak-actions-card {
+    margin-top: 18px;
+    border-radius: 5px;
+    background: var(--ak-form-bg-ca);
+    box-shadow: 0 8px 18px rgba(0,0,0,.06);
+}
+
+/* Título del formulario */
+.ak-form-title {
+    font-weight: 700;
+    letter-spacing: .2px;
+    color: var(--ak-text-fo);
+    font-weight: 500;
+    font-size: clamp(20px,2.4vw,26px);
+    margin-right: 1rem;
+}
+
+/* ============ 4) Campos de formulario ============ */
 .ak-form .form-label {
-    font-weight: 600;
+    font-weight: 700;
     color: var(--ak-text);
 }
 
-.ak-form .form-control,
-.ak-form .form-select,
-.ak-form textarea {
+.ak-form .form-control, .ak-form .form-select, .ak-form textarea {
     border-radius: 10px;
     border-color: #e5ddea;
 }
 
-    .ak-form .form-control:focus,
-    .ak-form .form-select:focus,
-    .ak-form textarea:focus {
+    .ak-form .form-control:focus, .ak-form .form-select:focus, .ak-form textarea:focus {
         border-color: var(--ak-celeste);
-        box-shadow: 0 0 0 .2rem rgba(149,181,192, .25);
+        box-shadow: 0 0 0 .2rem rgba(149,181,192,.25);
     }
 
-/* Texto de ayuda/validación */
 .ak-form .form-text {
     color: var(--ak-muted);
 }
 
-/* ============ Botones (extienden Bootstrap) ============ */
+/* Oculta el summary cuando no hay errores */
+.validation-summary-valid.alert {
+    display: none !important;
+}
+
+/* Opcional: quita margen del <ul> interno cuando sí hay errores */
+.alert.validation-summary-errors ul {
+    margin-bottom: 0;
+}
+
+
+
+
+/* Checkbox Kary: cuadrado con check negro */
+.form-check-input.ak-checkbox {
+    /* ocultar el estilo nativo y dibujar el nuestro */
+    -webkit-appearance: none;
+    appearance: none;
+    width: 2rem;
+    height: 2rem;
+    border-radius: .1rem;
+    border: 1px solid #a4a1a1; /* borde negro */
+    background-color: #fff; /* fondo sin marcar */
+    display: inline-block;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+    /* foco accesible */
+    .form-check-input.ak-checkbox:focus {
+        box-shadow: 0 0 0 .2rem rgba(0,0,0,.25);
+        outline: none;
+    }
+
+    /* estado marcado: fondo a tu color y ✓ negro */
+    .form-check-input.ak-checkbox:checked {
+        background-color: var(--ak-celeste); /* o #e0e0e0 si lo prefieres gris */
+        border-color: var(--ak-celeste);
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 8l3 3 7-7' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 80% 80%;
+    }
+
+
+
+
+
+
+
+
+/* ============ 5) Botones Kary (extienden Bootstrap) ============ */
 .btn-ak {
     border-radius: 12px;
     font-weight: 600;
@@ -92,41 +175,34 @@
     display: inline-flex;
     align-items: center;
     gap: .5rem;
+    color: var(--ak-btn-text);
 }
 
-.btn-ak-primary { /* Guardar */
+.btn-ak-primary {
     background: var(--ak-celeste);
     border-color: var(--ak-celeste);
-    color: var(--ak-white);
 }
 
-    .btn-ak-primary:hover {
-        filter: brightness(.95);
-    }
-
-.btn-ak-success { /* Regresar */
+.btn-ak-success {
     background: var(--ak-verde);
     border-color: var(--ak-verde);
-    color: var(--ak-white);
 }
-
-    .btn-ak-success:hover {
-        filter: brightness(.95);
-    }
 
 .btn-ak-cancel {
     background: var(--ak-cafe-p);
     border-color: var(--ak-cafe-p);
-    color: var(--ak-btn-text);
 }
 
     .btn-ak-cancel:hover {
         background: var(--ak-cafe-cl);
         border-color: var(--ak-cafe-cl);
-        color: var(--ak-btn-text);
     }
 
-.btn-ak-outline { /* Limpiar */
+.btn-ak-primary:hover, .btn-ak-success:hover {
+    filter: brightness(.95);
+}
+
+.btn-ak-outline {
     background: transparent;
     border-color: var(--ak-muted);
     color: var(--ak-text);
@@ -136,15 +212,134 @@
         background: rgba(0,0,0,.03);
     }
 
-/* Separador de botones en mobile */
+.btn-ak-square {
+    border-radius: .5rem !important;
+}
+
 .ak-actions {
     gap: .75rem;
     flex-wrap: wrap;
 }
 
-/* Pequeñas mejoras visuales */
 .ak-icon {
     width: 1.15em;
     height: 1.15em;
     display: inline-block;
+}
+
+/* ============ 6) Toolbar de listados (Index) ============ */
+.ak-toolbar {
+    background: #9fc09594; /* verdoso suave */
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: .2rem;
+    padding: .75rem 1rem;
+}
+
+.ak-toolbar__row {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    min-height: 56px;
+}
+
+.ak-toolbar__title {
+    font-weight: 500;
+    letter-spacing: .2px;
+    color: #3e3e3e;
+    font-size: clamp(20px,2.4vw,26px);
+    margin-right: 1rem;
+}
+
+.ak-toolbar__right {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    flex-wrap: nowrap;
+}
+
+@media (max-width:992px) {
+    .ak-toolbar__row {
+        flex-wrap: wrap;
+    }
+
+    .ak-toolbar__right {
+        flex-wrap: wrap;
+        width: 100%;
+    }
+}
+
+/* Buscador / Rango de fechas integrados */
+.ak-search .input-group-text {
+    border-radius: .5rem 0 0 .5rem;
+}
+
+.ak-search .form-control {
+    border-radius: 0 .5rem .5rem 0;
+}
+
+.ak-daterange-group .input-group-text:first-child {
+    border-radius: .5rem 0 0 .5rem;
+}
+
+.ak-daterange-group .form-control {
+    border-radius: 0 !important;
+}
+
+.ak-daterange-group .input-group-text:last-child {
+    border-radius: 0 .5rem .5rem 0;
+}
+
+/* ============ 7) Tablas ============ */
+.table-kary-zebra.table-striped > tbody > tr:nth-of-type(odd) > * {
+    --bs-table-accent-bg: #efefef;
+}
+
+.table .thead-kary, .table .thead-kary tr, .table .thead-kary th {
+    background-color: #b6ceaf !important;
+}
+
+    .table .thead-kary th {
+        color: #0f2d1d;
+        font-weight: 700;
+        border-bottom-color: rgba(0,0,0,.15);
+    }
+
+/* Iconos de acción en celdas */
+.icono-accion {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+}
+
+.acciones {
+    width: 1%;
+    white-space: nowrap;
+}
+
+/* ============ 8) Paginación ============ */
+/*.ak-pagination .page-link {
+    border-radius: .6rem;
+}*/
+
+.ak-pagination .page-item.active .page-link {
+    background-color: var(--ak-celeste);
+    border-color: var(--ak-celeste);
+    color: #111;
+}
+
+/* ============ 9) Utilidades varias ============ */
+/* Mantener selector “Mostrar: 10 registros por página” en una línea */
+.ak-pager-inline {
+    white-space: nowrap;
+    flex-wrap: nowrap;
+}
+
+@media (max-width:576px) {
+    .ak-pager-inline {
+        white-space: normal;
+        flex-wrap: wrap;
+        row-gap: .25rem;
+    }
 }

@@ -1,0 +1,72 @@
+﻿/* ===========================
+   Áreas - Listado (Index)
+   =========================== */
+
+/* Paleta (según su archivo) */
+:root {
+    --ak-lila: #ac8cb6;
+    --ak-lila-1: #c5a3cf;
+    --ak-cafe-p: #b6978c;
+    --ak-cafe-cl: #cfafa3;
+    --ak-verde: #9fc095; /* para toques de "activo" */
+    --ak-celeste: #95b5c0;
+}
+
+/* Toolbar con fondo suave verdoso (como su mockup) */
+.kary-toolbar {
+    background: linear-gradient(0deg, #e8f2eb 0%, #e8f2eb 100%);
+    border: 1px solid rgba(0,0,0,.06);
+    border-radius: .5rem;
+}
+
+/* Botón principal Agregar */
+.btn-ak-primary {
+    background-color: var(--ak-celeste);
+    border: 1px solid rgba(0,0,0,.1);
+    color: #111;
+    font-weight: 600;
+    padding: .45rem .8rem;
+}
+
+    .btn-ak-primary:hover {
+        filter: brightness(0.95);
+    }
+
+/* Chips de filtro (Todos/Activo/Inactivo) */
+.btn-ak-filter {
+    background: #f4f4f4;
+    color: #111;
+    border: 1px solid rgba(0,0,0,.1);
+    padding: .45rem .8rem;
+    border-radius: 1rem;
+}
+
+    .btn-ak-filter.active {
+        background: var(--ak-lila-1);
+        border-color: rgba(0,0,0,.15);
+    }
+
+/* Badges de estado con colores solicitados */
+.badge-estado--activo {
+    background: var(--ak-verde);
+    color: #073b1b;
+    font-weight: 600;
+}
+
+.badge-estado--inactivo {
+    background: #dc3545; /* rojo bootstrap */
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Ajustes tabla */
+.table td, .table th {
+    vertical-align: middle;
+}
+
+.text-monospace {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+
+

@@ -13,7 +13,8 @@
     <link href="~/css/sidebar.css" rel="stylesheet" asp-append-version="true" />
     <link href="~/css/footer.css" rel="stylesheet" asp-append-version="true" />
     <link href="~/css/kary-form.css" rel="stylesheet" asp-append-version="true" />
-
+    <!-- SweetAlert2 + helper reutilizable (global) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
@@ -29,27 +30,24 @@
         @* Sidebar (partial existente) *@
         @await Html.PartialAsync("_Sidebar")
 
-        <main class="kary-content kary-main" role="main">
+@*         <main class="kary-content kary-main" role="main">
             <div class="container pb-3">
                 @RenderBody()
             </div>
         </main>
 
         @await Html.PartialAsync("_Footer")
-    </div>
-  @*   @await Html.PartialAsync("_header")  
-    @await Html.PartialAsync("_Sidebar")  
+    </div> *@
 
-
-
-    <div class="container kary-content">
-        <main role="main" class="pb-3">
-            @RenderBody()
+        <main class="kary-content kary-main kary-main--fluid" role="main">
+            <div class="container-fluid px-3 pb-3 kary-main__wrap">
+                @RenderBody()
+            </div>
         </main>
+        @await Html.PartialAsync("_Footer")
+
     </div>
-    @await Html.PartialAsync("_Footer")  
- *@
- 
+
 
     <!-- Scripts base -->
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
@@ -57,6 +55,7 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <script src="~/js/header.js" asp-append-version="true"></script>
     <script src="~/js/sidebar.js" asp-append-version="true"></script>
+    <script src="~/js/kary-swal.js" asp-append-version="true"></script>
 
 
 

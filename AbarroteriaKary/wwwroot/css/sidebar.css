@@ -9,15 +9,15 @@
 :root {
     --hdr-h: 72px;
     /* Sidebar (track de la columna) */
-    --sb-w: 260px; /* ancho expandido */
-    --sb-w-collapsed: 78px; /* ancho colapsado (solo iconos) */
+    --sb-w: 320px; /* ancho expandido */
+    --sb-w-collapsed: 95px; /* ancho colapsado (solo iconos) */
     /* Gaps para el efecto flotante */
-    --sb-gap-x: 24px; /* separación lateral (izq/der) */
-    --sb-gap-top: 20px; /* separación superior */
+    --sb-gap-x: 20px; /* separación lateral (izq/der) */
+    --sb-gap-top: 36px; /* separación superior */
     --sb-gap-bottom: 20px; /* separación inferior */
     /* Apariencia de la tarjeta */
-    --sb-bg: #a78273; /* fondo de la tarjeta */
-    --sb-text: #000000; /* texto sobre la tarjeta (blanco como su mock) */
+    --sb-bg: #a78273; /* fondo de la tarjeta #a78273*/
+    --sb-text: #000000; /* texto sobre la tarjeta (blanco como su mock)  #a78273*/
     --sb-divider: rgba(0,0,0,.25); /* línea divisoria entre items */
     /*    --sb-radius: 1px;
 */
@@ -25,7 +25,6 @@
     --sb-border: rgba(0,0,0,.15);
     --z-sidebar: 1700;
     --z-overlay: 1600;
-
     --sb-divider: rgba(0,0,0,.25); /* color de la línea */
     --sb-sep-w: 2px; /* <— grosor del separador (1px, 2px, 3px...) */
 }

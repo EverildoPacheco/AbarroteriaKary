@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -18,8 +19,20 @@ namespace AbarroteriaKary.ModelsPartial
         [MaxLength(250, ErrorMessage = "Máximo 250 caracteres.")]
         public string? areaDescripcion { get; set; }
 
+        //[Display(Name = "Estado")]
+        //public string estadoArea { get; set; }
+
+        // String que ya usas en listados / consultas
+        [ValidateNever]
         [Display(Name = "Estado")]
         public string estadoArea { get; set; }
+
+
+        [ValidateNever]
+        // ✔ Nuevo: flag para el Create/Edit (checkbox)
+        [Display(Name = "Activo")]
+        public bool estadoActivo { get; set; } = true;
+
 
         [Display(Name = "Fecha de creación")]
         [Column(TypeName = "datetime")]
