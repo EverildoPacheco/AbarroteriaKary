@@ -16,8 +16,9 @@
     --sb-gap-top: 36px; /* separación superior */
     --sb-gap-bottom: 20px; /* separación inferior */
     /* Apariencia de la tarjeta */
-    --sb-bg: #a78273; /* fondo de la tarjeta #a78273*/
+    --sb-bg: #ac8cb6; /* fondo de la tarjeta #a78273*/
     --sb-text: #000000; /* texto sobre la tarjeta (blanco como su mock)  #a78273*/
+    --sb-text-su: #ffffff; /* texto sobre la tarjeta (blanco como su mock)  #a78273*/
     --sb-divider: rgba(0,0,0,.25); /* línea divisoria entre items */
     /*    --sb-radius: 1px;
 */

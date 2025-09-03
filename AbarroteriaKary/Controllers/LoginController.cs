@@ -109,14 +109,7 @@ namespace AbarroteriaKary.Controllers
             HttpContext.Session.SetString("UsuarioId", userFull.USUARIO_ID);
             HttpContext.Session.SetString("UsuarioNombre", userFull.USUARIO_NOMBRE);
 
-            // (Opcional) Si desea el nombre completo, puede unir a EMPLEADO/PERSONA:
-            // var nombre = (from u in _context.USUARIO
-            //               join e in _context.EMPLEADO on u.EMPLEADO_ID equals e.EMPLEADO_ID
-            //               join p in _context.PERSONA on e.EMPLEADO_ID equals p.PERSONA_ID
-            //               where u.USUARIO_ID == userFull.USUARIO_ID
-            //               select p.PERSONA_PRIMERNOMBRE + " " + p.PERSONA_PRIMERAPELLIDO)
-            //              .FirstOrDefault();
-            // HttpContext.Session.SetString("Nombre", nombre ?? userFull.USUARIO_NOMBRE);
+
 
             AgregarBitacora(userFull.USUARIO_ID, "LOGIN_OK", "Acceso correcto");
             return RedirectToAction("Inicio", "Home");
@@ -152,18 +145,7 @@ namespace AbarroteriaKary.Controllers
                 return View(model);
             }
 
-            // 1) Validar contraseña actual
-            //bool actualOk;
-            //if (usuario.USUARIO_SALT != null && usuario.USUARIO_SALT.Length > 0)
-            //    actualOk = PasswordHasher.Verify(model.ContrasenaActual, usuario.USUARIO_SALT, usuario.USUARIO_CONTRASENA);
-            //else
-            //    actualOk = PasswordHasher.VerifyLegacySha256(model.ContrasenaActual, usuario.USUARIO_CONTRASENA);
-
-            //if (!actualOk)
-            //{
-            //    ModelState.AddModelError("", "La contraseña actual no es correcta.");
-            //    return View(model);
-            //}
+           
 
             // 2) Generar nuevo SALT + HASH PBKDF2 y actualizar
             var newSalt = PasswordHasher.GenerateSalt();

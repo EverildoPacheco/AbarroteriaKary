@@ -7,7 +7,7 @@ namespace AbarroteriaKary.ModelsPartial
 {
     public class AreasViewModel
     {
-        [Display(Name = "ID Área")]
+        [Display(Name = "Id área")]
         public string areaId { get; set; }
 
         [Required(ErrorMessage = "El campo área es obligatorio.")]

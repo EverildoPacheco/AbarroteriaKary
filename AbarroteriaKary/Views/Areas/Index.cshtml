@@ -90,12 +90,13 @@
     </div>
 </div>
 
-<!-- Paginador arriba (opcional) -->
 
 
 <!-- Tabla -->
 <div class="table-responsive">
+    
     <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra">
+
         <thead class="text-center thead-kary">
             <tr>
                 @* ★ Encabezados seguros cuando no hay Items *@
@@ -113,7 +114,7 @@
                     <th>Fecha de creación</th>
                     <th>Estado</th>
                 }
-                <th>ACCIONES</th>
+                <th>Acciones</th>
             </tr>
         </thead>
 
@@ -153,55 +154,84 @@
             }
         </tbody>
     </table>
-
-    <!-- Paginador abajo (recomendado) -->
-    @await Html.PartialAsync("_Pager", Model)
+     @await Html.PartialAsync("_Pager", Model)
+   
 </div>
 
 @section Styles {
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/litepicker/dist/css/litepicker.css" />
     <link rel="stylesheet" href="~/css/areas.css" asp-append-version="true" />
+
+ 
 }
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/litepicker/dist/litepicker.js"></script>
     <script>
         (function () {
-            'use strict';
-            const form    = document.getElementById('frmFiltros');
-            const input   = document.getElementById('rangoFechas');
-            const fDesde  = document.getElementById('fDesde');
-            const fHasta  = document.getElementById('fHasta');
-            const btnClr  = document.getElementById('btnClearRange');
-            const estadoH = form.querySelector('input[name="estado"]');
+          'use strict';
 
-            const picker = new Litepicker({
-                element: input,
-                singleMode: false,
-                autoApply: true,
-                allowRepick: true,
-                numberOfMonths: 2,
-                numberOfColumns: 2,
-                format: 'DD/MM/YYYY',
-                lang: 'es-ES',
-            });
+          const form   = document.getElementById('frmFiltros');
+          if (!form) return;
 
-            picker.on('selected', (start, end) => {
-                if (start && end) {
-                    fDesde.value = start.format('YYYY-MM-DD');
-                    fHasta.value = end.format('YYYY-MM-DD');
-                    form.submit();
-                }
-            });
+          const input  = document.getElementById('rangoFechas');
+          const fDesde = document.getElementById('fDesde');
+          const fHasta = document.getElementById('fHasta');
+          const btnClr = document.getElementById('btnClearRange');
+          const estadoH = form.querySelector('input[name="estado"]');
 
+          // Evita doble init
+          if (input && input._litepicker && typeof input._litepicker.destroy === 'function') {
+            input._litepicker.destroy();
+          }
+
+          const start = '@(ViewBag.FDesde as string ?? "")';
+          const end   = '@(ViewBag.FHasta as string ?? "")';
+
+          const picker = new Litepicker({
+            element: input,
+            singleMode: false,
+            autoApply: true,
+            allowRepick: true,
+            numberOfMonths: 2,
+            numberOfColumns: 2,
+            splitView: true,
+            // IMPORTANTE: no incluir "dropdowns" para tener grids al click en header
+            format: 'DD/MM/YYYY',
+            lang: 'es-ES',
+            startDate: start || null,
+            endDate: end || null
+          });
+
+          picker.on('selected', (s, e) => {
+            if (s && e) {
+              fDesde.value = s.format('YYYY-MM-DD');
+              fHasta.value = e.format('YYYY-MM-DD');
+              form.submit();
+            }
+          });
+
+          if (btnClr) {
             btnClr.addEventListener('click', () => {
-                input.value = '';
-                fDesde.value = '';
-                fHasta.value = '';
-                try { if (picker.clearSelection) picker.clearSelection(); } catch {}
-                if (estadoH) estadoH.value = 'ACTIVO';
-                form.submit();
+              input.value = '';
+              fDesde.value = '';
+              fHasta.value = '';
+              try { picker.clearSelection(); } catch {}
+              // Si NO quieres forzar "ACTIVO", comenta la siguiente línea:
+              if (estadoH) estadoH.value = 'ACTIVO';
+              form.submit();
             });
+          }
+
+          // (Solo estética) cursor de “click” en el header
+          picker.on('render', () => {
+            document.querySelectorAll(
+              '.litepicker .month-item-header .month-name, .litepicker .month-item-header .year-number'
+            ).forEach(el => el.style.cursor = 'pointer');
+          });
         })();
     </script>
 }
+
+
+
+
+

@@ -1,87 +1,92 @@
-﻿@model AbarroteriaKary.Models.AREA
-
+﻿@model AbarroteriaKary.ModelsPartial.AreasViewModel
 @{
-    Layout = null;
+    ViewData["Title"] = "Detalle de Área";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool esActivo = Model.estadoActivo;
 }
 
-<!DOCTYPE html>
+<div class="ak-page">
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Details</title>
-</head>
-<body>
+    <!-- Franja 1: Título -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Detalle de área</h1>
+    </div>
 
-<div>
-    <h4>AREA</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AREA_NOMBRE)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AREA_NOMBRE)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.AREA_DESCRIPCION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.AREA_DESCRIPCION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CREADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CREADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_CREACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_CREACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MODIFICADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MODIFICADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_MODIFICACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_MODIFICACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ELIMINADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ELIMINADO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ELIMINADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ELIMINADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_ELIMINACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_ELIMINACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ESTADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ESTADO)
-        </dd>
-    </dl>
+    <!-- Franja 2: Contenido -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+
+            <!-- Card translúcida (mismo look que Crear) -->
+            <div class="card ak-card translucent shadow-sm w-100">
+                <div class="card-body">
+
+                    <!-- 4 items en una sola línea -->
+                    <div class="row g-4 ak-dl-row">
+                        <!-- Código -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Código</div>
+                                <div class="ak-dl__value text-monospace">@Model.areaId</div>
+                            </div>
+                        </div>
+
+                        <!-- Nombre -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Nombre</div>
+                                <div class="ak-dl__value">@Model.areaNombre</div>
+                            </div>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Descripción</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.areaDescripcion) ? Model.areaDescripcion : "—")</div>
+                            </div>
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Estado</div>
+                                <div class="ak-dl__value">
+                                    <span class="badge @(esActivo ? "bg-success" : "bg-danger") text-white px-3 py-2">
+                                        @(esActivo ? "ACTIVO" : "INACTIVO")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Línea extra opcional (fecha) -->
+                    <div class="row g-4 mt-1">
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Fecha de creación</div>
+                                <div class="ak-dl__value">@Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Franja 3: Card de acciones (mismo look) -->
+            <div class="card ak-card ak-actions-card w-100 mt-3">
+                <div class="card-body d-flex justify-content-center gap-4 flex-wrap">
+                    <a asp-action="Index" class="btn btn-ak btn-ak-success">
+                        <i class="fa-solid fa-arrow-left ak-icon"></i> Regresar
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.areaId" class="btn btn-ak btn-ak-primary">
+                        <i class="fa-solid fa-pen-to-square ak-icon"></i> Editar
+                    </a>
+                  
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.AREA_ID">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
-</body>
-</html>
+

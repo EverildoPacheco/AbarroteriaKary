@@ -6,12 +6,13 @@
 :root {
     --ak-lila: #ac8cb6; /* detalles */
     --ak-lila-1: #c8abd1; /* lila base sólido */
-    --ak-form-bg: rgba(200,171,209,.40); /* fondo translúcido para cards */
-    --ak-form-bg-ca: rgba(200,171,209,.30);
-    --ak-cafe-p: #b6978c; /* cancelar */
-    --ak-cafe-cl: #cfafa3; /* hover cancelar */
-    --ak-verde: #9fc095; /* regresar */
-    --ak-celeste: #95b5c0; /* guardar */
+    /*--ak-form-bg: rgba(200,171,209,.40);*/ /* fondo translúcido para cards */
+    --ak-form-bg: #9fc09594; /* fondo translúcido para cards */
+    --ak-form-bg-ca: #95b5c0a6; /* #95b5c0a6*/
+    --ak-cafe-p: #ac8cb6; /* Cancelar */
+    --ak-cafe-cl: #8f7398; /* hover cancelar */
+    --ak-verde: #b6978c; /* Limpiar */
+    --ak-celeste: #7a9d6fff; /* guardar */
 
     --ak-text: #2b2b2b; /* texto primario */
     --ak-text-fo: #3e3e3e;
@@ -48,6 +49,8 @@
 }
 
 @media (min-width:1400px) {
+
+
     .ak-form-wrap {
         width: min(100%, 820px);
     }
@@ -134,10 +137,10 @@
     /* ocultar el estilo nativo y dibujar el nuestro */
     -webkit-appearance: none;
     appearance: none;
-    width: 2rem;
-    height: 2rem;
+    width: 2.5rem;
+    height: 2.5rem;
     border-radius: .1rem;
-    border: 1px solid #a4a1a1; /* borde negro */
+    border: 2px solid #a4a1a1; /* borde negro */
     background-color: #fff; /* fondo sin marcar */
     display: inline-block;
     vertical-align: middle;
@@ -152,8 +155,8 @@
 
     /* estado marcado: fondo a tu color y ✓ negro */
     .form-check-input.ak-checkbox:checked {
-        background-color: var(--ak-celeste); /* o #e0e0e0 si lo prefieres gris */
-        border-color: var(--ak-celeste);
+        background-color: #ffffff; /* o #e0e0e0 si lo prefieres gris */
+        border-color: #a4a1a1;
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M3 8l3 3 7-7' fill='none' stroke='%23111' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
         background-repeat: no-repeat;
         background-position: center;
@@ -319,15 +322,36 @@
 }
 
 /* ============ 8) Paginación ============ */
-/*.ak-pagination .page-link {
-    border-radius: .6rem;
-}*/
 
+
+/* Color de los números (links) del pager */
+.ak-pagination .page-link,
+.ak-pagination .page-link:visited {
+    color: var(--ak-text); /* tu color de texto (negro/gris) */
+}
+
+    /* Hover */
+    .ak-pagination .page-link:hover {
+        color: #111; /* más oscuro al pasar el mouse */
+    }
+
+/* Activo (el recuadro coloreado) */
 .ak-pagination .page-item.active .page-link {
-    background-color: var(--ak-celeste);
-    border-color: var(--ak-celeste);
+    background-color: #ac8cb6;
+    border-color: #ac8cb6;
     color: #111;
 }
+
+/* Deshabilitados (« ‹ › » cuando no aplican) */
+.ak-pagination .page-item.disabled .page-link {
+    color: #9aa0a6; /* gris tenue */
+}
+
+
+
+
+
+
 
 /* ============ 9) Utilidades varias ============ */
 /* Mantener selector “Mostrar: 10 registros por página” en una línea */
@@ -343,3 +367,82 @@
         row-gap: .25rem;
     }
 }
+
+
+/* ============ 10) loading  ============ */
+
+/* ===== Loading global ===== */
+.kary-loading {
+    position: fixed;
+    inset: 0;
+    z-index: 1055; /* por encima de modals (1050 en Bootstrap) */
+    display: grid;
+    place-items: center;
+}
+
+    .kary-loading.d-none {
+        display: none !important;
+    }
+
+.kary-loading__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,.25); /* velo */
+    backdrop-filter: blur(1px);
+}
+
+.kary-loading__box {
+    position: relative;
+    min-width: 180px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: #fff;
+    box-shadow: 0 10px 30px rgba(0,0,0,.18);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--ak-celeste); /* color del spinner (currentColor) */
+}
+
+.kary-loading__spinner {
+    line-height: 0;
+}
+
+.kary-loading__text {
+    color: #333;
+    font-weight: 600;
+}
+
+/* Utilidad: mostrar loading cuando se agregue la clase .is-visible */
+.kary-loading.is-visible {
+    display: grid !important;
+}
+
+
+/*VISTA DETALLES*/
+/* Bloques tipo Definition List (label + valor con barrita) */
+.ak-dl__label {
+    font-weight: 750;
+    color: var(--ak-muted);
+    margin-bottom: .20rem;
+}
+
+.ak-dl__value {
+    position: relative;
+    padding-left: .75rem;
+}
+
+    .ak-dl__value::before {
+        content: "";
+        position: absolute;
+        left: 0;
+        top: .15rem;
+        bottom: .15rem;
+        width: 3px;
+        border-radius: 2px;
+        background: #8f7398; /* barrita vertical (puedes usar var(--ak-celeste) si prefieres) */
+        /*opacity: .9;*/
+    }
+
+/* En pantallas angostas, los 4 items apilan (Bootstrap hace el trabajo).
+                   Si quieres forzar siempre 1 línea en >=992px, ya usamos col-lg-3. */
