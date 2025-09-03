@@ -13,6 +13,10 @@ namespace AbarroteriaKary.Controllers
         {
             return View(); // Busca Views/Home/Inicio.cshtml
         }
+        public IActionResult Privacy()
+        {
+            return View();
+        }
     }
 }
 

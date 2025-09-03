@@ -81,9 +81,10 @@ namespace AbarroteriaKary.Controllers
 
                     // ESTADO setter sincroniza el checkbox EstadoActivo
                     ESTADO = r.ESTADO,
+                    FechaCreacion = r.FECHA_CREACION
 
                     // Auditoría (para que FechaCreacion en el VM tenga valor)
-                   
+
                 });
 
             // 7) Paginación
@@ -124,27 +125,53 @@ namespace AbarroteriaKary.Controllers
 
 
 
-
-
-
-
-        // GET: Roles/Details/5
         public async Task<IActionResult> Details(string id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            // 1) Validación de parámetro
+            if (string.IsNullOrWhiteSpace(id)) return NotFound();
 
-            var rOL = await _context.ROL
-                .FirstOrDefaultAsync(m => m.ROL_ID == id);
-            if (rOL == null)
-            {
-                return NotFound();
-            }
+            // 2) Carga de entidad con el Área (solo lectura)
+            var entidad = await _context.ROL
+                .AsNoTracking()
+                //.Include(p => p.AREA)
+                .FirstOrDefaultAsync(r => r.ROL_ID == id);
 
-            return View(rOL);
+            if (entidad is null) return NotFound();
+
+            // 3) Proyección a ViewModel (lo que usaremos en la vista)
+            var vm = new RolViewModel
+            {
+                IdRol = entidad.ROL_ID,
+                NombreRol = entidad.ROL_NOMBRE,
+                DescripcionRol = entidad.ROL_DESCRIPCION,
+                //AREA_ID = entidad.AREA_ID,
+                //AREA_NOMBRE = entidad.AREA?.AREA_NOMBRE, // ← nombre del Área para mostrar
+                ESTADO = entidad.ESTADO,
+                EstadoActivo = string.Equals(entidad.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase),
+                FechaCreacion = entidad.FECHA_CREACION
+            };
+
+            // 4) Auditoría (opcional): disponible en la vista si la quieres mostrar
+            ViewBag.Auditoria = new
+            {
+                CreadoPor = entidad.CREADO_POR,
+                FechaCreacion = entidad.FECHA_CREACION,
+                ModificadoPor = entidad.MODIFICADO_POR,
+                FechaModificacion = entidad.FECHA_MODIFICACION,
+                EliminadoPor = entidad.ELIMINADO_POR,
+                FechaEliminacion = entidad.FECHA_ELIMINACION
+            };
+
+            // 5) Devolver la vista tipada al ViewModel
+            return View(vm);
         }
+
+
+
+
+
+
+
 
 
 
@@ -252,47 +279,158 @@ namespace AbarroteriaKary.Controllers
 
 
 
+        // GET: Puesto/Edit/5
+        [HttpGet]
+        public async Task<IActionResult> Edit(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return NotFound();
+
+            var entidad = await _context.ROL
+                .AsNoTracking()
+                //.Include(r => r.ROL_ID)
+                .FirstOrDefaultAsync(r => r.ROL_ID == id);
+
+            if (entidad == null) return NotFound();
+
+            var vm = new RolViewModel
+            {
+                IdRol = entidad.ROL_ID,
+                NombreRol = entidad.ROL_NOMBRE,
+                DescripcionRol = entidad.ROL_DESCRIPCION,
+                //AREA_ID = entidad.AREA_ID,
+                //AREA_NOMBRE = entidad.AREA?.AREA_NOMBRE,
+                ESTADO = entidad.ESTADO,
+                EstadoActivo = string.Equals(entidad.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase),
+                FechaCreacion = entidad.FECHA_CREACION
+            };
+
+            //CargarAreas(vm);
+            ViewBag.UpdatedOk = TempData["UpdatedOk"];
+            ViewBag.UpdatedName = TempData["UpdatedName"];
+            ViewBag.NoChanges = TempData["NoChanges"];
+
+            return View(vm);
+        }
 
 
 
 
-
-
-
-        // POST: Roles/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("ROL_ID,ROL_NOMBRE,ROL_DESCRIPCION,CREADO_POR,FECHA_CREACION,MODIFICADO_POR,FECHA_MODIFICACION,ELIMINADO,ELIMINADO_POR,FECHA_ELIMINACION,ESTADO")] ROL rOL)
+        public async Task<IActionResult> Edit(string id, RolViewModel vm)
         {
-            if (id != rOL.ROL_ID)
-            {
+            if (string.IsNullOrWhiteSpace(id) || !string.Equals(id, vm.IdRol, StringComparison.Ordinal))
                 return NotFound();
+
+            if (!ModelState.IsValid)
+            {
+                //CargarAreas(vm);
+                return View(vm);
             }
 
-            if (ModelState.IsValid)
+            var entidad = await _context.ROL.FirstOrDefaultAsync(p => p.ROL_ID == id);
+            if (entidad == null) return NotFound();
+
+            // ====== Normalización de datos nuevos desde el VM ======
+            var nuevoNombre = (vm.NombreRol ?? string.Empty).Trim();
+            var nuevaDesc = vm.DescripcionRol?.Trim();
+            //var nuevaAreaId = vm.AREA_ID;
+            var nuevoEstado = vm.EstadoActivo ? "ACTIVO" : "INACTIVO";
+
+            // ====== ¿Hay cambios? (nombre, desc, área, estado) ======
+            var sinCambios =
+                string.Equals(entidad.ROL_NOMBRE ?? "", nuevoNombre, StringComparison.Ordinal) &&
+                string.Equals(entidad.ROL_DESCRIPCION ?? "", nuevaDesc ?? "", StringComparison.Ordinal) &&
+                //string.Equals(entidad.AREA_ID ?? "", nuevaAreaId ?? "", StringComparison.Ordinal) &&
+                string.Equals(entidad.ESTADO ?? "", nuevoEstado, StringComparison.Ordinal);
+
+            if (sinCambios)
             {
-                try
-                {
-                    _context.Update(rOL);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!ROLExists(rOL.ROL_ID))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction(nameof(Index));
+                TempData["NoChanges"] = true;
+                return RedirectToAction(nameof(Edit), new { id });
             }
-            return View(rOL);
+
+            // ====== Usuario y fecha para auditoría (★ servicio) ======
+            var ahora = DateTime.Now;
+            var usuarioNombre = await _auditoria.GetUsuarioNombreAsync(); // ★ AQUÍ LA INTEGRACIÓN
+
+            // ====== Aplicar cambios base ======
+            entidad.ROL_NOMBRE = nuevoNombre;
+            entidad.ROL_DESCRIPCION = nuevaDesc;
+            //entidad.AREA_ID = nuevaAreaId;
+
+            var estadoOriginalActivo = string.Equals(entidad.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+            var estadoNuevoActivo = vm.EstadoActivo;
+
+            if (estadoOriginalActivo != estadoNuevoActivo)
+            {
+                if (!estadoNuevoActivo)
+                {
+                    // → DESACTIVAR (NO tocar ELIMINADO: debe seguir en listados)
+                    entidad.ESTADO = "INACTIVO";
+
+                    // Opcional: registrar quién lo desactivó y cuándo (sin marcar ELIMINADO)
+                    entidad.ELIMINADO_POR = usuarioNombre;   // rastro de “desactivación”
+                    entidad.FECHA_ELIMINACION = ahora;
+                    // entidad.ELIMINADO = false; // ← asegúrate que permanezca en false
+                }
+                else
+                {
+                    // → REACTIVAR
+                    entidad.ESTADO = "ACTIVO";
+
+                    //Opcional: limpiar rastro, o conservarlo si prefieres histórico
+                    entidad.ELIMINADO_POR = usuarioNombre;
+                    entidad.FECHA_ELIMINACION = ahora;
+
+                    // entidad.ELIMINADO = false; // siempre false para que aparezca en listados
+                }
+            }
+            else
+            {
+                // Sin cambio de estado, solo sincroniza por claridad
+                entidad.ESTADO = estadoNuevoActivo ? "ACTIVO" : "INACTIVO";
+                // No tocar ELIMINADO aquí
+            }
+
+            // ====== Auditoría de modificación ======
+            entidad.MODIFICADO_POR = usuarioNombre;           // ★ nombre real del usuario
+            entidad.FECHA_MODIFICACION = ahora;
+
+            try
+            {
+                await _context.SaveChangesAsync();
+
+                TempData["UpdatedOk"] = true;
+                TempData["UpdatedName"] = entidad.ROL_NOMBRE;
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+            catch (DbUpdateConcurrencyException)
+            {
+                if (!await _context.ROL.AnyAsync(e => e.ROL_ID == id)) return NotFound();
+                throw;
+            }
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         // GET: Roles/Delete/5
         public async Task<IActionResult> Delete(string id)

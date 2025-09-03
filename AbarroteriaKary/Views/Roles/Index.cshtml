@@ -18,7 +18,7 @@
 <!-- CARD / TOOLBAR -->
 <div class="ak-toolbar mb-4 mt-4">
     <div class="ak-toolbar__row">
-        <h1 class="ak-toolbar__title m-0">Puestos</h1>
+        <h1 class="ak-toolbar__title m-0">Rol</h1>
 
         <div class="ak-toolbar__right">
             <!-- Agregar -->
@@ -109,7 +109,6 @@
                 {
                     <th>Código</th>
                     <th>Nombre del puesto</th>
-                    // <th>Área</th>
                     <th>Descripción</th>
                     <th>Fecha de creación</th>
                     <th>Estado</th>
@@ -146,10 +145,10 @@
                             </span>
                         </td>
                         <td class="text-center acciones">
-                            <a href="@Url.Action("Edit", "Puesto", new { id = p.IdRol })" class="btn btn-sm me-2" title="Editar">
+                            <a href="@Url.Action("Edit", "Roles", new { id = p.IdRol })" class="btn btn-sm me-2" title="Editar">
                                 <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">
                             </a>
-                            <a href="@Url.Action("Details", "Puesto", new { id = p.IdRol })" class="btn btn-sm me-2" title="Ver">
+                            <a href="@Url.Action("Details", "Roles", new { id = p.IdRol })" class="btn btn-sm me-2" title="Ver">
                                 <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
                             </a>
                         </td>

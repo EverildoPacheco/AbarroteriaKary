@@ -461,3 +461,17 @@
         z-index: 1080
     }
 */
+
+/* ============ 11) IMGEN INDEX  ============ */
+
+/* Centro Home (logo grande) */
+.home-center {
+    height: calc(80vh - 64px);
+    display: grid;
+    place-items: center;
+}
+
+.home-logo {
+    width: min(80%, 500%);
+    height: auto;
+}

@@ -4,3 +4,38 @@
 <h1>@ViewData["Title"]</h1>
 
 <p>Use this page to detail your site's privacy policy.</p>
+
+
+<table id="tabla">
+    <thead>
+        <tr>
+            <th data-sort="text">Nombre</th>
+            <th data-sort="number">Edad</th>
+            <th data-sort="text">Ciudad</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td>Ana</td><td>28</td><td>Quetzaltenango</td></tr>
+        <tr><td>Luis</td><td>34</td><td>Guatemala</td></tr>
+        <tr><td>María</td><td>19</td><td>Antigua</td></tr>
+    </tbody>
+</table>
+
+<script>
+    const collator = new Intl.Collator('es', { numeric: true, sensitivity: 'base' });
+    document.querySelectorAll('#tabla thead th').forEach((th, idx) => {
+      th.addEventListener('click', () => {
+        const tbody = th.closest('table').tBodies[0];
+        const rows = [...tbody.rows];
+        const type = th.dataset.sort || 'text';
+        const dir = th.dataset.dir = th.dataset.dir === 'asc' ? 'desc' : 'asc';
+        rows.sort((a,b) => {
+          const A = a.cells[idx].innerText.trim();
+          const B = b.cells[idx].innerText.trim();
+          const cmp = type === 'number' ? (parseFloat(A) - parseFloat(B)) : collator.compare(A,B);
+          return dir === 'asc' ? cmp : -cmp;
+        });
+        rows.forEach(r => tbody.appendChild(r));
+      });
+    });
+</script>
