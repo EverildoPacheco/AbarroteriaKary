@@ -38,6 +38,18 @@ namespace AbarroteriaKary.Services.Correlativos
         Task<string> PeekNextPuestoIdAsync(CancellationToken ct = default);
         Task<string> NextPuestoIdAsync(CancellationToken ct = default);
 
+        // EMPLEADO (EMP0000001)
+        Task<string> PeekNextPersonaIdAsync(CancellationToken ct = default);
+        Task<string> NextPersonaIdAsync(CancellationToken ct = default);
+
+        // EMPLEADO (ROL0000007)
+        Task<string> PeekNextRolIdAsync(CancellationToken ct = default);
+        Task<string> NextRolIdAsync(CancellationToken ct = default);
+
+
+
+
+
         // Ejemplos para otras entidades (cuando las necesite):
         // Task<string> PeekNextRolIdAsync(CancellationToken ct = default);
         // Task<string> NextRolIdAsync(CancellationToken ct = default);

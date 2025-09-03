@@ -1,0 +1,144 @@
+﻿
+
+@model AbarroteriaKary.ModelsPartial.PuestoViewModel
+
+@{
+    ViewData["Title"] = "Editar Puesto";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var updatedOk = TempData["UpdatedOk"] as bool?;
+    var updatedName = TempData["UpdatedName"] as string ?? "";
+    var noChanges = TempData["NoChanges"] as bool?;
+}
+
+<div class="ak-page">
+    <!-- Título -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Editar puesto</h1>
+    </div>
+
+    <!-- Formulario -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+
+            <form asp-action="Edit" asp-route-id="@Model.PUESTO_ID" method="post" id="form-edit-puesto" novalidate>
+                @Html.AntiForgeryToken()
+
+                <div class="alert alert-danger mb-3" asp-validation-summary="All" role="alert"></div>
+
+                <div class="card ak-card translucent shadow-sm w-100">
+                    <div class="card-body ak-form">
+
+                        <!-- Código (readonly) -->
+                        <div class="mb-3">
+                            <label asp-for="PUESTO_ID" class="form-label">Código</label>
+                            <input asp-for="PUESTO_ID" class="form-control" readonly />
+                        </div>
+
+                        <!-- Nombre -->
+                        <div class="mb-3">
+                            <label asp-for="PUESTO_NOMBRE" class="form-label">Nombre*</label>
+                            <input asp-for="PUESTO_NOMBRE" class="form-control" placeholder="Ej. Cajero(a)" />
+                            <span asp-validation-for="PUESTO_NOMBRE" class="text-danger"></span>
+                        </div>
+
+                        <!-- Área (combo) -->
+                        <div class="mb-3">
+                            <label asp-for="AREA_ID" class="form-label">Área*</label>
+                            <select asp-for="AREA_ID" class="form-select" asp-items="Model.AreasOpciones">
+                                <option value="">-- Seleccione un área --</option>
+                            </select>
+                            <span asp-validation-for="AREA_ID" class="text-danger"></span>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label asp-for="PUESTO_DESCRIPCION" class="form-label">Descripción</label>
+                            <textarea asp-for="PUESTO_DESCRIPCION" class="form-control" rows="3"
+                                      placeholder="Ej. Atención en caja, arqueo, servicio al cliente"></textarea>
+                            <span asp-validation-for="PUESTO_DESCRIPCION" class="text-danger"></span>
+                        </div>
+
+                        <!-- Estado (checkbox cuadrado negro) -->
+                        <div class="form-check mb-3 d-flex align-items-center gap-2">
+                            <input class="form-check-input ak-checkbox" asp-for="EstadoActivo" />
+                            <label class="form-check-label fw-bold" asp-for="EstadoActivo"></label>
+                        </div>
+
+                        @* (Opcional) mostrar la fecha de creación solo lectura
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de creación</label>
+                            <input class="form-control" value="@(Model.FECHA_CREACION?.ToString("dd/MM/yyyy HH:mm"))" readonly />
+                        </div>
+                        *@
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card ak-card ak-actions-card w-100 mt-3">
+                    <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+                        <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">
+                            <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+                        </a>
+                        <button type="reset" class="btn btn-ak btn-ak-success">
+                            <i class="fa-solid fa-eraser ak-icon"></i> Restablecer
+                        </button>
+                        <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                            <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const form = document.getElementById('form-edit-puesto');
+            const btn  = document.getElementById('btn-guardar');
+
+            // Evitar doble submit (si no quieres deshabilitar, comenta la línea)
+            if (form) {
+                form.addEventListener('submit', function () {
+                    if (!form.checkValidity()) return;
+                    if (btn) btn.disabled = true;
+                });
+
+                // Proteger salida con cambios sin guardar (usa .js-leave en tus enlaces)
+                KarySwal.guardUnsaved('#form-edit-puesto', '.js-leave');
+            }
+
+            // Éxito: ACTUALIZADO -> 1 solo botón "Aceptar" y salir al listado
+            @if ((TempData["UpdatedOk"] as bool?) == true)
+            {
+                    <text>
+                    KarySwal.saveSuccess({
+                        icon: 'success',
+                        title: '¡Actualizado exitosamente!',
+                        text: 'Los cambios de "@(TempData["UpdatedName"] as string ?? "")" se guardaron correctamente.',
+                        confirmText: 'Aceptar',
+                        showDenyButton: false,
+                        indexUrl: '@Url.Action("Index", "Puesto")'   // redirige al listado de Puestos
+                    });
+                    </text>
+            }
+
+            // Info: NO SE MODIFICÓ NADA -> botón "Aceptar" que redirige al listado
+            @if ((TempData["NoChanges"] as bool?) == true)
+            {
+                    <text>
+                    KarySwal.info({
+                        title: 'Sin cambios',
+                        text: 'No se realizó ninguna modificación.',
+                        confirmText: 'Aceptar',
+                        redirectUrl: '@Url.Action("Index", "Puesto")' // redirige al listado
+                    });
+                    </text>
+            }
+        })();
+    </script>
+}

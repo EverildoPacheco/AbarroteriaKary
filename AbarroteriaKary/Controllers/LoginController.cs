@@ -7,6 +7,10 @@ using AbarroteriaKary.Data;
 using AbarroteriaKary.ModelsPartial;
 using AbarroteriaKary.Services.Security;
 using AbarroteriaKary.Models;
+using System.Security.Claims;                             // ★ nuevo
+using Microsoft.AspNetCore.Authentication;                // ★ nuevo
+using Microsoft.AspNetCore.Authentication.Cookies;        // ★ nuevo
+
 
 namespace AbarroteriaKary.Controllers
 {
@@ -33,7 +37,9 @@ namespace AbarroteriaKary.Controllers
         // POST: /Login
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Index(LoginViewModels model)
+        //public IActionResult Index(LoginViewModels model)
+        public async Task<IActionResult> Index(LoginViewModels model)   // ★ ahora async
+
         {
             if (!ModelState.IsValid)
                 return View(model);
@@ -111,6 +117,35 @@ namespace AbarroteriaKary.Controllers
 
 
 
+            // ★★★ EMISIÓN DE CLAIMS + SIGNIN (manteniendo su sesión) ★★★
+            var claims = new List<Claim>
+{
+            new Claim("USUARIO_ID", userFull.USUARIO_ID),        // para búsquedas si hiciera falta
+            new Claim("UsuarioNombre", userFull.USUARIO_NOMBRE), // nombre legible para auditoría
+            new Claim(ClaimTypes.Name, userFull.USUARIO_NOMBRE), // estándar (opcional pero útil)
+            // Si tiene roles: new Claim(ClaimTypes.Role, rol)
+};
+
+            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+            var principal = new ClaimsPrincipal(identity);
+
+            // Crea cookie de autenticación (aparte de su cookie KARY_USER y su Session)
+            await HttpContext.SignInAsync(
+                CookieAuthenticationDefaults.AuthenticationScheme,
+                principal,
+                new AuthenticationProperties
+                {
+                    IsPersistent = false, // la persistencia del "recordarme" usted ya la maneja con KARY_USER
+                    AllowRefresh = true
+                }
+            );
+
+
+
+
+
+
+
             AgregarBitacora(userFull.USUARIO_ID, "LOGIN_OK", "Acceso correcto");
             return RedirectToAction("Inicio", "Home");
         }
@@ -179,28 +214,32 @@ namespace AbarroteriaKary.Controllers
             return RedirectToAction("Inicio", "Home");
         }
 
-        //// GET: /Login/Logout
-        //public IActionResult Logout()
-        //{
-        //    AgregarBitacora(HttpContext.Session.GetString("UsuarioId"), "LOGOUT", "Salida de sesión");
-        //    HttpContext.Session.Clear();
-        //    HttpContext.Response.Cookies.Delete(".AspNetCore.Session");
-        //    return RedirectToAction("Index", "Login");
-        //}
+       
 
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Logout()
+        //public IActionResult Logout()
+        public async Task<IActionResult> Logout()    // ★ ahora async
+
         {
+            //var uid = HttpContext.Session.GetString("UsuarioId");
+            //AgregarBitacora(uid, "LOGOUT", "Salida de sesión");
+
+            //HttpContext.Session.Clear();
+            //Response.Cookies.Delete(".AspNetCore.Session");
+
+            //// Si guardó una cookie “Recordarme”, no es necesario borrarla para cerrar sesión,
+            //// porque solo rellena el usuario en el login; si quiere, puede dejarla.
+            //return RedirectToAction("Index", "Login");
             var uid = HttpContext.Session.GetString("UsuarioId");
             AgregarBitacora(uid, "LOGOUT", "Salida de sesión");
 
+            // ★ cerrar cookie de autenticación
+            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+
             HttpContext.Session.Clear();
             Response.Cookies.Delete(".AspNetCore.Session");
-
-            // Si guardó una cookie “Recordarme”, no es necesario borrarla para cerrar sesión,
-            // porque solo rellena el usuario en el login; si quiere, puede dejarla.
             return RedirectToAction("Index", "Login");
         }
 

@@ -444,5 +444,20 @@
         /*opacity: .9;*/
     }
 
-/* En pantallas angostas, los 4 items apilan (Bootstrap hace el trabajo).
-                   Si quieres forzar siempre 1 línea en >=992px, ya usamos col-lg-3. */
+/* wwwroot/css/site.css (o donde tengas el estilo) */
+/*#kary-loading {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,.55);
+    backdrop-filter: blur(1px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .15s
+}
+
+    #kary-loading.is-open {
+        opacity: 1;
+        pointer-events: all;
+        z-index: 1080
+    }
+*/

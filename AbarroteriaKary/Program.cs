@@ -1,9 +1,12 @@
-
+ï»¿
 using AbarroteriaKary.Data;
 using AbarroteriaKary.Models;
+using AbarroteriaKary.Services.Correlativos;
+using AbarroteriaKary.Services.Auditoria;
+using Microsoft.AspNetCore.Authentication.Cookies; // arriba
+
 using Microsoft.EntityFrameworkCore;
 using System;
-using AbarroteriaKary.Services.Correlativos; 
 
 
 
@@ -24,15 +27,43 @@ option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection
 // Registro del servicio de correlativos
 builder.Services.AddScoped<ICorrelativoService, CorrelativoService>();
 
+builder.Services.AddHttpContextAccessor();                   // requerido por AuditoriaService
+builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
+
+
+
+
+builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.LoginPath = "/Login/Index";
+        options.AccessDeniedPath = "/Login/Index";
+        options.SlidingExpiration = true;
+
+        // Opcionales recomendados:
+        options.ExpireTimeSpan = TimeSpan.FromHours(8);
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SameSite = SameSiteMode.Lax;      // o Strict si su flujo lo permite
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // requiere HTTPS (ya usa UseHttpsRedirection)
+        // options.Cookie.Name = "Kary.Auth";
+    });
+
+builder.Services.AddAuthorization();
+
+
+
 
 
 // Session
 builder.Services.AddSession(options =>
 {
     options.Cookie.Name = ".Kary.Session";
-    options.IdleTimeout = TimeSpan.FromMinutes(30); // ajuste según su política
+    options.IdleTimeout = TimeSpan.FromHours(8); // en lugar de 30 min, si lo desea
     options.Cookie.IsEssential = true;
+    options.Cookie.HttpOnly = true;
+    options.Cookie.SameSite = SameSiteMode.Lax;
 });
+
 
 // Antiforgery (opcional, ya usamos [ValidateAntiForgeryToken])
 builder.Services.AddAntiforgery();
@@ -52,53 +83,12 @@ app.UseRouting();
 
 app.UseSession(); // <-- importante: antes de UseEndpoints
 
+app.UseAuthentication();   // â˜… antes de UseAuthorization
+app.UseAuthorization();
+
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Login}/{action=Index}/{id?}");
 
 app.Run();
 
-
-
-
-
-
-
-
-
-
-//using AbarroteriaKary.Data;
-//using AbarroteriaKary.Models;
-//using Microsoft.EntityFrameworkCore;
-//using System;
-
-//var builder = WebApplication.CreateBuilder(args);
-
-
-//// Conexion EFCORE
-//builder.Services.AddDbContext<KaryDbContext>(option =>
-//option.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-
-//// Add services to the container.
-//builder.Services.AddControllersWithViews();
-
-
-//var app = builder.Build();
-
-//// Configure the HTTP request pipeline.
-//if (!app.Environment.IsDevelopment())
-//{
-//    app.UseExceptionHandler("/Home/Error");
-//}
-//app.UseStaticFiles();
-
-//app.UseRouting();
-
-//app.UseAuthorization();
-
-//app.MapControllerRoute(
-//    name: "default",
-//    pattern: "{controller=Login}/{action=Index}/{id?}");
-
-//app.Run();

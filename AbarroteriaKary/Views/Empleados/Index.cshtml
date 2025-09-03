@@ -1,8 +1,16 @@
-﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.AreasViewModel>
+﻿@* ================================
+   EMPLEADOS / INDEX
+   - Estilo idéntico a Index de Puestos/Áreas
+   - Filtros: Estado, Búsqueda, Rango de fechas (FECHA_CREACION de EMPLEADO)
+   - Columnas: ID Empleado, Nombre completo, Puesto, CUI, NIT, Teléfono, Género, Fecha ingreso, Estado
+   - Paginación con _Pager
+   ================================= *@
+
+@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.EmpleadoViewModel>
 @using System.Globalization
 
 @{
-    ViewData["Title"] = "Áreas";
+    ViewData["Title"] = "Empleados";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     string estado = (ViewBag.Estado as string) ?? "ACTIVO";
@@ -18,12 +26,11 @@
 <!-- CARD / TOOLBAR -->
 <div class="ak-toolbar mb-4 mt-4">
     <div class="ak-toolbar__row">
-        <h1 class="ak-toolbar__title m-0">Áreas</h1>
+        <h1 class="ak-toolbar__title m-0">Empleados</h1>
 
         <div class="ak-toolbar__right">
             <!-- Agregar -->
-            <a asp-action="Create"
-               class="btn btn-ak-primary btn-ak-square d-inline-flex align-items-center gap-2">
+            <a asp-action="Create" class="btn btn-ak-primary btn-ak-square d-inline-flex align-items-center gap-2">
                 <i class="fa-solid fa-circle-plus"></i><span>Agregar</span>
             </a>
 
@@ -79,39 +86,46 @@
                 <input type="hidden" name="fHasta" id="fHasta" value="@fHasta" />
 
                 <!-- BUSCADOR -->
-                <div class="input-group ak-search" style="width:clamp(220px, 24vw, 260px);">
+                <div class="input-group ak-search" style="width:clamp(260px, 24vw, 320px);">
                     <button type="submit" class="input-group-text bg-white border-end-0" title="Buscar">
                         <i class="fas fa-search"></i>
                     </button>
-                    <input name="q" value="@q" class="form-control border-start-0" placeholder="Buscar por ID o nombre" />
+                    <input name="q" value="@q" class="form-control border-start-0"
+                           placeholder="Buscar por ID, nombre, CUI, NIT o puesto" />
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-
-
 <!-- Tabla -->
 <div class="table-responsive">
-    
     <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra">
-
         <thead class="text-center thead-kary">
             <tr>
-                @* ★ Encabezados seguros cuando no hay Items *@
                 @if (Model.Items.Any())
                 {
-                    <th>@Html.DisplayNameFor(m => m.Items[0].areaId)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].areaNombre)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].estadoArea)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].Id)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].NombreCompleto)</th>
+                    <th>Puesto</th>
+     @* header fijo para mostrar nombre/ID según disponibilidad *@
+                    <th>@Html.DisplayNameFor(m => m.Items[0].CUI)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].NIT)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].TelefonoMovil)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].Genero)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].FechaIngreso)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
                 }
                 else
                 {
                     <th>Código</th>
-                    <th>Área</th>
-                    <th>Fecha de creación</th>
+                    <th>Nombre completo</th>
+                    <th>Puesto</th>
+                    <th>CUI</th>
+                    <th>NIT</th>
+                    <th>Teléfono</th>
+                    <th>Género</th>
+                    <th>Fecha ingreso</th>
                     <th>Estado</th>
                 }
                 <th>Acciones</th>
@@ -122,30 +136,38 @@
             @if (!Model.Items.Any())
             {
                 <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">
+                    <td colspan="10" class="text-center py-4 text-muted">
                         <i class="fa-regular fa-face-frown me-1"></i> No hay resultados.
                     </td>
                 </tr>
             }
             else
             {
-                foreach (var area in Model.Items)
+                foreach (var e in Model.Items)
                 {
-                    bool esActivo = string.Equals(area.estadoArea, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+                    bool esActivo = string.Equals(e.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+
                     <tr>
-                        <td class="text-monospace">@Html.DisplayFor(_ => area.areaId)</td>
-                        <td>@Html.DisplayFor(_ => area.areaNombre)</td>
-                        <td>@area.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                        <td class="text-monospace">@e.Id</td>
+                        <td>@e.NombreCompleto</td>
+                        <td>@(string.IsNullOrWhiteSpace((e as dynamic)?.PuestoNombre) ? e.PuestoId : ((dynamic)e).PuestoNombre)</td>
+                        <td>@(string.IsNullOrWhiteSpace(e.CUI) ? "-" : e.CUI)</td>
+                        <td>@(string.IsNullOrWhiteSpace(e.NIT) ? "-" : e.NIT)</td>
+                        <td>@(string.IsNullOrWhiteSpace(e.TelefonoMovil) ? "-" : e.TelefonoMovil)</td>
+                        <td>@(string.IsNullOrWhiteSpace(e.Genero) ? "-" : e.Genero)</td>
+                        <td>@e.FechaIngreso.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT"))</td>
+
                         <td class="text-center">
                             <span class="badge text-white @(esActivo ? "bg-success" : "bg-danger")">
                                 @(esActivo ? "Activo" : "Inactivo")
                             </span>
                         </td>
+
                         <td class="text-center acciones">
-                            <a href="@Url.Action("Edit", "Areas", new { id = area.areaId })" class="btn btn-sm me-2" title="Editar">
+                            <a href="@Url.Action("Edit", "Empleados", new { id = e.Id })" class="btn btn-sm me-2" title="Editar">
                                 <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">
                             </a>
-                            <a href="@Url.Action("Details", "Areas", new { id = area.areaId })" class="btn btn-sm me-2" title="Ver">
+                            <a href="@Url.Action("Details", "Empleados", new { id = e.Id })" class="btn btn-sm me-2" title="Ver">
                                 <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
                             </a>
                         </td>
@@ -154,11 +176,10 @@
             }
         </tbody>
     </table>
-     @await Html.PartialAsync("_Pager", Model)
-   
+
+    @* Paginador (mismo parcial que Áreas/Puestos) *@
+    @await Html.PartialAsync("_Pager", Model)
 </div>
-
-
 
 @section Scripts {
     <script>
@@ -190,7 +211,6 @@
             numberOfMonths: 2,
             numberOfColumns: 2,
             splitView: true,
-            // IMPORTANTE: no incluir "dropdowns" para tener grids al click en header
             format: 'DD/MM/YYYY',
             lang: 'es-ES',
             startDate: start || null,
@@ -211,7 +231,7 @@
               fDesde.value = '';
               fHasta.value = '';
               try { picker.clearSelection(); } catch {}
-              // Si NO quieres forzar "ACTIVO", comenta la siguiente línea:
+              // Si quiere forzar "ACTIVO" al limpiar:
               if (estadoH) estadoH.value = 'ACTIVO';
               form.submit();
             });
@@ -226,8 +246,3 @@
         })();
     </script>
 }
-
-
-
-
-

@@ -31,8 +31,19 @@ namespace AbarroteriaKary.Services.Correlativos
             => await NextAsync("PUE", 7, _context.PUESTO.Select(p => p.PUESTO_ID), ct);
 
 
+        // ----------------- empleado -----------------
+        public async Task<string> PeekNextPersonaIdAsync(CancellationToken ct = default)
+          => await PeekAsync("PER", 7, _context.PERSONA.Select(x => x.PERSONA_ID), ct);
 
+        public async Task<string> NextPersonaIdAsync(CancellationToken ct = default)
+            => await NextAsync("PER", 7, _context.PERSONA.Select(x => x.PERSONA_ID), ct);
 
+        // ----------------- ROL -----------------
+        public async Task<string> PeekNextRolIdAsync(CancellationToken ct = default)
+          => await PeekAsync("ROL", 7, _context.ROL.Select(x => x.ROL_ID), ct);
+
+        public async Task<string> NextRolIdAsync(CancellationToken ct = default)
+            => await NextAsync("ROL", 7, _context.ROL.Select(x => x.ROL_ID), ct);
 
 
 

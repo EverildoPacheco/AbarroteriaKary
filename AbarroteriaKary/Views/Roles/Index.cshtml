@@ -1,8 +1,8 @@
-﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.AreasViewModel>
+﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.RolViewModel>
 @using System.Globalization
 
 @{
-    ViewData["Title"] = "Áreas";
+    ViewData["Title"] = "Rol";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     string estado = (ViewBag.Estado as string) ?? "ACTIVO";
@@ -18,7 +18,7 @@
 <!-- CARD / TOOLBAR -->
 <div class="ak-toolbar mb-4 mt-4">
     <div class="ak-toolbar__row">
-        <h1 class="ak-toolbar__title m-0">Áreas</h1>
+        <h1 class="ak-toolbar__title m-0">Puestos</h1>
 
         <div class="ak-toolbar__right">
             <!-- Agregar -->
@@ -83,34 +83,34 @@
                     <button type="submit" class="input-group-text bg-white border-end-0" title="Buscar">
                         <i class="fas fa-search"></i>
                     </button>
-                    <input name="q" value="@q" class="form-control border-start-0" placeholder="Buscar por ID o nombre" />
+                    <input name="q" value="@q" class="form-control border-start-0" placeholder="Buscar por ID, nombre o área" />
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-
-
 <!-- Tabla -->
 <div class="table-responsive">
-    
     <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra">
-
         <thead class="text-center thead-kary">
             <tr>
                 @* ★ Encabezados seguros cuando no hay Items *@
                 @if (Model.Items.Any())
                 {
-                    <th>@Html.DisplayNameFor(m => m.Items[0].areaId)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].areaNombre)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].IdRol)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].NombreRol)</th>
+                    // <th>@Html.DisplayNameFor(m => m.Items[0].AREA_NOMBRE)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].DescripcionRol)</th>
                     <th>@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].estadoArea)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
                 }
                 else
                 {
                     <th>Código</th>
-                    <th>Área</th>
+                    <th>Nombre del puesto</th>
+                    // <th>Área</th>
+                    <th>Descripción</th>
                     <th>Fecha de creación</th>
                     <th>Estado</th>
                 }
@@ -122,30 +122,34 @@
             @if (!Model.Items.Any())
             {
                 <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">
+                    <td colspan="7" class="text-center py-4 text-muted">
                         <i class="fa-regular fa-face-frown me-1"></i> No hay resultados.
                     </td>
                 </tr>
             }
             else
             {
-                foreach (var area in Model.Items)
+                foreach (var p in Model.Items)
                 {
-                    bool esActivo = string.Equals(area.estadoArea, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+                    bool esActivo = string.Equals(p.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
                     <tr>
-                        <td class="text-monospace">@Html.DisplayFor(_ => area.areaId)</td>
-                        <td>@Html.DisplayFor(_ => area.areaNombre)</td>
-                        <td>@area.FechaCreacion.ToString("dd/MM/yyyy")</td>
+                        <td class="text-monospace">@Html.DisplayFor(_ => p.IdRol)</td>
+                        <td>@Html.DisplayFor(_ => p.NombreRol)</td>
+                        <td class="text-muted">
+                            @(!string.IsNullOrWhiteSpace(p.DescripcionRol) ? p.DescripcionRol : "-")
+                        </td>
+                        <td>@(p.FechaCreacion?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT")))</td>
+
                         <td class="text-center">
                             <span class="badge text-white @(esActivo ? "bg-success" : "bg-danger")">
                                 @(esActivo ? "Activo" : "Inactivo")
                             </span>
                         </td>
                         <td class="text-center acciones">
-                            <a href="@Url.Action("Edit", "Areas", new { id = area.areaId })" class="btn btn-sm me-2" title="Editar">
+                            <a href="@Url.Action("Edit", "Puesto", new { id = p.IdRol })" class="btn btn-sm me-2" title="Editar">
                                 <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">
                             </a>
-                            <a href="@Url.Action("Details", "Areas", new { id = area.areaId })" class="btn btn-sm me-2" title="Ver">
+                            <a href="@Url.Action("Details", "Puesto", new { id = p.IdRol })" class="btn btn-sm me-2" title="Ver">
                                 <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
                             </a>
                         </td>
@@ -154,8 +158,9 @@
             }
         </tbody>
     </table>
-     @await Html.PartialAsync("_Pager", Model)
-   
+
+    @* Paginador (mismo parcial que Áreas) *@
+    @await Html.PartialAsync("_Pager", Model)
 </div>
 
 
@@ -211,7 +216,7 @@
               fDesde.value = '';
               fHasta.value = '';
               try { picker.clearSelection(); } catch {}
-              // Si NO quieres forzar "ACTIVO", comenta la siguiente línea:
+              // Si NO quiere forzar "ACTIVO" al limpiar, comente la siguiente línea:
               if (estadoH) estadoH.value = 'ACTIVO';
               form.submit();
             });
@@ -226,8 +231,3 @@
         })();
     </script>
 }
-
-
-
-
-

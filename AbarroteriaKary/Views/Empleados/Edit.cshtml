@@ -1,0 +1,231 @@
+﻿@model AbarroteriaKary.ModelsPartial.EmpleadoViewModel
+
+@{
+    ViewData["Title"] = "Editar Empleado";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var updatedOk = TempData["UpdatedOk"] as bool?;
+    var updatedName = TempData["UpdatedName"] as string ?? "";
+    var noChanges = TempData["NoChanges"] as bool?;
+}
+
+<div class="ak-page">
+    <!-- Título -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Editar empleado</h1>
+    </div>
+
+    <!-- Formulario -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+
+            <!-- IMPORTANTE: id en ruta y antifalsificación -->
+            <form asp-action="Edit" asp-route-id="@Model.Id" method="post" id="form-edit-empleado" novalidate>
+                @Html.AntiForgeryToken()
+
+                <!-- Resumen de validaciones -->
+                <div class="alert alert-danger mb-3" asp-validation-summary="All" role="alert"></div>
+
+                <div class="card ak-card translucent shadow-sm w-100">
+                    <div class="card-body ak-form">
+
+                        <!-- Código (readonly, compartido PERSONA/EMPLEADO) -->
+                        <div class="mb-3">
+                            <label class="form-label">Código</label>
+                            <input asp-for="Id" class="form-control" readonly />
+                        </div>
+
+
+                        <!-- Nombres (3 en fila) -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="PrimerNombre" class="form-label">Primer nombre*</label>
+                                <input asp-for="PrimerNombre" class="form-control" />
+                                <span asp-validation-for="PrimerNombre" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="SegundoNombre" class="form-label">Segundo nombre</label>
+                                <input asp-for="SegundoNombre" class="form-control" />
+                                <span asp-validation-for="SegundoNombre" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="TercerNombre" class="form-label">Tercer nombre</label>
+                                <input asp-for="TercerNombre" class="form-control" />
+                                <span asp-validation-for="TercerNombre" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Apellidos (3 en fila) -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="PrimerApellido" class="form-label">Primer apellido*</label>
+                                <input asp-for="PrimerApellido" class="form-control" />
+                                <span asp-validation-for="PrimerApellido" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="SegundoApellido" class="form-label">Segundo apellido</label>
+                                <input asp-for="SegundoApellido" class="form-control" />
+                                <span asp-validation-for="SegundoApellido" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="ApellidoCasada" class="form-label">Apellido de casada</label>
+                                <input asp-for="ApellidoCasada" class="form-control" />
+                                <span asp-validation-for="ApellidoCasada" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Identificación y contacto (3 en fila) -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="NIT" class="form-label">NIT</label>
+                                <input asp-for="NIT" class="form-control" placeholder="Ej. 1234567-8 o 1234567K" />
+                                <span asp-validation-for="NIT" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="CUI" class="form-label">CUI</label>
+                                <input asp-for="CUI" class="form-control" placeholder="13 dígitos" />
+                                <span asp-validation-for="CUI" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="TelefonoMovil" class="form-label">Teléfono móvil</label>
+                                <input asp-for="TelefonoMovil" class="form-control" placeholder="8 dígitos" />
+                                <span asp-validation-for="TelefonoMovil" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Correo y Dirección (2 en fila) -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Correo" class="form-label">Correo</label>
+                                <input asp-for="Correo" class="form-control" placeholder="nombre@dominio.com" />
+                                <span asp-validation-for="Correo" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Direccion" class="form-label">Dirección</label>
+                                <textarea asp-for="Direccion" class="form-control" rows="1" placeholder="Calle, avenida, zona, municipio..."></textarea>
+                                <span asp-validation-for="Direccion" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Genero" class="form-label">Género*</label>
+                                <select asp-for="Genero" class="form-select" asp-items="Model.ComboGeneros">
+                                    <option value="">-- Seleccione --</option>
+                                </select>
+                                <span asp-validation-for="Genero" class="text-danger"></span>
+                            </div>
+                        </div>
+
+
+                        <!-- Fila de 3: Género, Puesto, Estado -->
+                        <div class="row">
+                            
+
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="PuestoId" class="form-label">Puesto*</label>
+                                <select asp-for="PuestoId" class="form-select" asp-items="Model.ComboPuestos">
+                                    <option value="">-- Seleccione un puesto --</option>
+                                </select>
+                                <span asp-validation-for="PuestoId" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="FechaNacimiento" class="form-label">Fecha de nacimiento</label>
+                                <input asp-for="FechaNacimiento" type="date" class="form-control" />
+                                <span asp-validation-for="FechaNacimiento" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="FechaIngreso" class="form-label">Fecha de ingreso*</label>
+                                <input asp-for="FechaIngreso" type="date" class="form-control" />
+                                <span asp-validation-for="FechaIngreso" class="text-danger"></span>
+                            </div>
+                          
+                        </div>
+
+                        <div class="col-md-4 mb-3 d-flex align-items-end">
+                            <div class="form-check d-flex align-items-center gap-2">
+                                <input class="form-check-input ak-checkbox" asp-for="EstadoActivo" />
+                                <label class="form-check-label fw-bold" asp-for="EstadoActivo"></label>
+                            </div>
+                            @* Opcional: si quieres que viaje el string también *@
+                            <input type="hidden" asp-for="ESTADO" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card ak-card ak-actions-card w-100 mt-3">
+                    <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+                        <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">
+                            <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+                        </a>
+                        <button type="reset" class="btn btn-ak btn-ak-success">
+                            <i class="fa-solid fa-eraser ak-icon"></i> Restablecer
+                        </button>
+                        <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                            <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const form = document.getElementById('form-edit-empleado');
+            const btn  = document.getElementById('btn-guardar');
+
+            // Evitar doble submit
+            if (form) {
+                form.addEventListener('submit', function () {
+                    if (!form.checkValidity()) return;
+                    if (btn) btn.disabled = true;
+                });
+
+                // Proteger salida con cambios sin guardar
+                if (window.KarySwal?.guardUnsaved) {
+                    KarySwal.guardUnsaved('#form-edit-empleado', '.js-leave');
+                }
+            }
+
+            // (Opcional) Sincronizar hidden ESTADO con checkbox, si deseas verlo en el POST
+            const chk = document.getElementById('EstadoActivo');
+            const est = document.getElementById('ESTADO');
+            if (chk && est) {
+                const sync = () => est.value = chk.checked ? 'ACTIVO' : 'INACTIVO';
+                chk.addEventListener('change', sync);
+                sync();
+            }
+
+            // Éxito: actualizado
+            @if ((TempData["UpdatedOk"] as bool?) == true)
+            {
+                    <text>
+                    KarySwal.saveSuccess({
+                        icon: 'success',
+                        title: '¡Actualizado exitosamente!',
+                        text: 'Los cambios de "@(updatedName)" se guardaron correctamente.',
+                        confirmText: 'Aceptar',
+                        showDenyButton: false,
+                        indexUrl: '@Url.Action("Index", "Empleados")'
+                    });
+                    </text>
+            }
+
+            // Sin cambios
+            @if ((TempData["NoChanges"] as bool?) == true)
+            {
+                    <text>
+                    KarySwal.info({
+                        title: 'Sin cambios',
+                        text: 'No se realizó ninguna modificación.',
+                        confirmText: 'Aceptar',
+                        redirectUrl: '@Url.Action("Index", "Empleados")'
+                    });
+                    </text>
+            }
+        })();
+    </script>
+}
