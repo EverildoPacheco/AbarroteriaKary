@@ -1,0 +1,169 @@
+﻿@* ================================
+   USUARIOS / CREATE (estilo Áreas/Puestos)
+   RUTA: Views/Usuarios/Create.cshtml
+   MODELO: UsuarioCreateViewModel
+   ================================= *@
+
+@model AbarroteriaKary.ModelsPartial.UsuarioCreateViewModel
+
+@{
+    ViewData["Title"] = "Nuevo Usuario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // PRG (Post-Redirect-Get): valores enviados desde el controlador tras guardar
+    var savedOk = TempData["SavedOk"] as bool?;
+    var savedName = TempData["SavedName"] as string ?? "";
+}
+
+<div class="ak-page">
+    <!-- Encabezado -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Ingresar nuevo usuario</h1>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+
+            <!-- Formulario -->
+            <form asp-action="Create" method="post" id="form-create-usuario" novalidate>
+                @Html.AntiForgeryToken()
+
+                <!-- Resumen de validaciones -->
+                <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+
+                <!-- Card del formulario -->
+                <div class="card ak-card translucent shadow-sm w-100">
+                    <div class="card-body ak-form">
+
+                        <!-- Código (solo lectura, lo genera el correlativo) -->
+                        <div class="mb-3">
+                            <label asp-for="UsuarioId" class="form-label">Código</label>
+                            <input asp-for="UsuarioId" class="form-control" readonly />
+                            <div class="form-text">Se genera automáticamente al guardar.</div>
+                        </div>
+
+                        <!-- Usuario (login) -->
+                        <div class="mb-3">
+                            <label asp-for="NombreUsuario" class="form-label">Usuario*</label>
+                            <input asp-for="NombreUsuario" class="form-control" placeholder="Ej. jperez" />
+                            <span asp-validation-for="NombreUsuario" class="text-danger"></span>
+                        </div>
+
+                        <!-- Rol (combo con roles activos) -->
+                        <div class="mb-3">
+                            <label asp-for="RolId" class="form-label">Rol*</label>
+                            <select asp-for="RolId" class="form-select" asp-items="Model.Roles">
+                                <option value="">-- Seleccione un rol --</option>
+                            </select>
+                            <span asp-validation-for="RolId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Empleado (solo empleados sin usuario) -->
+                        <div class="mb-3">
+                            <label asp-for="EmpleadoId" class="form-label">Empleado*</label>
+                            <select asp-for="EmpleadoId" class="form-select" asp-items="Model.EmpleadosDisponibles">
+                                <option value="">-- Seleccione un empleado --</option>
+                            </select>
+                            <span asp-validation-for="EmpleadoId" class="text-danger"></span>
+                        </div>
+
+                        <!-- Contraseña temporal + Confirmación -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ContraseñaTemporal" class="form-label">Contraseña temporal*</label>
+                                <div class="input-group">
+                                    <input asp-for="ContraseñaTemporal" class="form-control" />
+                                    <button type="button" class="btn btn-outline-secondary" id="btnGenPwd"
+                                            title="Generar contraseña alfanumérica">
+                                        Generar
+                                    </button>
+                                </div>
+                                <span asp-validation-for="ContraseñaTemporal" class="text-danger"></span>
+                                <div class="form-text">Solo letras y números (sin caracteres especiales).</div>
+                            </div>
+
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ConfirmarContraseña" class="form-label">Confirmar contraseña*</label>
+                                <input asp-for="ConfirmarContraseña" class="form-control" />
+                                <span asp-validation-for="ConfirmarContraseña" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Estado (checkbox Activo) -->
+                        <div class="form-check mb-3 d-flex align-items-center gap-2">
+                            <input class="form-check-input ak-checkbox js-loading" asp-for="EstadoActivo" />
+                            <label class="form-check-label fw-bold js-loading" asp-for="EstadoActivo"></label>
+                        </div>
+
+                        @* (Opcional) Mostrar fecha de creación solo informativa:
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de creación</label>
+                            <input value="@(Model.FechaRegistro?.ToString("dd/MM/yyyy HH:mm") ?? "")" class="form-control" readonly />
+                        </div>
+                        *@
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card ak-card ak-actions-card w-100 mt-3">
+                    <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+                        <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">
+                            <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+                        </a>
+                        <button type="reset" class="btn btn-ak btn-ak-success">
+                            <i class="fa-solid fa-eraser ak-icon"></i> Limpiar
+                        </button>
+                        <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                            <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const form = document.getElementById('form-create-usuario');
+
+            // Proteger salida con cambios sin guardar (links/botones con .js-leave)
+            if (form && window.KarySwal && KarySwal.guardUnsaved) {
+                KarySwal.guardUnsaved('#form-create-usuario', '.js-leave');
+            }
+
+            // Generar contraseña temporal alfanumérica (sin caracteres especiales)
+            const btn = document.getElementById('btnGenPwd');
+            const pwd  = document.getElementById('ContraseñaTemporal');
+            const pwd2 = document.getElementById('ConfirmarContraseña');
+
+            btn?.addEventListener('click', () => {
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                const len = 10; // ajuste según su política
+                let out = '';
+                for (let i = 0; i < len; i++) out += chars[Math.floor(Math.random() * chars.length)];
+                if (pwd)  pwd.value  = out;
+                if (pwd2) pwd2.value = out;
+            });
+
+            // Modal de éxito tras PRG (usa TempData del controlador)
+            @if ((TempData["SavedOk"] as bool?) == true)
+            {
+                    <text>
+                    if (window.KarySwal?.saveSuccess) {
+                        KarySwal.saveSuccess({
+                            title: '¡Usuario guardado!',
+                            text: 'El registro "@(TempData["SavedName"] as string ?? "")" se creó correctamente.',
+                            indexUrl: '@Url.Action("Index", "Usuarios")',
+                            createUrl: '@Url.Action("Create", "Usuarios")'
+                        });
+                    }
+                    </text>
+            }
+        })();
+    </script>
+}

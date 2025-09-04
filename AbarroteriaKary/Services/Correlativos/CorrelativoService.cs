@@ -45,7 +45,12 @@ namespace AbarroteriaKary.Services.Correlativos
         public async Task<string> NextRolIdAsync(CancellationToken ct = default)
             => await NextAsync("ROL", 7, _context.ROL.Select(x => x.ROL_ID), ct);
 
+        // ----------------- USUARIO -----------------
+        public async Task<string> PeekNextUsuarioIdAsync(CancellationToken ct = default)
+          => await PeekAsync("USU", 7, _context.USUARIO.Select(x => x.USUARIO_ID), ct);
 
+        public async Task<string> NextUsuarioIdAsync(CancellationToken ct = default)
+            => await NextAsync("USU", 7, _context.USUARIO.Select(x => x.USUARIO_ID), ct);
 
 
         // ----------------- Núcleo reutilizable -----------------

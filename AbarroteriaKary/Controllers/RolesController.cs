@@ -168,14 +168,6 @@ namespace AbarroteriaKary.Controllers
 
 
 
-
-
-
-
-
-
-
-
         [HttpGet]
         public async Task<IActionResult> Create()
         {

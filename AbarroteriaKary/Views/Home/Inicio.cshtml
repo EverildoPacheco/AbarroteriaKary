@@ -1,6 +1,7 @@
 ﻿@{
     ViewData["Title"] = "Inicio";
     Layout = "~/Views/Shared/_Layout.cshtml";
+    var flashMsg = TempData["Mensaje"] as string;  // se usa solo para el modal
 }
 
 <div class="home-center">
@@ -8,10 +9,44 @@
     <img src="~/img/LOGO LOGO - copia.png" alt="CreArte Manualidades" class="home-logo" />
 </div>
 
-@* Si quieres mostrar un aviso con tu color #C5D930, ejemplo: *@
-@if (TempData["Mensaje"] != null)
-{
-    <div class="alert alert-paleta mt-3" role="alert">
-        @TempData["Mensaje"]
-    </div>
+
+
+@section Scripts {
+    @if (!string.IsNullOrWhiteSpace(flashMsg))
+    {
+        <script>
+            (function () {
+                // Serializar de forma segura para JS
+                const msg = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(flashMsg.Trim()));
+
+                if (window.KarySwal && typeof KarySwal.alert === 'function') {
+                    KarySwal.alert({
+                        icon: 'success',
+                        title: '¡Listo!',
+                        text: msg,
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK',
+                        timer: 4500,
+                        timerProgressBar: true,
+                        allowOutsideClick: true,
+                        allowEscapeKey: true
+                    });
+                } else if (window.Swal) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Listo!',
+                        text: msg,
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK',
+                        timer: 4500,
+                        timerProgressBar: true,
+                        allowOutsideClick: true,
+                        allowEscapeKey: true
+                    });
+                } else {
+                    console.warn('SweetAlert2 no está disponible. Mensaje:', msg);
+                }
+            })();
+        </script>
+    }
 }

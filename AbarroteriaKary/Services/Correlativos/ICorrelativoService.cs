@@ -47,6 +47,9 @@ namespace AbarroteriaKary.Services.Correlativos
         Task<string> NextRolIdAsync(CancellationToken ct = default);
 
 
+        // EMPLEADO (USU0000007)
+        Task<string> PeekNextUsuarioIdAsync(CancellationToken ct = default);
+        Task<string> NextUsuarioIdAsync(CancellationToken ct = default);
 
 
 

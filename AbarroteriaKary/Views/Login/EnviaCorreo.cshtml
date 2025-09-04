@@ -1,0 +1,208 @@
+﻿@model AbarroteriaKary.ModelsPartial.RecoveryRequestViewModel
+@{
+    // Mismo look & feel de la pantalla de cambio de contraseña
+    Layout = null;
+
+    string pageTitle = "Recuperar contraseña";
+    string helpText = "Ingresa tu correo y te enviaremos un enlace para restablecer tu contraseña. El enlace vence en 15 minutos.";
+
+    var flashInfo = TempData["RecoveryInfo"] as string;   // éxito / info
+    var flashErr = TempData["RecoveryError"] as string;  // error
+}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Abarrotería Kary - @pageTitle</title>
+
+    <!-- Bootstrap -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Íconos (para el avioncito) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
+    <!-- Mismo CSS que la página de cambio -->
+    <link rel="stylesheet" href="~/css/cambioContrasena.css" asp-append-version="true" />
+
+    <style>
+        /* Oculta el summary cuando no hay errores */
+        .validation-summary-valid {
+            display: none;
+        }
+
+        .validation-summary-errors {
+            display: block;
+        }
+    </style>
+</head>
+
+<body class="cc-body">
+    <div class="cc-band"></div>
+
+    <div class="container cc-wrap d-flex align-items-center justify-content-center">
+        <div class="cc-card shadow">
+            <!-- Logo -->
+            <div class="cc-avatar">
+                <img src="~/img/LOGO.png" alt="logo" class="cc-avatar-img" />
+            </div>
+
+            <h2 class="cc-title text-center">@pageTitle</h2>
+            <p class="cc-help">@helpText</p>
+
+            <form asp-action="EnviaCorreo" asp-controller="Login" method="post" novalidate id="form-recovery" class="vstack gap-3">
+                @Html.AntiForgeryToken()
+
+                <!-- Summary (modelo + campos) -->
+                <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+
+                <!-- Email -->
+                <div>
+                    <label asp-for="Email" class="form-label fw-semibold">Correo electrónico</label>
+                    <input asp-for="Email" class="form-control cc-input" placeholder="tu@correo.com" />
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+            @*     <button type="submit" class="btn cc-btn w-100 mt-2 d-inline-flex align-items-center justify-content-center gap-2" id="btn-enviar">
+                    <i class="fa-solid fa-paper-plane"></i>
+                    <span>Enviar enlace</span>
+                </button> *@
+
+                <button type="submit"
+                        class="btn cc-btn w-100 mt-2 d-inline-flex align-items-center justify-content-center gap-2"
+                        id="btn-enviar">
+                    <i class="fa-solid fa-paper-plane" id="ico-plane"></i>
+                    <i class="fa-solid fa-spinner fa-spin d-none" id="ico-spin"></i>
+                    <span id="lbl-btn">Enviar enlace</span>
+                </button>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation@1.19.5/dist/jquery.validate.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery-validation-unobtrusive@3.2.12/dist/jquery.validate.unobtrusive.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 (modal) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        (function () {
+          'use strict';
+
+          const form = document.getElementById('form-recovery');
+          const btn  = document.getElementById('btn-enviar');
+          const icoPlane = document.getElementById('ico-plane');
+          const icoSpin  = document.getElementById('ico-spin');
+          const lblBtn   = document.getElementById('lbl-btn');
+
+          if (!form || !btn) return;
+
+          // Asegura que unobtrusive esté montado
+          if (typeof $ !== 'undefined' && !$(form).data('validator')) {
+            try { $.validator.unobtrusive.parse(form); } catch {}
+          }
+
+          const hasJqVal = (typeof $ !== 'undefined') && !!$(form).data('validator');
+
+          function setLoading(on) {
+            btn.disabled = !!on;
+            if (icoPlane) icoPlane.classList.toggle('d-none', !!on);
+            if (icoSpin)  icoSpin.classList.toggle('d-none', !on);
+            if (lblBtn)   lblBtn.textContent = on ? 'Enviando…' : 'Enviar enlace';
+
+            // Loading modal (opcional pero recomendado)
+            if (window.Swal) {
+              if (on) {
+                Swal.fire({
+                  title: 'Enviando…',
+                  html: 'Por favor espera un momento',
+                  allowOutsideClick: false,
+                  allowEscapeKey: false,
+                  didOpen: () => { Swal.showLoading(); }
+                });
+              } else {
+                // Cierra si estaba abierto
+                try { Swal.close(); } catch {}
+              }
+            }
+          }
+
+          // Si el form es inválido, re-habilita
+          if (hasJqVal) {
+            $(form).on('invalid-form.validate', function () {
+              setLoading(false);
+            });
+
+            form.addEventListener('submit', function () {
+              const ok = $(form).valid();
+              if (!ok) { setLoading(false); return; }
+              setLoading(true);
+
+              // Failsafe: si no navega en 8s, libera UI
+              setTimeout(() => setLoading(false), 8000);
+            });
+          } else {
+            form.addEventListener('submit', function (e) {
+              if (!form.checkValidity()) {
+                e.preventDefault(); e.stopPropagation();
+                setLoading(false);
+                form.classList.add('was-validated');
+                return;
+              }
+              setLoading(true);
+              setTimeout(() => setLoading(false), 8000);
+            });
+          }
+
+          // ───────────── Modales post-back (TempData) ─────────────
+          // ÉXITO + redirección al Login
+          @if (!string.IsNullOrWhiteSpace(TempData["RecoveryInfo"] as string))
+          {
+                <text>
+                (function () {
+                  const msg = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["RecoveryInfo"] as string));
+                  const loginUrl = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Url.Action("Index", "Login")));
+                  // Cierra posible "Enviando…" por si quedó abierto
+                  try { Swal.close(); } catch {}
+                  if (window.Swal) {
+                    Swal.fire({
+                      icon: 'info',
+                      title: 'Solicitud recibida',
+                      text: msg,
+                      showConfirmButton: true,
+                      confirmButtonText: 'OK',
+                      timer: 6000,
+                      timerProgressBar: true
+                    }).then(() => { window.location.href = loginUrl; });
+                  }
+                })();
+                </text>
+          }
+
+          // ERROR
+          @if (!string.IsNullOrWhiteSpace(TempData["RecoveryError"] as string))
+          {
+                <text>
+                (function () {
+                  const msg = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["RecoveryError"] as string));
+                  try { Swal.close(); } catch {}
+                  if (window.Swal) {
+                    Swal.fire({
+                      icon: 'error',
+                      title: 'No se pudo enviar',
+                      text: msg,
+                      showConfirmButton: true,
+                      confirmButtonText: 'OK'
+                    });
+                  }
+                })();
+                </text>
+          }
+        })();
+    </script>
+
+</body>
+</html>

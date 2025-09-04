@@ -20,7 +20,16 @@
     <!-- Tu CSS de fondo degradado y estilos del login -->
     <link rel="stylesheet" href="~/css/login.css" asp-append-version="true" />
 </head>
+<style>
+    /* Oculta el summary cuando no hay errores */
+    .validation-summary-valid {
+        display: none;
+    }
 
+    .validation-summary-errors {
+        display: block;
+    }
+</style>
 <body>
     <!-- Header fijo arriba-derecha -->
     <header class="auth-header">
@@ -61,10 +70,13 @@
 @*                         <div asp-validation-summary="All" class="alert alert-danger d-none" data-valmsg-summary="true"></div>
  *@
 
-                        @if (ViewData.ModelState.ErrorCount > 0 && ViewData.ModelState["Usuario"]?.Errors.Count == 0 && ViewData.ModelState["Password"]?.Errors.Count == 0)
+                       @*  @if (ViewData.ModelState.ErrorCount > 0 && ViewData.ModelState["Usuario"]?.Errors.Count == 0 && ViewData.ModelState["Password"]?.Errors.Count == 0)
                         {
                             @Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })
-                        }
+                        } *@
+
+                        <div asp-validation-summary="All" class="alert alert-danger mb-3 validation-summary" role="alert"></div>
+
                         <!-- Usuario -->
                         <div>
 
@@ -89,8 +101,9 @@
                                 </button> *@
                             </div>
                             <span asp-validation-for="Password" class="text-danger small"></span>
+
                             <div class="text-end mt-1">
-                                <a href="#" class="small text-muted">¿Olvidaste tu contraseña?</a>
+                                <a asp-controller="Login" asp-action="EnviaCorreo" class="small text-muted">¿Olvidaste tu contraseña?</a>
                             </div>
                             
                         </div>

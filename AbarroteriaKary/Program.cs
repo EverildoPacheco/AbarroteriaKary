@@ -31,8 +31,16 @@ builder.Services.AddHttpContextAccessor();                   // requerido por Au
 builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 
 
+//Correo Electronico
+builder.Services.Configure<AbarroteriaKary.Services.Mail.SmtpOptions>(
+    builder.Configuration.GetSection("Mail"));
+builder.Services.AddScoped<AbarroteriaKary.Services.Mail.IEmailSender,
+                           AbarroteriaKary.Services.Mail.SmtpEmailSender>();
 
 
+
+
+//Autenticacion
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
     {

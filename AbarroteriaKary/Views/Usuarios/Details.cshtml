@@ -1,0 +1,254 @@
+﻿@model AbarroteriaKary.ModelsPartial.UsuarioDetailsViewModel
+@{
+    ViewData["Title"] = "Detalle de Usuario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool esActivo = Model.EstadoActivo;
+    bool requiereCambio = Model.CambioInicial;
+
+    var aud = ViewBag.Auditoria; 
+    // { CreadoPor, FechaCreacion, ModificadoPor, FechaModificacion, EliminadoPor, FechaEliminacion }
+}
+
+<div class="ak-page">
+
+    <!-- Franja 1: Título -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Detalle de usuario</h1>
+    </div>
+
+    <!-- Franja 2: Contenido -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+
+            <!-- Card translúcida (mismo look que Crear/Editar) -->
+            <div class="card ak-card translucent shadow-sm w-100">
+                <div class="card-body">
+
+                    <!-- Primera fila: 4 items -->
+                    <div class="row g-4 ak-dl-row">
+                        <!-- Código -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Código</div>
+                                <div class="ak-dl__value text-monospace">@Model.UsuarioId</div>
+                            </div>
+                        </div>
+
+                        <!-- Usuario (login) -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Usuario</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.NombreUsuario) ? Model.NombreUsuario : "—")</div>
+                            </div>
+                        </div>
+
+                        <!-- Rol -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Rol</div>
+                                <div class="ak-dl__value">
+                                    @(
+                                      !string.IsNullOrWhiteSpace(Model.RolNombre) 
+                                      ? Model.RolNombre 
+                                      : (!string.IsNullOrWhiteSpace(Model.RolId) ? Model.RolId : "—")
+                                     )
+                                </div>
+                                <div class="form-text">ID de rol: @(Model.RolId ?? "—")</div>
+                            </div>
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Estado</div>
+                                <div class="ak-dl__value">
+                                    <span class="badge @(esActivo ? "bg-success" : "bg-danger") text-white px-3 py-2">
+                                        @(esActivo ? "ACTIVO" : "INACTIVO")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Segunda fila: Empleado + Cambio inicial + Fechas -->
+                    <div class="row g-4 mt-1">
+                        <!-- Empleado -->
+                        <div class="col-12 col-lg-4">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Empleado</div>
+                                <div class="ak-dl__value">
+                                    @(
+                                      !string.IsNullOrWhiteSpace(Model.EmpleadoNombre) 
+                                      ? Model.EmpleadoNombre 
+                                      : "—"
+                                     )
+                                </div>
+                                <div class="form-text">ID de empleado: @(Model.EmpleadoId ?? "—")</div>
+                            </div>
+                        </div>
+
+                        <!-- Cambio inicial -->
+                        <div class="col-12 col-lg-4">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Cambio inicial</div>
+                                <div class="ak-dl__value">
+                                    <span class="badge @(requiereCambio ? "bg-warning text-dark" : "bg-secondary") px-3 py-2">
+                                        @(requiereCambio ? "Requiere cambio" : "Normal")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Fecha de registro -->
+                        <div class="col-12 col-lg-4">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Fecha de registro</div>
+                                <div class="ak-dl__value">
+                                    @(Model.FechaRegistro == null
+                                        ? "—"
+                                        : string.Format("{0:dd/MM/yyyy HH:mm}", Model.FechaRegistro))
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tercera fila: Último cambio de contraseña (opcional) -->
+                    <div class="row g-4 mt-1">
+                        <div class="col-12 col-lg-4">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Último cambio de contraseña</div>
+                                <div class="ak-dl__value">
+                                    @(Model.UltimoCambioPwd == null
+                                        ? "—"
+                                        : string.Format("{0:dd/MM/yyyy HH:mm}", Model.UltimoCambioPwd))
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            @* ─────────────────────────────────────────────────────────────
+               Toggle Bootstrap para mostrar/ocultar la tarjeta Auditoría
+               (solo se renderiza si hay datos en ViewBag.Auditoria)
+               ───────────────────────────────────────────────────────────── *@
+            @if (aud != null)
+            {
+                <!-- Switch para mostrar Auditoría -->
+                <div class="d-flex justify-content-end mt-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="toggleAuditoria">
+                        <label class="form-check-label" for="toggleAuditoria">Mostrar auditoría</label>
+                    </div>
+                </div>
+
+                <!-- Card de Auditoría (oculta por defecto) -->
+                <div id="cardAuditoria" class="collapse">
+                    <div class="card ak-card w-100 mt-3">
+                        <div class="card-body">
+                            <h6 class="mb-3">
+                                <i class="fa-regular fa-clipboard me-2"></i>Auditoría
+                            </h6>
+
+                            <div class="row g-4 ak-dl-row">
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Creado por</div>
+                                        <div class="ak-dl__value">@((string)aud.CreadoPor ?? "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Fecha de creación</div>
+                                        <div class="ak-dl__value">
+                                            @(aud.FechaCreacion == null
+                                                ? "—"
+                                                : string.Format("{0:dd/MM/yyyy HH:mm}", aud.FechaCreacion))
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Modificado por</div>
+                                        <div class="ak-dl__value">@((string)aud.ModificadoPor ?? "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Fecha de modificación</div>
+                                        <div class="ak-dl__value">
+                                            @(aud.FechaModificacion == null
+                                                ? "—"
+                                                : string.Format("{0:dd/MM/yyyy HH:mm}", aud.FechaModificacion))
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-4 mt-1">
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Eliminado por</div>
+                                        <div class="ak-dl__value">@((string)aud.EliminadoPor ?? "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Fecha de eliminación</div>
+                                        <div class="ak-dl__value">
+                                            @(aud.FechaEliminacion == null
+                                                ? "—"
+                                                : string.Format("{0:dd/MM/yyyy HH:mm}", aud.FechaEliminacion))
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Franja 3: Card de acciones -->
+            <div class="card ak-card ak-actions-card w-100 mt-3">
+                <div class="card-body d-flex justify-content-center gap-4 flex-wrap">
+                    <a asp-action="Index" class="btn btn-ak btn-ak-success">
+                        <i class="fa-solid fa-arrow-left ak-icon"></i> Regresar
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.UsuarioId" class="btn btn-ak btn-ak-primary">
+                        <i class="fa-solid fa-pen-to-square ak-icon"></i> Editar
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        (function () {
+            // Toggle de auditoría con Bootstrap Collapse
+            const sw = document.getElementById('toggleAuditoria');
+            const box = document.getElementById('cardAuditoria');
+            if (!sw || !box) return;
+
+            // Inicializa el collapse sin mostrarlo al cargar
+            let col = null;
+            try {
+                col = new bootstrap.Collapse(box, { toggle: false });
+            } catch (e) { /* si Bootstrap no está, fallback abajo */ }
+
+            sw.addEventListener('change', function () {
+                if (col) {
+                    if (sw.checked) col.show(); else col.hide();
+                } else {
+                    // Fallback sin Bootstrap JS (toggle de clase)
+                    box.classList.toggle('show', sw.checked);
+                }
+            });
+        })();
+    </script>
+}
