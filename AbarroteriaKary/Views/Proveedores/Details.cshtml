@@ -1,93 +1,246 @@
-﻿@model AbarroteriaKary.Models.PROVEEDOR
-
+﻿@model AbarroteriaKary.ModelsPartial.ProveedorFormViewModel
 @{
-    Layout = null;
+    ViewData["Title"] = "Detalle de Proveedor";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool esActivo = Model.EstadoActivo;
+    var aud = ViewBag.Auditoria; // { CreadoPor, FechaCreacion, ModificadoPor, FechaModificacion, EliminadoPor, FechaEliminacion }
 }
 
-<!DOCTYPE html>
+<div class="ak-page">
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Details</title>
-</head>
-<body>
+    <!-- Franja 1: Título -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Detalle de proveedor</h1>
+    </div>
 
-<div>
-    <h4>PROVEEDOR</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PROVEEDOR_OBSERVACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PROVEEDOR_OBSERVACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CREADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CREADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_CREACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_CREACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MODIFICADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MODIFICADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_MODIFICACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_MODIFICACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ELIMINADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ELIMINADO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ELIMINADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ELIMINADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_ELIMINACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_ELIMINACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ESTADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ESTADO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.EMPRESA)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.EMPRESA)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PROVEEDORNavigation)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PROVEEDORNavigation.PERSONA_ID)
-        </dd>
-    </dl>
+    <!-- Franja 2: Contenido -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+
+            <!-- Card translúcida (mismo look que Crear/Editar) -->
+            <div class="card ak-card translucent shadow-sm w-100">
+                <div class="card-body">
+
+                    <!-- 4 items en una sola línea -->
+                    <div class="row g-4 ak-dl-row">
+                        <!-- Código -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Código</div>
+                                <div class="ak-dl__value text-monospace">@Model.Id</div>
+                            </div>
+                        </div>
+
+                        <!-- Proveedor (nombre completo) -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Proveedor</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.NombreCompleto) ? Model.NombreCompleto : "—")</div>
+                            </div>
+                        </div>
+
+                        <!-- Empresa -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Empresa</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.Empresa) ? Model.Empresa : "—")</div>
+                            </div>
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Estado</div>
+                                <div class="ak-dl__value">
+                                    <span class="badge @(esActivo ? "bg-success" : "bg-danger") text-white px-3 py-2">
+                                        @(esActivo ? "ACTIVO" : "INACTIVO")
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Línea extra: Contacto + Fecha -->
+                    <div class="row g-4 mt-1">
+                        <!-- Teléfono móvil -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Teléfono móvil</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.TelefonoMovil) ? Model.TelefonoMovil : "—")</div>
+                            </div>
+                        </div>
+
+                        <!-- Teléfono empresa (usando TelefonoCasa en VM) -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Teléfono empresa</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.TelefonoCasa) ? Model.TelefonoCasa : "—")</div>
+                            </div>
+                        </div>
+
+                        <!-- Correo -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Correo</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.Correo) ? Model.Correo : "—")</div>
+                            </div>
+                        </div>
+
+                        <!-- Fecha de creación -->
+                        <div class="col-12 col-lg-3">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Fecha de creación</div>
+                                <div class="ak-dl__value">
+                                    @(Model.FECHA_CREACION == default(DateTime)
+                                        ? "—"
+                                        : string.Format("{0:dd/MM/yyyy HH:mm}", Model.FECHA_CREACION))
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- (Opcional) Dirección en una fila completa -->
+                    <div class="row g-4 mt-1">
+                        <div class="col-12">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Dirección</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.Direccion) ? Model.Direccion : "—")</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- (Opcional) Observación -->
+                    <div class="row g-4 mt-1">
+                        <div class="col-12">
+                            <div class="ak-dl">
+                                <div class="ak-dl__label">Observación</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.ProveedorObservacion) ? Model.ProveedorObservacion : "—")</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            @* ─────────────────────────────────────────────────────────────
+               Toggle Bootstrap para mostrar/ocultar la tarjeta Auditoría
+               (solo se renderiza si hay datos en ViewBag.Auditoria)
+               ───────────────────────────────────────────────────────────── *@
+            @if (aud != null)
+            {
+                <!-- Switch para mostrar Auditoría -->
+                <div class="d-flex justify-content-end mt-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="toggleAuditoria">
+                        <label class="form-check-label" for="toggleAuditoria">Mostrar auditoría</label>
+                    </div>
+                </div>
+
+                <!-- Card de Auditoría (oculta por defecto) -->
+                <div id="cardAuditoria" class="collapse">
+                    <div class="card ak-card w-100 mt-3">
+                        <div class="card-body">
+                            <h6 class="mb-3">
+                                <i class="fa-regular fa-clipboard me-2"></i>Auditoría
+                            </h6>
+
+                            <div class="row g-4 ak-dl-row">
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Creado por</div>
+                                        <div class="ak-dl__value">@((string)aud.CreadoPor ?? "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Fecha de creación</div>
+                                        <div class="ak-dl__value">
+                                            @(aud.FechaCreacion == null
+                                                ? "—"
+                                                : string.Format("{0:dd/MM/yyyy HH:mm}", aud.FechaCreacion))
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Modificado por</div>
+                                        <div class="ak-dl__value">@((string)aud.ModificadoPor ?? "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Fecha de modificación</div>
+                                        <div class="ak-dl__value">
+                                            @(aud.FechaModificacion == null
+                                                ? "—"
+                                                : string.Format("{0:dd/MM/yyyy HH:mm}", aud.FechaModificacion))
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-4 mt-1">
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Eliminado por</div>
+                                        <div class="ak-dl__value">@((string)aud.EliminadoPor ?? "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Fecha de eliminación</div>
+                                        <div class="ak-dl__value">
+                                            @(aud.FechaEliminacion == null
+                                                ? "—"
+                                                : string.Format("{0:dd/MM/yyyy HH:mm}", aud.FechaEliminacion))
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Franja 3: Card de acciones (mismo look) -->
+            <div class="card ak-card ak-actions-card w-100 mt-3">
+                <div class="card-body d-flex justify-content-center gap-4 flex-wrap">
+                    <a asp-action="Index" class="btn btn-ak btn-ak-success">
+                        <i class="fa-solid fa-arrow-left ak-icon"></i> Regresar
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-ak btn-ak-primary">
+                        <i class="fa-solid fa-pen-to-square ak-icon"></i> Editar
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.PROVEEDOR_ID">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
-</body>
-</html>
+
+@section Scripts{
+    <script>
+        (function () {
+            // Toggle de auditoría con Bootstrap Collapse
+            const sw = document.getElementById('toggleAuditoria');
+            const box = document.getElementById('cardAuditoria');
+            if (!sw || !box) return;
+
+            let col = null;
+            try {
+                col = new bootstrap.Collapse(box, { toggle: false }); // inicia oculto
+            } catch (e) { /* si bootstrap no está, fallback abajo */ }
+
+            sw.addEventListener('change', function () {
+                if (col) {
+                    if (sw.checked) col.show(); else col.hide();
+                } else {
+                    // Fallback sin Bootstrap JS
+                    box.classList.toggle('show', sw.checked);
+                }
+            });
+        })();
+    </script>
+}

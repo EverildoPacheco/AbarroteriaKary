@@ -68,31 +68,25 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         (function () {
-            const form = document.getElementById('form-create-area');
-            const btn  = document.getElementById('btn-guardar');
-
-            // Evitar doble envío, sin cambiar el texto del botón
-            if (form) {
-                form.addEventListener('submit', function () {
-                    if (!form.checkValidity()) return;
-                });
-
-                // Proteger cambios sin guardar (enlaces/botones con .js-leave)
-                KarySwal.guardUnsaved('#form-create-area', '.js-leave');
-            }
-
-            // Modal de éxito tras PRG (TempData desde el controlador)
-            @if ((TempData["SavedOk"] as bool?) == true)
-            {
-                    <text>
-                    KarySwal.saveSuccess({
-                        title: '¡Área guardada!',
-                        text: 'El registro "@(TempData["SavedName"] as string ?? "")" se creó correctamente.',
-                        indexUrl: '@Url.Action("Index", "Areas")',
-                        createUrl: '@Url.Action("Create", "Areas")'
-                    });
-                    </text>
-            }
+          const formId = '#form-create-proveedor'; // ← Debe coincidir con el id del form
+          if (window.KarySwal && KarySwal.guardUnsaved) {
+            KarySwal.guardUnsaved(formId, '.js-leave, a[href]:not([href^="#"])');
+          }
+          // Modal de éxito PRG (ya lo tenía)
+          @if ((TempData["SavedOk"] as bool?) == true)
+          {
+                  <text>
+                  if (window.KarySwal && KarySwal.saveSuccess) {
+                      KarySwal.saveSuccess({
+                          title: '¡Proveedor guardado!',
+                          text: 'El registro "@(TempData["SavedName"] as string ?? "")" se creó correctamente.',
+                          indexUrl: '@Url.Action("Index", "Proveedores")',
+                          createUrl: '@Url.Action("Create", "Proveedores")'
+                      });
+                  }
+                  </text>
+          }
         })();
     </script>
 }
+

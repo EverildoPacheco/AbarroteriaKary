@@ -53,6 +53,13 @@ namespace AbarroteriaKary.Services.Correlativos
             => await NextAsync("USU", 7, _context.USUARIO.Select(x => x.USUARIO_ID), ct);
 
 
+        public async Task<string> PeekNextProveedorIdAsync(CancellationToken ct = default)
+         => await PeekAsync("PRO", 7, _context.PROVEEDOR.Select(x => x.PROVEEDOR_ID), ct);
+
+        public async Task<string> NextProveedorIdAsync(CancellationToken ct = default)
+            => await NextAsync("PRO", 7, _context.PROVEEDOR.Select(x => x.PROVEEDOR_ID), ct);
+
+
         // ----------------- Núcleo reutilizable -----------------
         /// <summary>
         /// Obtiene un “siguiente” tentativo (solo mostrar), sin bloquear.

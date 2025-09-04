@@ -177,6 +177,12 @@
             const form = document.getElementById('form-edit-empleado');
             const btn  = document.getElementById('btn-guardar');
 
+
+              // Proteger salida con cambios sin guardar
+                if (window.KarySwal && KarySwal.guardUnsaved) {
+                    KarySwal.guardUnsaved('#form-edit-proveedor', '.js-leave');
+                }
+            }
             // Evitar doble submit
             if (form) {
                 form.addEventListener('submit', function () {

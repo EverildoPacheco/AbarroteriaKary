@@ -95,13 +95,30 @@
                 </button>
 
                 <div id="sm-Proveedor" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Proveedor", "Index")"
-                       asp-controller="Proveedor" asp-action="Index">Proveedor</a>
+                    <a class="kary-submenu__item @active("Proveedores", "Index")"
+                       asp-controller="Proveedores" asp-action="Index">Proveedores</a>
 
                 </div>
             </div>
 
 
+
+            @* CLIENTE *@  
+            <div class="kary-menu__group" data-group="Cliente">
+                <button type="button"
+                        class="kary-menu__item js-submenu-toggle"
+                        aria-expanded="false"
+                        aria-controls="sm-Cliente">
+                    <img src="~/img/sidebar/cliente.png" class="kary-icon" alt="" asp-append-version="true" />
+                    <span class="kary-menu__title"><strong>CLIENTE</strong></span>
+                </button>
+
+                <div id="sm-Empleado" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Clientes", "Index")"
+                       asp-controller="Clientes" asp-action="Index">Clientes</a>
+
+                </div>
+            </div>
 
                                     @* EMPLEADOS *@  
             <div class="kary-menu__group" data-group="Empleado">
@@ -125,6 +142,10 @@
 
                 </div>
             </div>
+
+
+
+
 
 
 

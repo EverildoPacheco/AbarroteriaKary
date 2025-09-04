@@ -109,9 +109,6 @@ namespace AbarroteriaKary.ModelsPartial
 
 
 
-
-
-
         [DataType(DataType.Date)]
         [Display(Name = "Fecha de nacimiento")]
         public DateTime? FechaNacimiento { get; set; } // en Controller se convierte a DateOnly?

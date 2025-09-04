@@ -92,6 +92,13 @@
             const form = document.getElementById('form-edit-rol');
             const btn  = document.getElementById('btn-guardar');
 
+
+              // Proteger salida con cambios sin guardar
+                if (window.KarySwal && KarySwal.guardUnsaved) {
+                    KarySwal.guardUnsaved('#form-edit-proveedor', '.js-leave');
+                }
+            }
+
             // Evitar doble submit (si no quieres deshabilitar, comenta la línea)
             if (form) {
                 form.addEventListener('submit', function () {
