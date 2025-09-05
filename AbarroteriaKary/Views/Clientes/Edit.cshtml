@@ -1,80 +1,202 @@
-﻿@model AbarroteriaKary.Models.CLIENTE
+﻿@model AbarroteriaKary.ModelsPartial.ClienteViewModel
 
 @{
-    Layout = null;
+    ViewData["Title"] = "Editar Cliente";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var updatedOk = TempData["UpdatedOk"] as bool?;
+    var updatedName = TempData["UpdatedName"] as string ?? "";
+    var noChanges = TempData["NoChanges"] as bool?;
 }
 
-<!DOCTYPE html>
+<div class="ak-page">
+    <!-- Título -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Editar cliente</h1>
+    </div>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Edit</title>
-</head>
-<body>
+    <!-- Formulario -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
 
-<h4>CLIENTE</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="CLIENTE_ID" />
-            <div class="form-group">
-                <label asp-for="CLIENTE_NOTA" class="control-label"></label>
-                <input asp-for="CLIENTE_NOTA" class="form-control" />
-                <span asp-validation-for="CLIENTE_NOTA" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CREADO_POR" class="control-label"></label>
-                <input asp-for="CREADO_POR" class="form-control" />
-                <span asp-validation-for="CREADO_POR" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FECHA_CREACION" class="control-label"></label>
-                <input asp-for="FECHA_CREACION" class="form-control" />
-                <span asp-validation-for="FECHA_CREACION" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="MODIFICADO_POR" class="control-label"></label>
-                <input asp-for="MODIFICADO_POR" class="form-control" />
-                <span asp-validation-for="MODIFICADO_POR" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FECHA_MODIFICACION" class="control-label"></label>
-                <input asp-for="FECHA_MODIFICACION" class="form-control" />
-                <span asp-validation-for="FECHA_MODIFICACION" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="ELIMINADO" /> @Html.DisplayNameFor(model => model.ELIMINADO)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="ELIMINADO_POR" class="control-label"></label>
-                <input asp-for="ELIMINADO_POR" class="form-control" />
-                <span asp-validation-for="ELIMINADO_POR" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FECHA_ELIMINACION" class="control-label"></label>
-                <input asp-for="FECHA_ELIMINACION" class="form-control" />
-                <span asp-validation-for="FECHA_ELIMINACION" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ESTADO" class="control-label"></label>
-                <input asp-for="ESTADO" class="form-control" />
-                <span asp-validation-for="ESTADO" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+            <!-- IMPORTANTE: id en ruta y antifalsificación -->
+            <form asp-action="Edit" asp-route-id="@Model.Id" method="post" id="form-edit-cliente" novalidate>
+                @Html.AntiForgeryToken()
+
+                <!-- Resumen de validaciones -->
+                <div class="alert alert-danger mb-3" asp-validation-summary="All" role="alert"></div>
+
+                <div class="card ak-card translucent shadow-sm w-100">
+                    <div class="card-body ak-form">
+
+                        <!-- Código (readonly, compartido PERSONA/CLIENTE) -->
+                        <div class="mb-3">
+                            <label class="form-label">Código</label>
+                            <input asp-for="Id" class="form-control" readonly />
+                        </div>
+
+                        <!-- Nombres (3 en fila) -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="PrimerNombre" class="form-label">Primer nombre*</label>
+                                <input asp-for="PrimerNombre" class="form-control" />
+                                <span asp-validation-for="PrimerNombre" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="SegundoNombre" class="form-label">Segundo nombre</label>
+                                <input asp-for="SegundoNombre" class="form-control" />
+                                <span asp-validation-for="SegundoNombre" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="TercerNombre" class="form-label">Tercer nombre</label>
+                                <input asp-for="TercerNombre" class="form-control" />
+                                <span asp-validation-for="TercerNombre" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Apellidos (2 en fila) -->
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="PrimerApellido" class="form-label">Primer apellido*</label>
+                                <input asp-for="PrimerApellido" class="form-control" />
+                                <span asp-validation-for="PrimerApellido" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="SegundoApellido" class="form-label">Segundo apellido</label>
+                                <input asp-for="SegundoApellido" class="form-control" />
+                                <span asp-validation-for="SegundoApellido" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Identificación y contacto (3 en fila) -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="NIT" class="form-label">NIT</label>
+                                <input asp-for="NIT" class="form-control" placeholder="Ej. 1234567-8 o 1234567K (o C/F)" />
+                                <span asp-validation-for="NIT" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="CUI" class="form-label">CUI</label>
+                                <input asp-for="CUI" class="form-control" placeholder="13 dígitos" />
+                                <span asp-validation-for="CUI" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="TelefonoMovil" class="form-label">Teléfono móvil</label>
+                                <input asp-for="TelefonoMovil" class="form-control" placeholder="8 dígitos" />
+                                <span asp-validation-for="TelefonoMovil" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Dirección y Nota -->
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="Direccion" class="form-label">Dirección</label>
+                                <textarea asp-for="Direccion" class="form-control" rows="1" placeholder="Calle, avenida, zona, municipio..."></textarea>
+                                <span asp-validation-for="Direccion" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="clienteNota" class="form-label">Nota del cliente</label>
+                                <textarea asp-for="clienteNota" class="form-control" rows="1" placeholder="Observaciones, preferencias, etc."></textarea>
+                                <span asp-validation-for="clienteNota" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Estado -->
+                        <div class="row">
+                            <div class="col-md-4 mb-3 d-flex align-items-end">
+                                <div class="form-check d-flex align-items-center gap-2">
+                                    <input class="form-check-input ak-checkbox" asp-for="EstadoActivo" />
+                                    <label class="form-check-label fw-bold" asp-for="EstadoActivo"></label>
+                                </div>
+                                <!-- (Opcional) Si quieres que viaje el string también -->
+                                <input type="hidden" asp-for="ESTADO" />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card ak-card ak-actions-card w-100 mt-3">
+                    <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+                        <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">
+                            <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+                        </a>
+                        <button type="reset" class="btn btn-ak btn-ak-success">
+                            <i class="fa-solid fa-eraser ak-icon"></i> Restablecer
+                        </button>
+                        <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                            <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            'use strict';
 
-</body>
-</html>
+            const form = document.getElementById('form-edit-cliente');
+            const btn  = document.getElementById('btn-guardar');
+
+              // Proteger salida con cambios sin guardar
+                if (window.KarySwal && KarySwal.guardUnsaved) {
+                    KarySwal.guardUnsaved('#form-edit-proveedor', '.js-leave');
+                }
+            }
+
+            // Evitar doble submit
+            if (form) {
+                form.addEventListener('submit', function () {
+                    if (!form.checkValidity()) return;
+                    if (btn) btn.disabled = true;
+                });
+
+               
+            }
+
+            // (Opcional) Sincronizar hidden ESTADO con checkbox, si deseas verlo en el POST
+            const chk = document.getElementById('EstadoActivo');
+            const est = document.getElementById('ESTADO');
+            if (chk && est) {
+                const sync = () => est.value = chk.checked ? 'ACTIVO' : 'INACTIVO';
+                chk.addEventListener('change', sync);
+                sync();
+            }
+
+            // Éxito: actualizado
+            @if ((TempData["UpdatedOk"] as bool?) == true)
+            {
+                    <text>
+                    KarySwal.saveSuccess({
+                        icon: 'success',
+                        title: '¡Actualizado exitosamente!',
+                        text: 'Los cambios de "@(updatedName)" se guardaron correctamente.',
+                        confirmText: 'Aceptar',
+                        showDenyButton: false,
+                        indexUrl: '@Url.Action("Index", "Clientes")'
+                    });
+                    </text>
+            }
+
+            // Sin cambios
+            @if ((TempData["NoChanges"] as bool?) == true)
+            {
+                    <text>
+                    KarySwal.info({
+                        title: 'Sin cambios',
+                        text: 'No se realizó ninguna modificación.',
+                        confirmText: 'Aceptar',
+                        redirectUrl: '@Url.Action("Index", "Clientes")'
+                    });
+                    </text>
+            }
+        })();
+    </script>
+}

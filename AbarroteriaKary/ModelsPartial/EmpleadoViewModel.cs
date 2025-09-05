@@ -18,9 +18,7 @@ namespace AbarroteriaKary.ModelsPartial
         [Display(Name = "Código (ID)")]
         public string? Id { get; set; }  // = PERSONA_ID = EMPLEADO_ID
 
-        // ==========================
         // Estado (UI + Persistencia)
-        // ==========================
 
         /// <summary>
         /// Valor de persistencia para PERSONA/EMPLEADO. Se deriva del checkbox.

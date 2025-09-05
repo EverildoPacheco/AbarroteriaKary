@@ -1,97 +1,249 @@
-﻿@model IEnumerable<AbarroteriaKary.Models.CLIENTE>
+﻿@* ================================
+   CLIENTES / INDEX
+   - Estilo idéntico a Index de Empleados/Puestos/Áreas
+   - Filtros: Estado, Búsqueda, Rango (FECHA_CREACION de CLIENTE)
+   - Columnas: ID Cliente, Nombre completo, CUI, NIT, Teléfono, Dirección, Estado
+   - Paginación con _Pager
+   ================================= *@
+
+@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.ClienteViewModel>
+@using System.Globalization
 
 @{
-    Layout = null;
+    ViewData["Title"] = "Clientes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string estado = (ViewBag.Estado as string) ?? "ACTIVO";
+    string q = ViewBag.Q as string;
+    string fDesde = ViewBag.FDesde as string;
+    string fHasta = ViewBag.FHasta as string;
+
+    string rangoTexto = "";
+    if (DateTime.TryParse(fDesde, out var d1) && DateTime.TryParse(fHasta, out var d2))
+        rangoTexto = $"{d1:dd/MM/yyyy} - {d2:dd/MM/yyyy}";
+
+    // Helper local para mostrar el nombre completo usando las partes del VM
+    System.Func<AbarroteriaKary.ModelsPartial.ClienteViewModel, string> NombreCompleto = c =>
+        string.Join(" ", new[]{
+            c.PrimerNombre, c.SegundoNombre, c.TercerNombre,
+            c.PrimerApellido, c.SegundoApellido
+        }.Where(s => !string.IsNullOrWhiteSpace(s)));
 }
 
-<!DOCTYPE html>
+<!-- CARD / TOOLBAR -->
+<div class="ak-toolbar mb-4 mt-4">
+    <div class="ak-toolbar__row">
+        <h1 class="ak-toolbar__title m-0">Clientes</h1>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Index</title>
-</head>
-<body>
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.CLIENTE_NOTA)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CREADO_POR)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FECHA_CREACION)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.MODIFICADO_POR)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FECHA_MODIFICACION)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ELIMINADO)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ELIMINADO_POR)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FECHA_ELIMINACION)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.ESTADO)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.CLIENTENavigation)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.CLIENTE_NOTA)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CREADO_POR)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FECHA_CREACION)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.MODIFICADO_POR)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FECHA_MODIFICACION)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ELIMINADO)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ELIMINADO_POR)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FECHA_ELIMINACION)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ESTADO)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.CLIENTENavigation.PERSONA_ID)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.CLIENTE_ID">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.CLIENTE_ID">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.CLIENTE_ID">Delete</a>
-            </td>
-        </tr>
+        <div class="ak-toolbar__right">
+            <!-- Agregar -->
+            <a asp-action="Create" class="btn btn-ak-primary btn-ak-square d-inline-flex align-items-center gap-2">
+                <i class="fa-solid fa-circle-plus"></i><span>Agregar</span>
+            </a>
+
+            <!-- Filtros de estado (★ preserva pageSize y reinicia a página 1) -->
+            <a asp-action="Index" asp-route-estado="TODOS" asp-route-q="@q"
+               asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(estado == "TODOS" ? "active" : "")">
+                <i class="fa-solid fa-layer-group me-1"></i>Todos
+            </a>
+
+            <a asp-action="Index" asp-route-estado="ACTIVO" asp-route-q="@q"
+               asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(estado == "ACTIVO" ? "active" : "")">
+                <i class="fa-solid fa-check me-1"></i>Activo
+            </a>
+
+            <a asp-action="Index" asp-route-estado="INACTIVO" asp-route-q="@q"
+               asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(estado == "INACTIVO" ? "active" : "")">
+                <i class="fa-solid fa-ban me-1"></i>Inactivo
+            </a>
+
+            <!-- Buscador + Rango -->
+            <form id="frmFiltros" method="get" asp-action="Index"
+                  class="d-inline-flex align-items-center gap-2">
+                <input type="hidden" name="estado" value="@estado" />
+                <input type="hidden" name="page" value="1" />                 @* ★ Reinicia página *@
+                <input type="hidden" name="pageSize" value="@Model.PageSize" />@* ★ Preserva pageSize *@
+
+                <!-- RANGO -->
+                <div class="input-group ak-daterange-group" style="width:clamp(220px, 20vw, 260px);">
+                    <span class="input-group-text bg-white border-end-0" title="Rango de fechas">
+                        <i class="fa-regular fa-calendar"></i>
+                    </span>
+
+                    <input id="rangoFechas"
+                           class="form-control border-start-0 border-end-0"
+                           placeholder="Buscar por fecha"
+                           value="@rangoTexto"
+                           autocomplete="off" />
+
+                    <button type="button" id="btnClearRange"
+                            class="input-group-text bg-white border-start-0"
+                            title="Limpiar rango">
+                        <i class="fa-solid fa-eraser"></i>
+                    </button>
+                </div>
+
+                <input type="hidden" name="fDesde" id="fDesde" value="@fDesde" />
+                <input type="hidden" name="fHasta" id="fHasta" value="@fHasta" />
+
+                <!-- BUSCADOR -->
+                <div class="input-group ak-search" style="width:clamp(260px, 24vw, 320px);">
+                    <button type="submit" class="input-group-text bg-white border-end-0" title="Buscar">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <input name="q" value="@q" class="form-control border-start-0"
+                           placeholder="Buscar por ID, nombre, CUI, NIT, teléfono o dirección" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Tabla -->
+<div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra">
+        <thead class="text-center thead-kary">
+            <tr>
+                @if (Model.Items.Any())
+                {
+                    <th>@Html.DisplayNameFor(m => m.Items[0].Id)</th>
+                    <th>Nombre completo</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].CUI)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].NIT)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].TelefonoMovil)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].Direccion)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
+                }
+                else
+                {
+                    <th>Código</th>
+                    <th>Nombre completo</th>
+                    <th>CUI</th>
+                    <th>NIT</th>
+                    <th>Teléfono</th>
+                    <th>Dirección</th>
+                    <th>Estado</th>
+                }
+                <th>Acciones</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr>
+                    <td colspan="8" class="text-center py-4 text-muted">
+                        <i class="fa-regular fa-face-frown me-1"></i> No hay resultados.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var c in Model.Items)
+                {
+                    bool esActivo = string.Equals(c.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+
+                    <tr>
+                        <td class="text-monospace">@c.Id</td>
+                        <td>@NombreCompleto(c)</td>
+                        <td>@(string.IsNullOrWhiteSpace(c.CUI) ? "-" : c.CUI)</td>
+                        <td>@(string.IsNullOrWhiteSpace(c.NIT) ? "-" : c.NIT)</td>
+                        <td>@(string.IsNullOrWhiteSpace(c.TelefonoMovil) ? "-" : c.TelefonoMovil)</td>
+                        <td>@(string.IsNullOrWhiteSpace(c.Direccion) ? "-" : c.Direccion)</td>
+
+                        <td class="text-center">
+                            <span class="badge text-white @(esActivo ? "bg-success" : "bg-danger")">
+                                @(esActivo ? "Activo" : "Inactivo")
+                            </span>
+                        </td>
+
+                        <td class="text-center acciones">
+                            <a href="@Url.Action("Edit", "Clientes", new { id = c.Id })" class="btn btn-sm me-2" title="Editar">
+                                <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">
+                            </a>
+                            <a href="@Url.Action("Details", "Clientes", new { id = c.Id })" class="btn btn-sm me-2" title="Ver">
+                                <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    @* Paginador (mismo parcial que Áreas/Puestos/Empleados) *@
+    @await Html.PartialAsync("_Pager", Model)
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+          'use strict';
+
+          const form   = document.getElementById('frmFiltros');
+          if (!form) return;
+
+          const input  = document.getElementById('rangoFechas');
+          const fDesde = document.getElementById('fDesde');
+          const fHasta = document.getElementById('fHasta');
+          const btnClr = document.getElementById('btnClearRange');
+
+          // Evita doble init de Litepicker si vuelve del historial
+          if (input && input._litepicker && typeof input._litepicker.destroy === 'function') {
+            input._litepicker.destroy();
+          }
+
+          const start = '@(ViewBag.FDesde as string ?? "")';
+          const end   = '@(ViewBag.FHasta as string ?? "")';
+
+          const picker = new Litepicker({
+            element: input,
+            singleMode: false,
+            autoApply: true,
+            allowRepick: true,
+            numberOfMonths: 2,
+            numberOfColumns: 2,
+            splitView: true,
+            format: 'DD/MM/YYYY',
+            lang: 'es-ES',
+            startDate: start || null,
+            endDate: end || null
+          });
+
+          picker.on('selected', (s, e) => {
+            if (s && e) {
+              fDesde.value = s.format('YYYY-MM-DD');
+              fHasta.value = e.format('YYYY-MM-DD');
+              form.submit();
+            }
+          });
+
+          if (btnClr) {
+            btnClr.addEventListener('click', () => {
+              input.value = '';
+              fDesde.value = '';
+              fHasta.value = '';
+              try { picker.clearSelection(); } catch {}
+              // Si quiere forzar "ACTIVO" al limpiar:
+              const estadoH = form.querySelector('input[name="estado"]');
+              if (estadoH) estadoH.value = 'ACTIVO';
+              form.submit();
+            });
+          }
+
+          // Overlay opcional
+          form.addEventListener('submit', () => {
+            if (window.KaryLoading?.show) KaryLoading.show('Buscando...');
+          });
+          window.addEventListener('pageshow', () => {
+            if (window.KaryLoading?.hide) KaryLoading.hide();
+          });
+        })();
+    </script>
 }
-    </tbody>
-</table>
-</body>
-</html>
