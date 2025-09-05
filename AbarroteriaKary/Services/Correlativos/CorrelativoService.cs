@@ -69,9 +69,11 @@ namespace AbarroteriaKary.Services.Correlativos
         public async Task<string> NextClienteIdIdAsync(CancellationToken ct = default)
             => await NextAsync("CLI", 7, _context.CLIENTE.Select(x => x.CLIENTE_ID), ct);
 
+        public async Task<string> PeekNextCategoriaIdAsync(CancellationToken ct = default)
+             => await PeekAsync("CAT", 7, _context.CATEGORIA.Select(x => x.CATEGORIA_ID), ct);
 
-
-
+        public async Task<string> NextCategoriaIdAsync(CancellationToken ct = default)
+            => await NextAsync("CAT", 7, _context.CATEGORIA.Select(x => x.CATEGORIA_ID), ct);
 
 
 

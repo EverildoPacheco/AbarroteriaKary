@@ -68,24 +68,28 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         (function () {
-          const formId = '#form-create-proveedor'; // ← Debe coincidir con el id del form
-          if (window.KarySwal && KarySwal.guardUnsaved) {
-            KarySwal.guardUnsaved(formId, '.js-leave, a[href]:not([href^="#"])');
-          }
-          // Modal de éxito PRG (ya lo tenía)
-          @if ((TempData["SavedOk"] as bool?) == true)
-          {
-                  <text>
-                  if (window.KarySwal && KarySwal.saveSuccess) {
-                      KarySwal.saveSuccess({
-                          title: '¡Proveedor guardado!',
-                          text: 'El registro "@(TempData["SavedName"] as string ?? "")" se creó correctamente.',
-                          indexUrl: '@Url.Action("Index", "Proveedores")',
-                          createUrl: '@Url.Action("Create", "Proveedores")'
-                      });
-                  }
-                  </text>
-          }
+            const formId = '#form-create-area';
+            const form = document.querySelector(formId);
+
+            // Proteger salida con cambios sin guardar (links/botones con .js-leave)
+            if (form && window.KarySwal && typeof KarySwal.guardUnsaved === 'function') {
+                KarySwal.guardUnsaved(formId, '.js-leave');
+            }
+
+            // Modal de éxito tras PRG (usa TempData del controlador)
+            @if ((TempData["SavedOk"] as bool?) == true)
+            {
+                        <text>
+                        if (window.KarySwal && typeof KarySwal.saveSuccess === 'function') {
+                            KarySwal.saveSuccess({
+                                title: '¡Categoría guardada!',
+                                text: 'El registro "@(TempData["SavedName"] as string ?? "")" se creó correctamente.',
+                                indexUrl: '@Url.Action("Index", "Areas")',
+                                    createUrl: '@Url.Action("Create", "Areas")'
+                            });
+                        }
+                        </text>
+            }
         })();
     </script>
 }

@@ -344,6 +344,25 @@ namespace AbarroteriaKary.Controllers
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
         // ================================
         // EDIT / GET
         // - Traer CLIENTE + PERSONA (sin tracking)

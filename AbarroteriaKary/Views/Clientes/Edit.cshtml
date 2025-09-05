@@ -139,17 +139,17 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        (function () {
-            'use strict';
-
+                (function () {
             const form = document.getElementById('form-edit-cliente');
             const btn  = document.getElementById('btn-guardar');
 
-              // Proteger salida con cambios sin guardar
-                if (window.KarySwal && KarySwal.guardUnsaved) {
-                    KarySwal.guardUnsaved('#form-edit-proveedor', '.js-leave');
-                }
-            }
+
+                KaryForms.bindSafeSubmit('#form-edit-cliente', '#btn-guardar', {
+          spinnerHtml: '<i class="fa-solid fa-spinner fa-spin ak-icon"></i> Guardando...'
+        });
+
+
+
 
             // Evitar doble submit
             if (form) {
@@ -158,45 +158,48 @@
                     if (btn) btn.disabled = true;
                 });
 
-               
+                // Proteger salida con cambios sin guardar
+                if (window.KarySwal && KarySwal.guardUnsaved) {
+                    KarySwal.guardUnsaved('#form-edit-cliente', '.js-leave');
+                }
             }
 
-            // (Opcional) Sincronizar hidden ESTADO con checkbox, si deseas verlo en el POST
-            const chk = document.getElementById('EstadoActivo');
-            const est = document.getElementById('ESTADO');
-            if (chk && est) {
-                const sync = () => est.value = chk.checked ? 'ACTIVO' : 'INACTIVO';
-                chk.addEventListener('change', sync);
-                sync();
-            }
-
-            // Éxito: actualizado
+            // Éxito: ACTUALIZADO -> un botón "Aceptar" y regresar al listado
             @if ((TempData["UpdatedOk"] as bool?) == true)
             {
-                    <text>
-                    KarySwal.saveSuccess({
-                        icon: 'success',
-                        title: '¡Actualizado exitosamente!',
-                        text: 'Los cambios de "@(updatedName)" se guardaron correctamente.',
-                        confirmText: 'Aceptar',
-                        showDenyButton: false,
-                        indexUrl: '@Url.Action("Index", "Clientes")'
-                    });
-                    </text>
+                            <text>
+                            if (window.KarySwal && KarySwal.saveSuccess) {
+                                KarySwal.saveSuccess({
+                                    icon: 'success',
+                                    title: '¡Actualizado exitosamente!',
+                                    text: 'Los cambios de "@(TempData["UpdatedName"] as string ?? "")" se guardaron correctamente.',
+                                    confirmText: 'Aceptar',
+                                    showDenyButton: false,
+                                    indexUrl: '@Url.Action("Index", "Clientes")'
+                                });
+                            }
+                            </text>
             }
 
-            // Sin cambios
+            // Info: NO SE MODIFICÓ NADA -> botón "Aceptar" que redirige al listado
             @if ((TempData["NoChanges"] as bool?) == true)
             {
-                    <text>
-                    KarySwal.info({
-                        title: 'Sin cambios',
-                        text: 'No se realizó ninguna modificación.',
-                        confirmText: 'Aceptar',
-                        redirectUrl: '@Url.Action("Index", "Clientes")'
-                    });
-                    </text>
+                            <text>
+                            if (window.KarySwal && KarySwal.info) {
+                                KarySwal.info({
+                                    title: 'Sin cambios',
+                                    text: 'No se realizó ninguna modificación.',
+                                    confirmText: 'Aceptar',
+                                            redirectUrl: '@Url.Action("Index", "Clientes")'
+                                });
+                            } else {
+                                // Fallback sin helper
+                                alert('No se realizó ninguna modificación.');
+                                        window.location.href = '@Url.Action("Index", "Clientes")';
+                            }
+                            </text>
             }
-        })();
+        })();;
     </script>
 }
+

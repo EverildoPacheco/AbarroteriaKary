@@ -1,7 +1,11 @@
 ﻿using AbarroteriaKary.Data;
 using AbarroteriaKary.Models;
 using AbarroteriaKary.ModelsPartial;
+using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T>
 using AbarroteriaKary.Services.Correlativos;
+using AbarroteriaKary.Services.Auditoria;
+
+using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,8 +15,6 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T>
-using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
 
 
 namespace AbarroteriaKary.Controllers
@@ -21,6 +23,7 @@ namespace AbarroteriaKary.Controllers
     {
         private readonly KaryDbContext _context;
         private readonly ICorrelativoService _correlativos;
+        //private readonly IAuditoriaService _auditoria;
 
 
         public AreasController(KaryDbContext context, ICorrelativoService correlativos)

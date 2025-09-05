@@ -73,58 +73,69 @@
     </div>
 </div>
 
-@section Scripts{
+@section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-    (function () {
-        const form = document.getElementById('form-edit-area');
-        const btn  = document.getElementById('btn-guardar');
+                (function () {
+            const form = document.getElementById('form-edit-area');
+            const btn  = document.getElementById('btn-guardar');
 
-              // Proteger salida con cambios sin guardar
-                    if (window.KarySwal && KarySwal.guardUnsaved) {
-                        KarySwal.guardUnsaved('#form-edit-proveedor', '.js-leave');
-                    }
+
+                KaryForms.bindSafeSubmit('#form-edit-area', '#btn-guardar', {
+          spinnerHtml: '<i class="fa-solid fa-spinner fa-spin ak-icon"></i> Guardando...'
+        });
+
+
+
+
+            // Evitar doble submit
+            if (form) {
+                form.addEventListener('submit', function () {
+                    if (!form.checkValidity()) return;
+                    if (btn) btn.disabled = true;
+                });
+
+                // Proteger salida con cambios sin guardar
+                if (window.KarySwal && KarySwal.guardUnsaved) {
+                    KarySwal.guardUnsaved('#form-edit-area', '.js-leave');
                 }
+            }
 
-        // Evitar doble submit (si no quieres deshabilitar, comenta la línea)
-        if (form) {
-            form.addEventListener('submit', function () {
-                if (!form.checkValidity()) return;
-                if (btn) btn.disabled = true;
-            });
+            // Éxito: ACTUALIZADO -> un botón "Aceptar" y regresar al listado
+            @if ((TempData["UpdatedOk"] as bool?) == true)
+            {
+                            <text>
+                            if (window.KarySwal && KarySwal.saveSuccess) {
+                                KarySwal.saveSuccess({
+                                    icon: 'success',
+                                    title: '¡Actualizado exitosamente!',
+                                    text: 'Los cambios de "@(TempData["UpdatedName"] as string ?? "")" se guardaron correctamente.',
+                                    confirmText: 'Aceptar',
+                                    showDenyButton: false,
+                                        indexUrl: '@Url.Action("Index", "Areas")'
+                                });
+                            }
+                            </text>
+            }
 
-            // Proteger salida con cambios sin guardar (usa .js-leave en tus enlaces)
-            KarySwal.guardUnsaved('#form-edit-area', '.js-leave');
-        }
-
-        // Éxito: ACTUALIZADO -> 1 solo botón "Aceptar" y salir al listado
-        @if ((TempData["UpdatedOk"] as bool?) == true)
-        {
-            <text>
-            KarySwal.saveSuccess({
-                icon: 'success',
-                title: '¡Actualizado exitosamente!',
-                text: 'Los cambios se guardaron correctamente.',
-                confirmText: 'Aceptar',
-                showDenyButton: false,                                // SOLO 1 BOTÓN
-                indexUrl: '@Url.Action("Index","Areas")'              // redirige al listado
-            });
-            </text>
-        }
-
-        // Info: NO SE MODIFICÓ NADA -> botón "Aceptar" que redirige al listado
-        @if ((TempData["NoChanges"] as bool?) == true)
-        {
-            <text>
-            KarySwal.info({
-                title: 'Sin cambios',
-                text: 'No se realizó ninguna modificación.',
-                confirmText: 'Aceptar',
-                redirectUrl: '@Url.Action("Index","Areas")'           // redirige al listado
-            });
-            </text>
-        }
-    })();
+            // Info: NO SE MODIFICÓ NADA -> botón "Aceptar" que redirige al listado
+            @if ((TempData["NoChanges"] as bool?) == true)
+            {
+                            <text>
+                            if (window.KarySwal && KarySwal.info) {
+                                KarySwal.info({
+                                    title: 'Sin cambios',
+                                    text: 'No se realizó ninguna modificación.',
+                                    confirmText: 'Aceptar',
+                                        redirectUrl: '@Url.Action("Index", "Areas")'
+                                });
+                            } else {
+                                // Fallback sin helper
+                                alert('No se realizó ninguna modificación.');
+                                        window.location.href = '@Url.Action("Index", "Areas")';
+                            }
+                            </text>
+            }
+        })();;
     </script>
 }
-

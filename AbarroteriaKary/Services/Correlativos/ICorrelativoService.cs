@@ -61,6 +61,9 @@ namespace AbarroteriaKary.Services.Correlativos
         Task<string> PeekNextClienteIdIdAsync(CancellationToken ct = default);
         Task<string> NextClienteIdIdAsync(CancellationToken ct = default);
 
+        // EMPLEADO (PRO0000007)
+        Task<string> PeekNextCategoriaIdAsync(CancellationToken ct = default);
+        Task<string> NextCategoriaIdAsync(CancellationToken ct = default);
 
 
         // Ejemplos para otras entidades (cuando las necesite):

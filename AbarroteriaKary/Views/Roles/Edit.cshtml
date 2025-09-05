@@ -88,55 +88,66 @@
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script>
-        (function () {
+                (function () {
             const form = document.getElementById('form-edit-rol');
             const btn  = document.getElementById('btn-guardar');
 
 
-              // Proteger salida con cambios sin guardar
-                if (window.KarySwal && KarySwal.guardUnsaved) {
-                    KarySwal.guardUnsaved('#form-edit-proveedor', '.js-leave');
-                }
-            }
+                KaryForms.bindSafeSubmit('#form-edit-rol', '#btn-guardar', {
+          spinnerHtml: '<i class="fa-solid fa-spinner fa-spin ak-icon"></i> Guardando...'
+        });
 
-            // Evitar doble submit (si no quieres deshabilitar, comenta la línea)
+
+
+
+            // Evitar doble submit
             if (form) {
                 form.addEventListener('submit', function () {
                     if (!form.checkValidity()) return;
                     if (btn) btn.disabled = true;
                 });
 
-                // Proteger salida con cambios sin guardar (usa .js-leave en tus enlaces)
-                KarySwal.guardUnsaved('#form-edit-rol', '.js-leave');
+                // Proteger salida con cambios sin guardar
+                if (window.KarySwal && KarySwal.guardUnsaved) {
+                    KarySwal.guardUnsaved('#form-edit-rol', '.js-leave');
+                }
             }
 
-            // Éxito: ACTUALIZADO -> 1 solo botón "Aceptar" y salir al listado
+            // Éxito: ACTUALIZADO -> un botón "Aceptar" y regresar al listado
             @if ((TempData["UpdatedOk"] as bool?) == true)
             {
-                        <text>
-                        KarySwal.saveSuccess({
-                            icon: 'success',
-                            title: '¡Actualizado exitosamente!',
-                            text: 'Los cambios de "@(TempData["UpdatedName"] as string ?? "")" se guardaron correctamente.',
-                            confirmText: 'Aceptar',
-                            showDenyButton: false,
-                            indexUrl: '@Url.Action("Index", "Roles")'   // redirige al listado de Puestos
-                        });
-                        </text>
+                            <text>
+                            if (window.KarySwal && KarySwal.saveSuccess) {
+                                KarySwal.saveSuccess({
+                                    icon: 'success',
+                                    title: '¡Actualizado exitosamente!',
+                                    text: 'Los cambios de "@(TempData["UpdatedName"] as string ?? "")" se guardaron correctamente.',
+                                    confirmText: 'Aceptar',
+                                    showDenyButton: false,
+                                        indexUrl: '@Url.Action("Index", "Roles")'
+                                });
+                            }
+                            </text>
             }
 
             // Info: NO SE MODIFICÓ NADA -> botón "Aceptar" que redirige al listado
             @if ((TempData["NoChanges"] as bool?) == true)
             {
-                        <text>
-                        KarySwal.info({
-                            title: 'Sin cambios',
-                            text: 'No se realizó ninguna modificación.',
-                            confirmText: 'Aceptar',
-                            redirectUrl: '@Url.Action("Index", "Roles")' // redirige al listado
-                        });
-                        </text>
+                            <text>
+                            if (window.KarySwal && KarySwal.info) {
+                                KarySwal.info({
+                                    title: 'Sin cambios',
+                                    text: 'No se realizó ninguna modificación.',
+                                    confirmText: 'Aceptar',
+                                        redirectUrl: '@Url.Action("Index", "Roles")'
+                                });
+                            } else {
+                                // Fallback sin helper
+                                alert('No se realizó ninguna modificación.');
+                                        window.location.href = '@Url.Action("Index", "Roles")';
+                            }
+                            </text>
             }
-        })();
+        })();;
     </script>
 }

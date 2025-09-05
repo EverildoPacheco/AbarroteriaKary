@@ -19,8 +19,6 @@ namespace AbarroteriaKary.ModelsPartial
         [MaxLength(250, ErrorMessage = "Máximo 250 caracteres.")]
         public string? areaDescripcion { get; set; }
 
-        //[Display(Name = "Estado")]
-        //public string estadoArea { get; set; }
 
         // String que ya usas en listados / consultas
         [ValidateNever]
