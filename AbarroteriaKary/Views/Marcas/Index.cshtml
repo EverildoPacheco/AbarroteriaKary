@@ -1,4 +1,4 @@
-﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.TipoEmpaqueViewModel>
+﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.MarcaViewModel>
 @using System.Globalization
 
 @{
@@ -18,7 +18,7 @@
 <!-- CARD / TOOLBAR -->
 <div class="ak-toolbar mb-4 mt-4">
     <div class="ak-toolbar__row">
-        <h1 class="ak-toolbar__title m-0">Tipo de Empaque</h1>
+        <h1 class="ak-toolbar__title m-0">Unidad de Medida</h1>
 
         <div class="ak-toolbar__right">
             <!-- Agregar -->
@@ -98,9 +98,9 @@
                 @* ★ Encabezados seguros cuando no hay Items *@
                 @if (Model.Items.Any())
                 {
-                    <th>@Html.DisplayNameFor(m => m.Items[0].TipoEmpaqueId)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].TipoEmpaqueNombre)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].TipoEmpaqueDescripcion)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].MarcaId)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].MarcaNombre)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].MarcaDescripcion)</th>
                     <th>@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
                     <th>@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
                 }
@@ -131,10 +131,10 @@
                 {
                     bool esActivo = string.Equals(c.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
                     <tr>
-                        <td class="text-monospace">@Html.DisplayFor(_ => c.TipoEmpaqueId)</td>
-                        <td>@Html.DisplayFor(_ => c.TipoEmpaqueNombre)</td>
+                        <td class="text-monospace">@Html.DisplayFor(_ => c.MarcaId)</td>
+                        <td>@Html.DisplayFor(_ => c.MarcaNombre)</td>
                         <td class="text-muted">
-                            @(!string.IsNullOrWhiteSpace(c.TipoEmpaqueDescripcion) ? c.TipoEmpaqueDescripcion : "-")
+                            @(!string.IsNullOrWhiteSpace(c.MarcaDescripcion) ? c.MarcaDescripcion : "-")
                         </td>
                         <td>@(c.FechaCreacion?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT")))</td>
 
@@ -144,10 +144,10 @@
                             </span>
                         </td>
                         <td class="text-center acciones">
-                            <a asp-action="Edit" asp-route-id="@c.TipoEmpaqueId" class="btn btn-sm me-2" title="Editar">
+                            <a asp-action="Edit" asp-route-id="@c.MarcaId" class="btn btn-sm me-2" title="Editar">
                                 <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">
                             </a>
-                            <a asp-action="Details" asp-route-id="@c.TipoEmpaqueId" class="btn btn-sm me-2" title="Ver">
+                            <a asp-action="Details" asp-route-id="@c.MarcaId" class="btn btn-sm me-2" title="Ver">
                                 <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
                             </a>
                         </td>

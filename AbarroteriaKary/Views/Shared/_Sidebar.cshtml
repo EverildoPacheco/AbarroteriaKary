@@ -41,6 +41,31 @@
             </div>
 
 
+
+
+                                     @* CAJA *@
+            <div class="kary-menu__group" data-group="caja">
+                <button type="button"
+                        class="kary-menu__item js-submenu-toggle"
+                        aria-expanded="false"
+                        aria-controls="sm-caja">
+                    <img src="~/img/sidebar/Caja.png" class="kary-icon" alt="" asp-append-version="true" />
+                    <span class="kary-menu__title"><strong>CAJA </strong></span>
+                </button>
+
+                <div id="sm-cajas" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Cajas", "Index")"
+                       asp-controller="cajas" asp-action="Index">Caja</a>
+
+                </div>
+            </div>
+
+
+
+
+
+
+
                                     @* INVENTARIO *@
             <div class="kary-menu__group" data-group="inventario">
                 <button type="button"
@@ -52,8 +77,8 @@
                 </button>
 
                 <div id="sm-inventario" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Producto", "Index")"
 
+                    <a class="kary-submenu__item @active("Producto", "Index")"
                        asp-controller="Stock" asp-action="Index">Stock</a>
 
                     <a class="kary-submenu__item @active("Categoria", "Index")"
@@ -91,8 +116,8 @@
                     <a class="kary-submenu__item @active("TipoEmpaques", "Index")"
                        asp-controller="TipoEmpaques" asp-action="Index">Tipo de Empaques</a>
 
-                    <a class="kary-submenu__item @active("UnidadMedidas", "Index")"
-                       asp-controller="UnidadMedidas" asp-action="Index">Unidad de Medidas</a>
+                    <a class="kary-submenu__item @active("UnidadDeMedidas", "Index")"
+                       asp-controller="UnidadDeMedidas" asp-action="Index">Unidad de Medidas</a>
 
                     <a class="kary-submenu__item @active("Marcas", "Index")"
                        asp-controller="Marcas" asp-action="Index">Marcas</a>

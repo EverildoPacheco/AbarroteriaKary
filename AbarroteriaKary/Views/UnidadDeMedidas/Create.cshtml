@@ -1,0 +1,118 @@
+﻿@model AbarroteriaKary.ModelsPartial.UnidaDeMedidaViewModel
+
+@{
+    ViewData["Title"] = "Nueva Categoría";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // PRG (Post-Redirect-Get): valores enviados desde el controlador tras guardar
+    var savedOk = TempData["SavedOk"] as bool?;
+    var savedName = TempData["SavedName"] as string ?? "";
+}
+
+<div class="ak-page">
+    <!-- Encabezado -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Ingresar nueva Unidad de Medida</h1>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+
+            <!-- Formulario -->
+            <form asp-action="Create" method="post" id="form-create-UnidadDeMedida" novalidate>
+                @Html.AntiForgeryToken()
+
+                <!-- Resumen de validaciones -->
+                <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+
+                <!-- Card del formulario -->
+                <div class="card ak-card translucent shadow-sm w-100">
+                    <div class="card-body ak-form">
+
+                        <!-- Código (solo lectura, lo genera el correlativo) -->
+                        <div class="mb-3">
+                            <label asp-for="UnidadDeMedidaId" class="form-label">Código</label>
+                            <input asp-for="UnidadDeMedidaId" class="form-control" readonly />
+                            <div class="form-text">Se genera automáticamente al guardar.</div>
+                        </div>
+
+                        <!-- Nombre (requerido) -->
+                        <div class="mb-3">
+                            <label asp-for="UnidadDeMedidaNombre" class="form-label">Unidad de Medida*</label>
+                            <input asp-for="UnidadDeMedidaNombre" class="form-control" placeholder="Ej. Bebidas" />
+                            <span asp-validation-for="UnidadDeMedidaNombre" class="text-danger"></span>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label asp-for="UnidadDeMedidaDescripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="UnidadDeMedidaDescripcion" class="form-control" rows="3" placeholder="Ej. Productos líquidos como gaseosas, jugos, agua"></textarea>
+                            <span asp-validation-for="UnidadDeMedidaDescripcion" class="text-danger"></span>
+                        </div>
+
+                        <!-- Estado (checkbox Activo) -->
+                        <div class="form-check mb-3 d-flex align-items-center gap-2">
+                            <input class="form-check-input ak-checkbox js-loading" asp-for="EstadoActivo" />
+                            <label class="form-check-label fw-bold js-loading" asp-for="EstadoActivo"></label>
+                        </div>
+
+                        <!-- (Opcional) Fecha de creación solo informativa -->
+                        @* 
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de creación</label>
+                            <input value="@(Model.FechaCreacion?.ToString("dd/MM/yyyy HH:mm") ?? "")" class="form-control" readonly />
+                        </div>
+                        *@
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card ak-card ak-actions-card w-100 mt-3">
+                    <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+                        <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">
+                            <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+                        </a>
+                        <button type="reset" class="btn btn-ak btn-ak-success">
+                            <i class="fa-solid fa-eraser ak-icon"></i> Limpiar
+                        </button>
+                        <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                            <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const formId = '#form-create-UnidadDeMedida';
+            const form = document.querySelector(formId);
+
+            // Proteger salida con cambios sin guardar (links/botones con .js-leave)
+            if (form && window.KarySwal && typeof KarySwal.guardUnsaved === 'function') {
+                KarySwal.guardUnsaved(formId, '.js-leave');
+            }
+
+            // Modal de éxito tras PRG (usa TempData del controlador)
+            @if ((TempData["SavedOk"] as bool?) == true)
+            {
+                        <text>
+                        if (window.KarySwal && typeof KarySwal.saveSuccess === 'function') {
+                            KarySwal.saveSuccess({
+                                title: '¡Categoría guardada!',
+                                text: 'El registro "@(TempData["SavedName"] as string ?? "")" se creó correctamente.',
+                                    indexUrl: '@Url.Action("Index", "UnidadDeMedidas")',
+                                    createUrl: '@Url.Action("Create", "UnidadDeMedidas")'
+                            });
+                        }
+                        </text>
+            }
+        })();
+    </script>
+}
