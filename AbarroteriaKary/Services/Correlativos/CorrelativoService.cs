@@ -76,6 +76,34 @@ namespace AbarroteriaKary.Services.Correlativos
             => await NextAsync("CAT", 7, _context.CATEGORIA.Select(x => x.CATEGORIA_ID), ct);
 
 
+        public async Task<string> PeekNextSubCategoriaIdAsync(CancellationToken ct = default)
+     => await PeekAsync("SUB", 7, _context.SUBCATEGORIA.Select(x => x.SUBCATEGORIA_ID), ct);
+
+        public async Task<string> NextSubCategoriaIdAsync(CancellationToken ct = default)
+            => await NextAsync("SUB", 7, _context.SUBCATEGORIA.Select(x => x.SUBCATEGORIA_ID), ct);
+
+
+        public async Task<string> PeekNextTipoProductoIdAsync(CancellationToken ct = default)
+            => await PeekAsync("TIP", 7, _context.TIPO_PRODUCTO.Select(x => x.TIPO_PRODUCTO_ID), ct);
+
+        public async Task<string> NextSubTipoProductoIdAsync(CancellationToken ct = default)
+            => await NextAsync("TIP", 7, _context.TIPO_PRODUCTO.Select(x => x.TIPO_PRODUCTO_ID), ct);
+
+
+        public async Task<string> PeekNextMateriaEnvaseIdAsync(CancellationToken ct = default)
+            => await PeekAsync("MAT", 7, _context.MATERIAL_ENVASE.Select(x => x.MATERIAL_ENVASE_ID), ct);
+
+        public async Task<string> NextMateriaEnvaseIdAsync(CancellationToken ct = default)
+            => await NextAsync("MAT", 7, _context.MATERIAL_ENVASE.Select(x => x.MATERIAL_ENVASE_ID), ct);
+
+        public async Task<string> PeekNextTipoEmpaqueIdAsync(CancellationToken ct = default)
+                 => await PeekAsync("TEM", 7, _context.TIPO_EMPAQUE.Select(x => x.TIPO_EMPAQUE_ID), ct);
+
+        public async Task<string> NextTipoEmpaqueIdAsync(CancellationToken ct = default)
+            => await NextAsync("TEM", 7, _context.TIPO_EMPAQUE.Select(x => x.TIPO_EMPAQUE_ID), ct);
+
+
+
 
 
 

@@ -1,7 +1,7 @@
-﻿@model AbarroteriaKary.ModelsPartial.SubCategoriaViewModel
+﻿@model AbarroteriaKary.ModelsPartial.TipoEmpaqueViewModel
 
 @{
-    ViewData["Title"] = "Nuevo Puesto";
+    ViewData["Title"] = "Nueva Categoría";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     // PRG (Post-Redirect-Get): valores enviados desde el controlador tras guardar
@@ -12,7 +12,7 @@
 <div class="ak-page">
     <!-- Encabezado -->
     <div class="ak-header container-fluid px-3 px-md-4">
-        <h1 class="ak-form-title m-1 mb-4">Ingresar nueva Sub Categoria</h1>
+        <h1 class="ak-form-title m-1 mb-4">Ingresar nuevo Tipo de Empaque</h1>
     </div>
 
     <!-- Contenido principal -->
@@ -20,7 +20,7 @@
         <div class="container-fluid px-3 px-md-4">
 
             <!-- Formulario -->
-            <form asp-action="Create" method="post" id="form-create-subCategoria" novalidate>
+            <form asp-action="Create" method="post" id="form-create-tipoEmpaque" novalidate>
                 @Html.AntiForgeryToken()
 
                 <!-- Resumen de validaciones -->
@@ -32,32 +32,23 @@
 
                         <!-- Código (solo lectura, lo genera el correlativo) -->
                         <div class="mb-3">
-                            <label asp-for="SubCategoriaId" class="form-label">Código</label>
-                            <input asp-for="SubCategoriaId" class="form-control" readonly />
-                            <div class="form-text">Se genera automáticamente.</div>
+                            <label asp-for="TipoEmpaqueId" class="form-label">Código</label>
+                            <input asp-for="TipoEmpaqueId" class="form-control" readonly />
+                            <div class="form-text">Se genera automáticamente al guardar.</div>
                         </div>
 
-                        <!-- Nombre del puesto (requerido) -->
+                        <!-- Nombre (requerido) -->
                         <div class="mb-3">
-                            <label asp-for="SubCategoriaNombre" class="form-label">Sub Categoria*</label>
-                            <input asp-for="SubCategoriaNombre" class="form-control" placeholder="Ej. Cajero(a)" />
-                            <span asp-validation-for="SubCategoriaNombre" class="text-danger"></span>
-                        </div>
-
-                        <!-- Área (combo con las áreas activas) -->
-                        <div class="mb-3">
-                            <label asp-for="CategoriaID" class="form-label">Categoria*</label>
-                            <select asp-for="CategoriaID" class="form-select" asp-items="Model.CategoriaOpciones">
-                                <option value="">Seleccione un Categoria </option>
-                            </select>
-                            <span asp-validation-for="CategoriaID" class="text-danger"></span>
+                            <label asp-for="TipoEmpaqueNombre" class="form-label">Tipo Empaque*</label>
+                            <input asp-for="TipoEmpaqueNombre" class="form-control" placeholder="Ej. en carton" />
+                            <span asp-validation-for="TipoEmpaqueNombre" class="text-danger"></span>
                         </div>
 
                         <!-- Descripción -->
                         <div class="mb-3">
-                            <label asp-for="DescripcionSubCategoria" class="form-label">Descripción</label>
-                            <textarea asp-for="DescripcionSubCategoria" class="form-control" rows="3" placeholder="Ej. Personal encargado de caja y atención al cliente"></textarea>
-                            <span asp-validation-for="DescripcionSubCategoria" class="text-danger"></span>
+                            <label asp-for="TipoEmpaqueDescripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="TipoEmpaqueDescripcion" class="form-control" rows="3" placeholder="Ej. Productos líquidos como gaseosas, jugos, agua"></textarea>
+                            <span asp-validation-for="TipoEmpaqueDescripcion" class="text-danger"></span>
                         </div>
 
                         <!-- Estado (checkbox Activo) -->
@@ -66,10 +57,11 @@
                             <label class="form-check-label fw-bold js-loading" asp-for="EstadoActivo"></label>
                         </div>
 
-                        @* (Opcional) Mostrar fecha de creación solamente informativa:
+                        <!-- (Opcional) Fecha de creación solo informativa -->
+                        @* 
                         <div class="mb-3">
                             <label class="form-label">Fecha de creación</label>
-                            <input value="@(Model.FECHA_CREACION?.ToString("dd/MM/yyyy HH:mm") ?? "")" class="form-control" readonly />
+                            <input value="@(Model.FechaCreacion?.ToString("dd/MM/yyyy HH:mm") ?? "")" class="form-control" readonly />
                         </div>
                         *@
                     </div>
@@ -99,23 +91,26 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
         (function () {
-            const form = document.getElementById('form-create-subCategoria');
+            const formId = '#form-create-tipoEmpaque';
+            const form = document.querySelector(formId);
 
             // Proteger salida con cambios sin guardar (links/botones con .js-leave)
-            if (form) {
-                KarySwal.guardUnsaved('#form-create-subCategoria', '.js-leave');
+            if (form && window.KarySwal && typeof KarySwal.guardUnsaved === 'function') {
+                KarySwal.guardUnsaved(formId, '.js-leave');
             }
 
             // Modal de éxito tras PRG (usa TempData del controlador)
             @if ((TempData["SavedOk"] as bool?) == true)
             {
                         <text>
-                        KarySwal.saveSuccess({
-                            title: '¡Puesto guardado!',
-                            text: 'El registro "@(TempData["SavedName"] as string ?? "")" se creó correctamente.',
-                            indexUrl: '@Url.Action("Index", "SubCategorias")',
-                                createUrl: '@Url.Action("Create", "SubCategorias")'
-                        });
+                        if (window.KarySwal && typeof KarySwal.saveSuccess === 'function') {
+                            KarySwal.saveSuccess({
+                                title: '¡Categoría guardada!',
+                                text: 'El registro "@(TempData["SavedName"] as string ?? "")" se creó correctamente.',
+                                    indexUrl: '@Url.Action("Index", "TipoEmpaques")',
+                                    createUrl: '@Url.Action("Create", "TipoEmpaques")'
+                            });
+                        }
                         </text>
             }
         })();

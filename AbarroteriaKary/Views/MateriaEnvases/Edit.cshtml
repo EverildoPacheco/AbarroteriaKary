@@ -1,7 +1,7 @@
-﻿@model AbarroteriaKary.ModelsPartial.SubCategoriaViewModel
+﻿@model AbarroteriaKary.ModelsPartial.MateriaEnvasesViewModel
 
 @{
-    ViewData["Title"] = "Editar Puesto";
+    ViewData["Title"] = "Editar Rol";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     var updatedOk = TempData["UpdatedOk"] as bool?;
@@ -12,14 +12,14 @@
 <div class="ak-page">
     <!-- Título -->
     <div class="ak-header container-fluid px-3 px-md-4">
-        <h1 class="ak-form-title m-1 mb-4">Editar puesto</h1>
+        <h1 class="ak-form-title m-1 mb-4">Editar Categoria</h1>
     </div>
 
     <!-- Formulario -->
     <div class="ak-main">
         <div class="container-fluid px-3 px-md-4">
 
-            <form asp-action="Edit" asp-route-id="@Model.SubCategoriaId" method="post" id="form-edit-subCategoria" novalidate>
+            <form asp-action="Edit" asp-route-id="@Model.MateriaEnvaseId" method="post" id="form-edit-materiaEnvase" novalidate>
                 @Html.AntiForgeryToken()
 
                 <div class="alert alert-danger mb-3" asp-validation-summary="All" role="alert"></div>
@@ -29,32 +29,25 @@
 
                         <!-- Código (readonly) -->
                         <div class="mb-3">
-                            <label asp-for="SubCategoriaId" class="form-label">Código</label>
-                            <input asp-for="SubCategoriaId" class="form-control" readonly />
+                            <label asp-for="MateriaEnvaseId" class="form-label">Código</label>
+                            <input asp-for="MateriaEnvaseId" class="form-control" readonly />
                         </div>
 
                         <!-- Nombre -->
                         <div class="mb-3">
-                            <label asp-for="SubCategoriaNombre" class="form-label">Nombre*</label>
-                            <input asp-for="SubCategoriaNombre" class="form-control" placeholder="Ej. Cajero(a)" />
-                            <span asp-validation-for="SubCategoriaNombre" class="text-danger"></span>
+                            <label asp-for="MateriaEnvaseNombre" class="form-label">Materia Envase*</label>
+                            <input asp-for="MateriaEnvaseNombre" class="form-control" placeholder="Ej. Vidrio(a)" />
+                            <span asp-validation-for="MateriaEnvaseNombre" class="text-danger"></span>
                         </div>
 
-                        <!-- Área (combo) -->
-                        <div class="mb-3">
-                            <label asp-for="CategoriaID" class="form-label">Categoria*</label>
-                            <select asp-for="CategoriaID" class="form-select" asp-items="Model.CategoriaOpciones">
-                                <option value="">Seleccione una Categoria</option>
-                            </select>
-                            <span asp-validation-for="CategoriaID" class="text-danger"></span>
-                        </div>
+
 
                         <!-- Descripción -->
                         <div class="mb-3">
-                            <label asp-for="DescripcionSubCategoria" class="form-label">Descripción</label>
-                            <textarea asp-for="DescripcionSubCategoria" class="form-control" rows="3"
+                            <label asp-for="MateriaEnvaseDescripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="MateriaEnvaseDescripcion" class="form-control" rows="3"
                                       placeholder="Ej. Atención en caja, arqueo, servicio al cliente"></textarea>
-                            <span asp-validation-for="DescripcionSubCategoria" class="text-danger"></span>
+                            <span asp-validation-for="MateriaEnvaseDescripcion" class="text-danger"></span>
                         </div>
 
                         <!-- Estado (checkbox cuadrado negro) -->
@@ -96,11 +89,11 @@
     <partial name="_ValidationScriptsPartial" />
     <script>
                 (function () {
-            const form = document.getElementById('form-edit-subCategoria');
+            const form = document.getElementById('form-edit-materiaEnvase');
             const btn  = document.getElementById('btn-guardar');
 
 
-          KaryForms.bindSafeSubmit('#form-edit-subCategoria', '#btn-guardar', {
+                KaryForms.bindSafeSubmit('#form-edit-materiaEnvase', '#btn-guardar', {
           spinnerHtml: '<i class="fa-solid fa-spinner fa-spin ak-icon"></i> Guardando...'
         });
 
@@ -116,44 +109,44 @@
 
                 // Proteger salida con cambios sin guardar
                 if (window.KarySwal && KarySwal.guardUnsaved) {
-                    KarySwal.guardUnsaved('#form-edit-subCategoria', '.js-leave');
+                    KarySwal.guardUnsaved('#form-edit-materiaEnvase', '.js-leave');
                 }
             }
 
             // Éxito: ACTUALIZADO -> un botón "Aceptar" y regresar al listado
             @if ((TempData["UpdatedOk"] as bool?) == true)
             {
-                                <text>
-                                if (window.KarySwal && KarySwal.saveSuccess) {
-                                    KarySwal.saveSuccess({
-                                        icon: 'success',
-                                        title: '¡Actualizado exitosamente!',
-                                        text: 'Los cambios de "@(TempData["UpdatedName"] as string ?? "")" se guardaron correctamente.',
-                                        confirmText: 'Aceptar',
-                                        showDenyButton: false,
-                                        indexUrl: '@Url.Action("Index", "SubCategorias")'
-                                    });
-                                }
-                                </text>
+                            <text>
+                            if (window.KarySwal && KarySwal.saveSuccess) {
+                                KarySwal.saveSuccess({
+                                    icon: 'success',
+                                    title: '¡Actualizado exitosamente!',
+                                    text: 'Los cambios de "@(TempData["UpdatedName"] as string ?? "")" se guardaron correctamente.',
+                                    confirmText: 'Aceptar',
+                                    showDenyButton: false,
+                                        indexUrl: '@Url.Action("Index", "MateriaEnvases")'
+                                });
+                            }
+                            </text>
             }
 
             // Info: NO SE MODIFICÓ NADA -> botón "Aceptar" que redirige al listado
             @if ((TempData["NoChanges"] as bool?) == true)
             {
-                                <text>
-                                if (window.KarySwal && KarySwal.info) {
-                                    KarySwal.info({
-                                        title: 'Sin cambios',
-                                        text: 'No se realizó ninguna modificación.',
-                                        confirmText: 'Aceptar',
-                                                    redirectUrl: '@Url.Action("Index", "SubCategorias")'
-                                    });
-                                } else {
-                                    // Fallback sin helper
-                                    alert('No se realizó ninguna modificación.');
-                                                window.location.href = '@Url.Action("Index", "SubCategorias")';
-                                }
-                                </text>
+                            <text>
+                            if (window.KarySwal && KarySwal.info) {
+                                KarySwal.info({
+                                    title: 'Sin cambios',
+                                    text: 'No se realizó ninguna modificación.',
+                                    confirmText: 'Aceptar',
+                                            redirectUrl: '@Url.Action("Index", "MateriaEnvases")'
+                                });
+                            } else {
+                                // Fallback sin helper
+                                alert('No se realizó ninguna modificación.');
+                                        window.location.href = '@Url.Action("Index", "MateriaEnvases")';
+                            }
+                            </text>
             }
         })();;
     </script>

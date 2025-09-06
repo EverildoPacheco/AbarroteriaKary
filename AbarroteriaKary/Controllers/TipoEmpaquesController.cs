@@ -14,28 +14,25 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using AbarroteriaKary.ModelsPartial.Commons;
 
 namespace AbarroteriaKary.Controllers
 {
-    public class SubCategoriasController : Controller
+    public class TipoEmpaquesController : Controller
     {
         private readonly KaryDbContext _context;
         private readonly ICorrelativoService _correlativos;
         private readonly IAuditoriaService _auditoria;
 
 
-        public SubCategoriasController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria)
+        public TipoEmpaquesController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria)
         {
             _context = context;
             _correlativos = correlativos;
             _auditoria = auditoria;
-
         }
 
-        // GET: SubCategorias
-
-        [HttpGet]
+        // GET: TipoEmpaques
+        // Listado con filtros: estado, texto, fechas y paginación
         public async Task<IActionResult> Index(string? estado, string? q = null, string? fDesde = null, string? fHasta = null, int page = 1, int pageSize = 10)
         {
             // 0) Normalización de estado
@@ -48,43 +45,40 @@ namespace AbarroteriaKary.Controllers
             DateTime? hasta = ParseDate(fHasta);
 
             // 2) Base query (ignora eliminados)
-            var qry = _context.SUBCATEGORIA
+            var qry = _context.TIPO_EMPAQUE
                 .AsNoTracking()
-                .Where(p => !p.ELIMINADO);
+                .Where(c => !c.ELIMINADO);
 
             // 3) Filtro por estado
             if (estadoNorm is "ACTIVO" or "INACTIVO")
-                qry = qry.Where(p => p.ESTADO == estadoNorm);
+                qry = qry.Where(c => c.ESTADO == estadoNorm);
 
-            // 4) Búsqueda por texto (ID, Nombre, Descripción, Área)
+            // 4) Búsqueda por texto (ID, Nombre, Descripción)
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var term = $"%{q.Trim()}%";
-                qry = qry.Where(p =>
-                    EF.Functions.Like(p.CATEGORIA_ID, term) ||
-                    EF.Functions.Like(p.SUBCATEGORIA_NOMBRE, term) ||
-                    (p.SUBCATEGORIA_DESCRIPCION != null && EF.Functions.Like(p.SUBCATEGORIA_DESCRIPCION, term)) ||
-                    EF.Functions.Like(p.CATEGORIA_ID, term) ||
-                    EF.Functions.Like(p.CATEGORIA.CATEGORIA_NOMBRE, term) // navegación en proyección
+                qry = qry.Where(c =>
+                    EF.Functions.Like(c.TIPO_EMPAQUE_ID, term) ||
+                    EF.Functions.Like(c.TIPO_EMPAQUE_NOMBRE, term) ||
+                    (c.TIPO_EMPAQUE_DESCRIPCION != null && EF.Functions.Like(c.TIPO_EMPAQUE_DESCRIPCION, term))
                 );
             }
 
             // 5) Rango de fechas (inclusivo)
-            if (desde.HasValue) qry = qry.Where(p => p.FECHA_CREACION >= desde.Value.Date);
-            if (hasta.HasValue) qry = qry.Where(p => p.FECHA_CREACION < hasta.Value.Date.AddDays(1));
+            if (desde.HasValue) qry = qry.Where(c => c.FECHA_CREACION >= desde.Value.Date);
+            if (hasta.HasValue) qry = qry.Where(c => c.FECHA_CREACION < hasta.Value.Date.AddDays(1));
 
             // 6) Ordenamiento + proyección a ViewModel (ANTES de paginar)
             var proyectado = qry
-                .OrderBy(p => p.SUBCATEGORIA_ID)
-                .Select(p => new SubCategoriaViewModel
+                .OrderBy(c => c.TIPO_EMPAQUE_NOMBRE)
+                .Select(c => new TipoEmpaqueViewModel
                 {
-                    SubCategoriaId = p.SUBCATEGORIA_ID,
-                    SubCategoriaNombre = p.SUBCATEGORIA_NOMBRE,
-                    DescripcionSubCategoria = p.SUBCATEGORIA_DESCRIPCION,
-                    CategoriaID = p.CATEGORIA_ID,
-                    NombreCategoria = p.CATEGORIA.CATEGORIA_NOMBRE, // nombre del Área
-                    ESTADO = p.ESTADO,
-                    FECHA_CREACION = p.FECHA_CREACION
+                    TipoEmpaqueId = c.TIPO_EMPAQUE_ID,
+                    TipoEmpaqueNombre = c.TIPO_EMPAQUE_NOMBRE,
+                    TipoEmpaqueDescripcion = c.TIPO_EMPAQUE_DESCRIPCION,
+                    ESTADO = c.ESTADO,
+                    EstadoActivo = c.ESTADO == "ACTIVO",
+                    FechaCreacion = c.FECHA_CREACION
                 });
 
             // 7) Paginación (normaliza pageSize)
@@ -93,7 +87,7 @@ namespace AbarroteriaKary.Controllers
 
             var resultado = await proyectado.ToPagedAsync(page, pageSize);
 
-            // 8) RouteValues para el pager
+            // 8) RouteValues para el pager (conservar filtros)
             resultado.RouteValues["estado"] = estadoNorm;
             resultado.RouteValues["q"] = q;
             resultado.RouteValues["fDesde"] = desde?.ToString("yyyy-MM-dd");
@@ -104,8 +98,9 @@ namespace AbarroteriaKary.Controllers
             ViewBag.Q = q;
             ViewBag.FDesde = resultado.RouteValues["fDesde"];
             ViewBag.FHasta = resultado.RouteValues["fHasta"];
+            ViewBag.PageSize = pageSize;
 
-            return View(resultado);
+            return View(resultado); // Views/Categoria/Index.cshtml
         }
 
         // === Utilidad local para parsear fechas ===
@@ -133,34 +128,33 @@ namespace AbarroteriaKary.Controllers
 
 
 
-
         public async Task<IActionResult> Details(string id)
         {
             // 1) Validación de parámetro
             if (string.IsNullOrWhiteSpace(id)) return NotFound();
 
             // 2) Carga de entidad con el Área (solo lectura)
-            var entidad = await _context.SUBCATEGORIA
+            var entidad = await _context.TIPO_EMPAQUE
                 .AsNoTracking()
-                .Include(p => p.CATEGORIA)
-                .FirstOrDefaultAsync(p => p.SUBCATEGORIA_ID == id);
+                //.Include(p => p.AREA)
+                .FirstOrDefaultAsync(r => r.TIPO_EMPAQUE_ID == id);
 
             if (entidad is null) return NotFound();
 
             // 3) Proyección a ViewModel (lo que usaremos en la vista)
-            var vm = new SubCategoriaViewModel
+            var vm = new TipoEmpaqueViewModel
             {
-                SubCategoriaId = entidad.SUBCATEGORIA_ID,
-                SubCategoriaNombre = entidad.SUBCATEGORIA_NOMBRE,
-                DescripcionSubCategoria = entidad.SUBCATEGORIA_DESCRIPCION,
-                CategoriaID = entidad.CATEGORIA_ID,
-                NombreCategoria = entidad.CATEGORIA?.CATEGORIA_NOMBRE, // ← nombre del Área para mostrar
+                TipoEmpaqueId = entidad.TIPO_EMPAQUE_ID,
+                TipoEmpaqueNombre = entidad.TIPO_EMPAQUE_NOMBRE,
+                TipoEmpaqueDescripcion = entidad.TIPO_EMPAQUE_DESCRIPCION,
+                //AREA_ID = entidad.AREA_ID,
+                //AREA_NOMBRE = entidad.AREA?.AREA_NOMBRE, // ← nombre del Área para mostrar
                 ESTADO = entidad.ESTADO,
                 EstadoActivo = string.Equals(entidad.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase),
-                FECHA_CREACION = entidad.FECHA_CREACION
+                FechaCreacion = entidad.FECHA_CREACION
             };
 
-            // 4) Auditoría (opcional): disponible en la vista si la quieres mostrar
+            // 4) Auditoría (): disponible en la vista 
             ViewBag.Auditoria = new
             {
                 CreadoPor = entidad.CREADO_POR,
@@ -178,127 +172,121 @@ namespace AbarroteriaKary.Controllers
 
 
 
-        // GET: Create
+
+
+
 
         [HttpGet]
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(CancellationToken ct)
         {
-            var vm = new SubCategoriaViewModel
+            var vm = new TipoEmpaqueViewModel
             {
-                SubCategoriaId = await _correlativos.PeekNextSubCategoriaIdAsync(), // solo para mostrar
+                // Solo vista previa; el definitivo se genera en el POST con NextCategoriaIdAsync()
+                TipoEmpaqueId = await _correlativos.PeekNextTipoEmpaqueIdAsync(ct),
                 ESTADO = "ACTIVO",
                 EstadoActivo = true,
-                FECHA_CREACION = DateTime.Now
+                FechaCreacion = DateTime.Now
             };
 
-            CargarCategorias(vm); // combo de áreas
-                             // Flags para modal de éxito (opcional, mismo patrón que Áreas)
+            // Flags de modal de éxito (opcional, por si muestra un toast/modal)
             ViewBag.SavedOk = TempData["SavedOk"];
             ViewBag.SavedName = TempData["SavedName"];
 
-            return View(vm);
+            return View(vm); // Views/Categoria/Create.cshtml
         }
 
-        // POST: /Puesto/Create
-
+        // ==========================================
+        // POST: /Categoria/Create
+        // - Normaliza entrada.
+        // - Valida duplicado por NOMBRE (ignora eliminados).
+        // - Genera ID definitivo (NEXT) dentro de transacción.
+        // - PRG → RedirectToAction(Create) para permitir altas consecutivas.
+        // ==========================================
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create(SubCategoriaViewModel vm)
+        public async Task<IActionResult> Create(TipoEmpaqueViewModel vm, CancellationToken ct)
         {
-            // Validación de modelo
+            // 1) Sincroniza checkbox -> cadena ESTADO
+            vm.RefrescarEstadoDesdeBool();
+
+            // 2) Normalización básica (evita espacios/valores nulos)
+            vm.TipoEmpaqueNombre = (vm.TipoEmpaqueNombre ?? string.Empty).Trim();
+            vm.TipoEmpaqueDescripcion = vm.TipoEmpaqueDescripcion?.Trim();
+
+            // 3) Validación servidor
             if (!ModelState.IsValid)
             {
-                // Si hubo error y se perdió el ID “preview”, lo reponemos
-                if (string.IsNullOrWhiteSpace(vm.SubCategoriaId))
-                    vm.SubCategoriaId = await _correlativos.PeekNextSubCategoriaIdAsync();
+                // Reponer "preview" si se perdió
+                if (string.IsNullOrWhiteSpace(vm.TipoEmpaqueId))
+                    vm.TipoEmpaqueId = await _correlativos.PeekNextTipoEmpaqueIdAsync(ct);
 
-                CargarCategorias(vm);
                 return View(vm);
             }
-            // ====== Usuario y fecha para auditoría (★ servicio) ======
-            var ahora = DateTime.Now;
-            var usuarioNombre = await _auditoria.GetUsuarioNombreAsync(); // ★ AQUÍ LA INTEGRACIÓN
 
-            // (Opcional) Validación de duplicado por Nombre+Área (solo si lo desea ya)
-            bool existe = await _context.SUBCATEGORIA
-                .AnyAsync(p => !p.ELIMINADO
-                    && p.CATEGORIA_ID == vm.CategoriaID
-                    && p.SUBCATEGORIA_NOMBRE.Trim() == (vm.SubCategoriaNombre ?? "").Trim());
-            if (existe)
+            // 4) Regla de dominio: nombre único entre no eliminados
+            var duplicado = await _context.CATEGORIA.AnyAsync(c =>
+                !c.ELIMINADO && c.CATEGORIA_NOMBRE == vm.TipoEmpaqueNombre, ct);
+
+            if (duplicado)
             {
-                ModelState.AddModelError(nameof(vm.SubCategoriaNombre),
-                    "Ya existe un puesto con ese nombre en el área seleccionada.");
-                CargarCategorias(vm);
-                if (string.IsNullOrWhiteSpace(vm.SubCategoriaId))
-                    vm.SubCategoriaId = await _correlativos.PeekNextSubCategoriaIdAsync();
+                ModelState.AddModelError(nameof(vm.TipoEmpaqueNombre), "Ya existe una Tipo empaque con ese nombre.");
+                if (string.IsNullOrWhiteSpace(vm.TipoEmpaqueId))
+                    vm.TipoEmpaqueId = await _correlativos.PeekNextTipoEmpaqueIdAsync(ct);
                 return View(vm);
             }
 
-            // Auditoría: tome usuario autenticado o “Sistema”
-            //var userName = User?.Identity?.Name ?? "Sistema";
+            // 5) Alta dentro de transacción para asegurar correlativo único
+            var ahora = DateTime.Now;
+            var usuario = User?.Identity?.Name ?? "SYSTEM";
 
-            await using var tx = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable);
+            await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
             try
             {
-                // ID definitivo y único (atómico)
-                var nuevoId = await _correlativos.NextSubCategoriaIdAsync();
+                // ID definitivo (atómico)
+                var nuevoId = await _correlativos.NextTipoEmpaqueIdAsync(ct);
 
-                // Mapear VM -> Entidad EF
-                var entidad = new SUBCATEGORIA
+                var entidad = new TIPO_EMPAQUE
                 {
-                    SUBCATEGORIA_ID = nuevoId,
-                    SUBCATEGORIA_NOMBRE = (vm.SubCategoriaNombre ?? string.Empty).Trim(),
-                    SUBCATEGORIA_DESCRIPCION = vm.DescripcionSubCategoria?.Trim(),
-                    CATEGORIA_ID = vm.CategoriaID,
-                    ESTADO = vm.EstadoActivo ? "ACTIVO" : "INACTIVO",
+                    TIPO_EMPAQUE_ID = nuevoId,
+                    TIPO_EMPAQUE_NOMBRE = vm.TipoEmpaqueNombre,
+                    TIPO_EMPAQUE_DESCRIPCION = vm.TipoEmpaqueDescripcion,
+                    ESTADO = vm.ESTADO,
                     ELIMINADO = false,
 
-                    // Auditoría (alta)
-                    CREADO_POR = usuarioNombre,
-                    FECHA_CREACION = ahora
+                    // Auditoría de alta
+                    CREADO_POR = usuario,
+                    FECHA_CREACION = ahora,
+                    MODIFICADO_POR = null,
+                    FECHA_MODIFICACION = null,
+                    ELIMINADO_POR = null,
+                    FECHA_ELIMINACION = null
                 };
 
-                _context.Add(entidad);
-                await _context.SaveChangesAsync();
-                await tx.CommitAsync();
+                _context.TIPO_EMPAQUE.Add(entidad);
+                await _context.SaveChangesAsync(ct);
+                await tx.CommitAsync(ct);
 
-                // Modal de éxito (mismo patrón que Áreas)
+                // Flags para modal/toast de éxito
                 TempData["SavedOk"] = true;
-                TempData["SavedName"] = entidad.SUBCATEGORIA_NOMBRE;
+                TempData["SavedName"] = entidad.TIPO_EMPAQUE_NOMBRE;
 
-                // PRG: vuelve a GET Create (para permitir alta consecutiva)
+                // PRG: permite registrar varias categorías seguidas
                 return RedirectToAction(nameof(Create));
             }
             catch (DbUpdateException ex)
             {
-                await tx.RollbackAsync();
-                ModelState.AddModelError(string.Empty, $"Error BD: {ex.GetBaseException().Message}");
+                await tx.RollbackAsync(ct);
 
-                // Reponer ID de “preview” para no dejar el campo en blanco
-                if (string.IsNullOrWhiteSpace(vm.SubCategoriaId))
-                    vm.SubCategoriaId = await _correlativos.PeekNextSubCategoriaIdAsync();
+                // Mensaje legible para el usuario (sin stack técnico)
+                ModelState.AddModelError(string.Empty, $"Error al guardar en base de datos: {ex.GetBaseException().Message}");
 
-                CargarCategorias(vm);
+                // Reponer "preview" si procede
+                if (string.IsNullOrWhiteSpace(vm.TipoEmpaqueId))
+                    vm.TipoEmpaqueId = await _correlativos.PeekNextTipoEmpaqueIdAsync(ct);
+
                 return View(vm);
             }
         }
-
-        // Helper: carga combo de Áreas activas y no eliminadas
-        private void CargarCategorias(SubCategoriaViewModel vm)
-        {
-            vm.CategoriaOpciones = _context.CATEGORIA
-                .AsNoTracking()
-                .Where(a => !a.ELIMINADO && a.ESTADO == "ACTIVO")
-                .OrderBy(a => a.CATEGORIA_NOMBRE)
-                .Select(a => new SelectListItem
-                {
-                    Value = a.CATEGORIA_ID,
-                    Text = a.CATEGORIA_NOMBRE
-                })
-                .ToList();
-        }
-
-
 
 
 
@@ -309,26 +297,26 @@ namespace AbarroteriaKary.Controllers
         {
             if (string.IsNullOrWhiteSpace(id)) return NotFound();
 
-            var entidad = await _context.SUBCATEGORIA
+            var entidad = await _context.TIPO_EMPAQUE
                 .AsNoTracking()
-                .Include(p => p.CATEGORIA)
-                .FirstOrDefaultAsync(p => p.SUBCATEGORIA_ID == id);
+                //.Include(r => r.ROL_ID)
+                .FirstOrDefaultAsync(r => r.TIPO_EMPAQUE_ID == id);
 
             if (entidad == null) return NotFound();
 
-            var vm = new SubCategoriaViewModel
+            var vm = new TipoEmpaqueViewModel
             {
-                SubCategoriaId = entidad.SUBCATEGORIA_ID,
-                SubCategoriaNombre = entidad.SUBCATEGORIA_NOMBRE,
-                DescripcionSubCategoria = entidad.SUBCATEGORIA_DESCRIPCION,
-                CategoriaID = entidad.CATEGORIA_ID,
-                NombreCategoria = entidad.CATEGORIA?.CATEGORIA_NOMBRE,
+                TipoEmpaqueId = entidad.TIPO_EMPAQUE_ID,
+                TipoEmpaqueNombre = entidad.TIPO_EMPAQUE_NOMBRE,
+                TipoEmpaqueDescripcion = entidad.TIPO_EMPAQUE_DESCRIPCION,
+                //AREA_ID = entidad.AREA_ID,
+                //AREA_NOMBRE = entidad.AREA?.AREA_NOMBRE,
                 ESTADO = entidad.ESTADO,
                 EstadoActivo = string.Equals(entidad.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase),
-                FECHA_CREACION = entidad.FECHA_CREACION
+                FechaCreacion = entidad.FECHA_CREACION
             };
 
-            CargarCategorias(vm);
+            //CargarAreas(vm);
             ViewBag.UpdatedOk = TempData["UpdatedOk"];
             ViewBag.UpdatedName = TempData["UpdatedName"];
             ViewBag.NoChanges = TempData["NoChanges"];
@@ -339,33 +327,36 @@ namespace AbarroteriaKary.Controllers
 
 
 
+
+
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, SubCategoriaViewModel vm)
+        public async Task<IActionResult> Edit(string id, TipoEmpaqueViewModel vm)
         {
-            if (string.IsNullOrWhiteSpace(id) || !string.Equals(id, vm.SubCategoriaId, StringComparison.Ordinal))
+            if (string.IsNullOrWhiteSpace(id) || !string.Equals(id, vm.TipoEmpaqueId, StringComparison.Ordinal))
                 return NotFound();
 
             if (!ModelState.IsValid)
             {
-                CargarCategorias(vm);
+                //CargarAreas(vm);
                 return View(vm);
             }
 
-            var entidad = await _context.SUBCATEGORIA.FirstOrDefaultAsync(p => p.SUBCATEGORIA_ID == id);
+            var entidad = await _context.TIPO_EMPAQUE.FirstOrDefaultAsync(p => p.TIPO_EMPAQUE_ID == id);
             if (entidad == null) return NotFound();
 
             // ====== Normalización de datos nuevos desde el VM ======
-            var nuevoNombre = (vm.SubCategoriaNombre ?? string.Empty).Trim();
-            var nuevaDesc = vm.DescripcionSubCategoria?.Trim();
-            var nuevaAreaId = vm.CategoriaID;
+            var nuevoNombre = (vm.TipoEmpaqueNombre ?? string.Empty).Trim();
+            var nuevaDesc = vm.TipoEmpaqueDescripcion?.Trim();
+            //var nuevaAreaId = vm.AREA_ID;
             var nuevoEstado = vm.EstadoActivo ? "ACTIVO" : "INACTIVO";
 
             // ====== ¿Hay cambios? (nombre, desc, área, estado) ======
             var sinCambios =
-                string.Equals(entidad.SUBCATEGORIA_NOMBRE ?? "", nuevoNombre, StringComparison.Ordinal) &&
-                string.Equals(entidad.SUBCATEGORIA_DESCRIPCION ?? "", nuevaDesc ?? "", StringComparison.Ordinal) &&
-                string.Equals(entidad.CATEGORIA_ID ?? "", nuevaAreaId ?? "", StringComparison.Ordinal) &&
+                string.Equals(entidad.TIPO_EMPAQUE_NOMBRE ?? "", nuevoNombre, StringComparison.Ordinal) &&
+                string.Equals(entidad.TIPO_EMPAQUE_DESCRIPCION ?? "", nuevaDesc ?? "", StringComparison.Ordinal) &&
+                //string.Equals(entidad.AREA_ID ?? "", nuevaAreaId ?? "", StringComparison.Ordinal) &&
                 string.Equals(entidad.ESTADO ?? "", nuevoEstado, StringComparison.Ordinal);
 
             if (sinCambios)
@@ -379,9 +370,9 @@ namespace AbarroteriaKary.Controllers
             var usuarioNombre = await _auditoria.GetUsuarioNombreAsync(); // ★ AQUÍ LA INTEGRACIÓN
 
             // ====== Aplicar cambios base ======
-            entidad.SUBCATEGORIA_NOMBRE = nuevoNombre;
-            entidad.SUBCATEGORIA_DESCRIPCION = nuevaDesc;
-            entidad.CATEGORIA_ID = nuevaAreaId;
+            entidad.TIPO_EMPAQUE_NOMBRE = nuevoNombre;
+            entidad.TIPO_EMPAQUE_DESCRIPCION = nuevaDesc;
+            //entidad.AREA_ID = nuevaAreaId;
 
             var estadoOriginalActivo = string.Equals(entidad.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
             var estadoNuevoActivo = vm.EstadoActivo;
@@ -426,12 +417,12 @@ namespace AbarroteriaKary.Controllers
                 await _context.SaveChangesAsync();
 
                 TempData["UpdatedOk"] = true;
-                TempData["UpdatedName"] = entidad.SUBCATEGORIA_NOMBRE;
+                TempData["UpdatedName"] = entidad.TIPO_EMPAQUE_NOMBRE;
                 return RedirectToAction(nameof(Edit), new { id });
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!await _context.SUBCATEGORIA.AnyAsync(e => e.SUBCATEGORIA_ID == id)) return NotFound();
+                if (!await _context.TIPO_EMPAQUE.AnyAsync(e => e.TIPO_EMPAQUE_ID == id)) return NotFound();
                 throw;
             }
         }
@@ -466,8 +457,7 @@ namespace AbarroteriaKary.Controllers
 
 
 
-
-        // GET: SubCategorias/Delete/5
+        // GET: TipoEmpaques/Delete/5
         public async Task<IActionResult> Delete(string id)
         {
             if (id == null)
@@ -475,35 +465,34 @@ namespace AbarroteriaKary.Controllers
                 return NotFound();
             }
 
-            var sUBCATEGORIA = await _context.SUBCATEGORIA
-                .Include(s => s.CATEGORIA)
-                .FirstOrDefaultAsync(m => m.SUBCATEGORIA_ID == id);
-            if (sUBCATEGORIA == null)
+            var tIPO_EMPAQUE = await _context.TIPO_EMPAQUE
+                .FirstOrDefaultAsync(m => m.TIPO_EMPAQUE_ID == id);
+            if (tIPO_EMPAQUE == null)
             {
                 return NotFound();
             }
 
-            return View(sUBCATEGORIA);
+            return View(tIPO_EMPAQUE);
         }
 
-        // POST: SubCategorias/Delete/5
+        // POST: TipoEmpaques/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
-            var sUBCATEGORIA = await _context.SUBCATEGORIA.FindAsync(id);
-            if (sUBCATEGORIA != null)
+            var tIPO_EMPAQUE = await _context.TIPO_EMPAQUE.FindAsync(id);
+            if (tIPO_EMPAQUE != null)
             {
-                _context.SUBCATEGORIA.Remove(sUBCATEGORIA);
+                _context.TIPO_EMPAQUE.Remove(tIPO_EMPAQUE);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
-        private bool SUBCATEGORIAExists(string id)
+        private bool TIPO_EMPAQUEExists(string id)
         {
-            return _context.SUBCATEGORIA.Any(e => e.SUBCATEGORIA_ID == id);
+            return _context.TIPO_EMPAQUE.Any(e => e.TIPO_EMPAQUE_ID == id);
         }
     }
 }

@@ -65,6 +65,18 @@ namespace AbarroteriaKary.Services.Correlativos
         Task<string> PeekNextCategoriaIdAsync(CancellationToken ct = default);
         Task<string> NextCategoriaIdAsync(CancellationToken ct = default);
 
+        Task<string> PeekNextSubCategoriaIdAsync(CancellationToken ct = default);
+        Task<string> NextSubCategoriaIdAsync(CancellationToken ct = default);
+
+        Task<string> PeekNextTipoProductoIdAsync(CancellationToken ct = default);
+        Task<string> NextSubTipoProductoIdAsync(CancellationToken ct = default);
+
+        Task<string> PeekNextMateriaEnvaseIdAsync(CancellationToken ct = default);
+        Task<string> NextMateriaEnvaseIdAsync(CancellationToken ct = default);
+
+        Task<string> PeekNextTipoEmpaqueIdAsync(CancellationToken ct = default);
+        Task<string> NextTipoEmpaqueIdAsync(CancellationToken ct = default);
+
 
         // Ejemplos para otras entidades (cuando las necesite):
         // Task<string> PeekNextRolIdAsync(CancellationToken ct = default);

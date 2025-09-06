@@ -1,6 +1,6 @@
-﻿@model AbarroteriaKary.ModelsPartial.SubCategoriaViewModel
+﻿@model AbarroteriaKary.ModelsPartial.MateriaEnvasesViewModel
 @{
-    ViewData["Title"] = "Detalle de Área";
+    ViewData["Title"] = "Detalle de Rol";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     bool esActivo = Model.EstadoActivo;
@@ -11,7 +11,7 @@
 
     <!-- Franja 1: Título -->
     <div class="ak-header container-fluid px-3 px-md-4">
-        <h1 class="ak-form-title m-1 mb-4">Detalle de área</h1>
+        <h1 class="ak-form-title m-1 mb-4">Detalle de rol</h1>
     </div>
 
     <!-- Franja 2: Contenido -->
@@ -28,15 +28,15 @@
                         <div class="col-12 col-lg-3">
                             <div class="ak-dl">
                                 <div class="ak-dl__label">Código</div>
-                                <div class="ak-dl__value text-monospace">@Model.SubCategoriaId</div>
+                                <div class="ak-dl__value text-monospace">@Model.MateriaEnvaseId</div>
                             </div>
                         </div>
 
                         <!-- Nombre -->
                         <div class="col-12 col-lg-3">
                             <div class="ak-dl">
-                                <div class="ak-dl__label">Sub Categoria</div>
-                                <div class="ak-dl__value">@Model.SubCategoriaNombre</div>
+                                <div class="ak-dl__label">Materia Envase</div>
+                                <div class="ak-dl__value">@Model.MateriaEnvaseNombre</div>
                             </div>
                         </div>
 
@@ -44,7 +44,7 @@
                         <div class="col-12 col-lg-3">
                             <div class="ak-dl">
                                 <div class="ak-dl__label">Descripción</div>
-                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.DescripcionSubCategoria) ? Model.DescripcionSubCategoria : "—")</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.MateriaEnvaseDescripcion) ? Model.MateriaEnvaseDescripcion : "—")</div>
                             </div>
                         </div>
 
@@ -64,22 +64,22 @@
                     <!-- Línea extra: Área + Fecha -->
                     <div class="row g-4 mt-1">
                         <!-- Área -->
-                        <div class="col-12 col-lg-3">
+                     @*    <div class="col-12 col-lg-3">
                             <div class="ak-dl">
-                                <div class="ak-dl__label">Categoria</div>
-                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.NombreCategoria) ? Model.NombreCategoria : "—")</div>
-                                <div class="form-text">ID de categoria: @(Model.CategoriaID ?? "—")</div>
+                                <div class="ak-dl__label">Área</div>
+                                <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.AREA_NOMBRE) ? Model.AREA_NOMBRE : "—")</div>
+                                <div class="form-text">ID de área: @(Model.AREA_ID ?? "—")</div>
                             </div>
-                        </div>
+                        </div> *@
 
                         <!-- Fecha de creación (fix ToString) -->
                         <div class="col-12 col-lg-3">
                             <div class="ak-dl">
                                 <div class="ak-dl__label">Fecha de creación</div>
                                 <div class="ak-dl__value">
-                                    @(Model.FECHA_CREACION == null
+                                    @(Model.FechaCreacion == null
                                         ? "—"
-                                        : string.Format("{0:dd/MM/yyyy HH:mm}", Model.FECHA_CREACION))
+                                        : string.Format("{0:dd/MM/yyyy HH:mm}", Model.FechaCreacion))
                                 </div>
                             </div>
                         </div>
@@ -175,7 +175,7 @@
                     <a asp-action="Index" class="btn btn-ak btn-ak-success">
                         <i class="fa-solid fa-arrow-left ak-icon"></i> Regresar
                     </a>
-                    <a asp-action="Edit" asp-route-id="@Model.SubCategoriaId" class="btn btn-ak btn-ak-primary">
+                    <a asp-action="Edit" asp-route-id="@Model.MateriaEnvaseId" class="btn btn-ak btn-ak-primary">
                         <i class="fa-solid fa-pen-to-square ak-icon"></i> Editar
                     </a>
                 </div>

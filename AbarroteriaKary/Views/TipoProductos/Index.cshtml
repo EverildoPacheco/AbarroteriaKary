@@ -1,16 +1,8 @@
-﻿@* ================================
-   PUESTO / INDEX
-   - Estilo idéntico al Index de Áreas
-   - Filtros: Estado, Búsqueda, Rango de fechas
-   - Columnas: ID, Nombre del puesto, Área, Fecha creación, Descripción, Estado
-   - Paginación con _Pager (igual que Áreas)
-   ================================= *@
-
-@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.SubCategoriaViewModel>
+﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.TipoProductoViewModel>
 @using System.Globalization
 
 @{
-    ViewData["Title"] = "Puestos";
+    ViewData["Title"] = "Categoría";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     string estado = (ViewBag.Estado as string) ?? "ACTIVO";
@@ -26,7 +18,7 @@
 <!-- CARD / TOOLBAR -->
 <div class="ak-toolbar mb-4 mt-4">
     <div class="ak-toolbar__row">
-        <h1 class="ak-toolbar__title m-0">Sub Categoria</h1>
+        <h1 class="ak-toolbar__title m-0">Tipo Producto</h1>
 
         <div class="ak-toolbar__right">
             <!-- Agregar -->
@@ -91,7 +83,7 @@
                     <button type="submit" class="input-group-text bg-white border-end-0" title="Buscar">
                         <i class="fas fa-search"></i>
                     </button>
-                    <input name="q" value="@q" class="form-control border-start-0" placeholder="Buscar por ID, nombre o área" />
+                    <input name="q" value="@q" class="form-control border-start-0" placeholder="Buscar por ID, nombre o descripción" />
                 </div>
             </form>
         </div>
@@ -106,18 +98,16 @@
                 @* ★ Encabezados seguros cuando no hay Items *@
                 @if (Model.Items.Any())
                 {
-                    <th>@Html.DisplayNameFor(m => m.Items[0].SubCategoriaId)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].SubCategoriaNombre)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].NombreCategoria)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].DescripcionSubCategoria)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].FECHA_CREACION)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].TipoProductoId)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].TipoProductoNomre)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].TipoProductoDescripcion)</th>
+                    <th>@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
                     <th>@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
                 }
                 else
                 {
                     <th>Código</th>
-                    <th>Nombre del puesto</th>
-                    <th>Área</th>
+                    <th>Nombre de categoría</th>
                     <th>Descripción</th>
                     <th>Fecha de creación</th>
                     <th>Estado</th>
@@ -130,24 +120,23 @@
             @if (!Model.Items.Any())
             {
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">
+                    <td colspan="6" class="text-center py-4 text-muted">
                         <i class="fa-regular fa-face-frown me-1"></i> No hay resultados.
                     </td>
                 </tr>
             }
             else
             {
-                foreach (var p in Model.Items)
+                foreach (var c in Model.Items)
                 {
-                    bool esActivo = string.Equals(p.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+                    bool esActivo = string.Equals(c.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
                     <tr>
-                        <td class="text-monospace">@Html.DisplayFor(_ => p.SubCategoriaId)</td>
-                        <td>@Html.DisplayFor(_ => p.SubCategoriaNombre)</td>
-                        <td>@Html.DisplayFor(_ => p.NombreCategoria)</td>
+                        <td class="text-monospace">@Html.DisplayFor(_ => c.TipoProductoId)</td>
+                        <td>@Html.DisplayFor(_ => c.TipoProductoNomre)</td>
                         <td class="text-muted">
-                            @(!string.IsNullOrWhiteSpace(p.DescripcionSubCategoria) ? p.DescripcionSubCategoria : "-")
+                            @(!string.IsNullOrWhiteSpace(c.TipoProductoDescripcion) ? c.TipoProductoDescripcion : "-")
                         </td>
-                        <td>@(p.FECHA_CREACION?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT")))</td>
+                        <td>@(c.FechaCreacion?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT")))</td>
 
                         <td class="text-center">
                             <span class="badge text-white @(esActivo ? "bg-success" : "bg-danger")">
@@ -155,10 +144,10 @@
                             </span>
                         </td>
                         <td class="text-center acciones">
-                            <a href="@Url.Action("Edit", "SubCategorias", new { id = p.SubCategoriaId })" class="btn btn-sm me-2" title="Editar">
+                            <a asp-action="Edit" asp-route-id="@c.TipoProductoId" class="btn btn-sm me-2" title="Editar">
                                 <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">
                             </a>
-                            <a href="@Url.Action("Details", "SubCategorias", new { id = p.SubCategoriaId })" class="btn btn-sm me-2" title="Ver">
+                            <a asp-action="Details" asp-route-id="@c.TipoProductoId" class="btn btn-sm me-2" title="Ver">
                                 <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
                             </a>
                         </td>
@@ -168,11 +157,9 @@
         </tbody>
     </table>
 
-    @* Paginador (mismo parcial que Áreas) *@
+    @* Paginador (mismo parcial que en otros módulos) *@
     @await Html.PartialAsync("_Pager", Model)
 </div>
-
-
 
 @section Scripts {
     <script>
@@ -204,7 +191,6 @@
             numberOfMonths: 2,
             numberOfColumns: 2,
             splitView: true,
-            // IMPORTANTE: no incluir "dropdowns" para tener grids al click en header
             format: 'DD/MM/YYYY',
             lang: 'es-ES',
             startDate: start || null,
@@ -231,7 +217,7 @@
             });
           }
 
-          // (Solo estética) cursor de “click” en el header
+          // (Solo estética) cursor “click” en el header
           picker.on('render', () => {
             document.querySelectorAll(
               '.litepicker .month-item-header .month-name, .litepicker .month-item-header .year-number'
