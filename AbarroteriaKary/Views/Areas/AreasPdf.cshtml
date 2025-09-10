@@ -1,0 +1,110 @@
+﻿@model IEnumerable<AbarroteriaKary.ModelsPartial.AreasViewModel>
+@{
+    Layout = "~/Views/Shared/_PdfLayout.cshtml";
+    ViewData["Title"] = "Reporte de Áreas";
+
+
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    var esGT = System.Globalization.CultureInfo.GetCultureInfo("es-GT");
+
+    // ----- Filtro Estado (ya lo tenías) -----
+    var filtroRaw = (ViewBag.Filtro_Estado as string) ?? "ACTIVO";
+    bool esActivo = string.Equals(filtroRaw, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+    var claseEstado = esActivo ? "estado-activo" : "estado-inactivo";
+    var filtroTexto = string.IsNullOrWhiteSpace(filtroRaw) ? "-"
+        : (filtroRaw.Substring(0, 1).ToUpper() + filtroRaw.Substring(1).ToLower());
+
+    // ----- Búsqueda y Rango (opcionales) -----
+    string q = ViewBag.Filtro_Q as string;
+    string desdeTxt = ViewBag.Filtro_Desde as string;
+    string hastaTxt = ViewBag.Filtro_Hasta as string;
+    bool hayQ = !string.IsNullOrWhiteSpace(q);
+    bool hayRango = !string.IsNullOrWhiteSpace(desdeTxt) || !string.IsNullOrWhiteSpace(hastaTxt);
+}
+
+<!-- ====== ENCABEZADO ====== -->
+<header class="rpt-header rpt-botline">
+    <div class="rpt-header__row">
+        <div class="rpt-header__cell rpt-header__cell--logo">
+            <img class="rpt-header__logo" src="@($"{baseUrl}/img/logologo.png")" alt="Logo" />
+        </div>
+        <div class="rpt-header__cell">
+            <h1 class="rpt-title">ABARROTERÍA KARY</h1>
+            <div class="rpt-sub">Reporte de Área</div>
+        </div>
+    </div>
+</header>
+<br />
+
+<!-- ====== METADATOS (cuadritos) ====== -->
+<table class="meta-outer">
+    <tr>
+        <td class="col-left">
+            <table class="meta-box">
+                <tr>
+                    <th>Filtro:</th>
+                    <td><span class="estado-text @claseEstado">@filtroTexto</span></td>
+                </tr>
+            </table>
+        </td>
+
+        <td class="col-right">
+            <table class="meta-box">
+                <tr>
+                    <th>Fecha / hora:</th>
+                    <td>@DateTime.Now.ToString("dd/MM/yyyy HH:mm", esGT)</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <tr>
+        <td class="col-left">
+            <table class="meta-box">
+                <tr>
+                    <th>Generado por:</th>
+                    <td>
+                        @{
+                            var u = ViewBag.Usuario as string;
+                        }
+                        @(string.IsNullOrWhiteSpace(u) ? "Admin" : u)
+                    </td>
+                </tr>
+            </table>
+        </td>
+
+        <td class="col-right">
+            @* Búsqueda (opcional) *@
+            @if (hayQ)
+            {
+                <table class="meta-box">
+                    <tr>
+                        <th>Búsqueda:</th>
+                        <td>@q</td>
+                    </tr>
+                </table>
+            }
+        </td>
+    </tr>
+
+    @* Rango (opcional) en una fila aparte *@
+    @if (hayRango)
+    {
+        <tr>
+            <td class="col-left">
+                <table class="meta-box">
+                    <tr>
+                        <th>Rango:</th>
+                        <td>@(string.IsNullOrWhiteSpace(desdeTxt) && string.IsNullOrWhiteSpace(hastaTxt) ? "-" : $"{desdeTxt} - {hastaTxt}")</td>
+                    </tr>
+                </table>
+            </td>
+            <td class="col-right"></td>
+        </tr>
+    }
+</table>
+
+<div class="rpt-divider"></div>
+
+@* ====== TABLA PRINCIPAL ====== *@
+@await Html.PartialAsync("_AreasReporteTabla", Model)

@@ -1,0 +1,103 @@
+﻿/* ====== PDF GLOBAL (wkhtmltopdf) ====== */
+:root {
+    /* Cambie aquí SU paleta (un solo lugar) */
+    --brand1: #034C8C; /* título */
+    --brand2: #ac8cb6; /* encabezado de tabla */
+    --brand2-ink: #ffffff;
+    --row-alt: #f5f8f6;
+    --text: #111111;
+    --muted: #666666;
+    --border: #dddddd;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: var(--text);
+    margin: 0;
+}
+
+/* ====== CABECERA con logo ====== */
+.rpt-header {
+    padding: 6px 0 10px;
+    border-bottom: 2px solid var(--brand2);
+}
+
+.rpt-header__row {
+    display: table;
+    width: 100%;
+}
+
+.rpt-header__left, .rpt-header__right {
+    display: table-cell;
+    vertical-align: middle;
+}
+
+.rpt-header__right {
+    text-align: right;
+}
+
+.rpt-header__logo {
+    height: 30px;
+}
+
+.rpt-title {
+    margin: 0 0 2px 0;
+    font-size: 18px;
+    color: var(--brand1); /* ← título de color */
+}
+
+.rpt-sub {
+    margin: 0;
+    color: var(--muted);
+    font-size: 12px;
+}
+
+/* ====== TABLA ====== */
+.rpt-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+    .rpt-table th, .rpt-table td {
+        border: 1px solid var(--border);
+        padding: 6px 8px;
+    }
+
+    .rpt-table thead th {
+        background: var(--brand2);
+        color: var(--brand2-ink);
+        text-align: left;
+        font-weight: bold;
+    }
+
+    .rpt-table tbody tr:nth-child(even) {
+        background: var(--row-alt);
+    }
+
+/* Alineaciones útiles */
+.rpt-td--right {
+    text-align: right;
+}
+
+.rpt-td--center {
+    text-align: center;
+}
+
+/* Pie de tabla / totales */
+.rpt-table tfoot th, .rpt-table tfoot td {
+    background: #eef5ea;
+    font-weight: bold;
+}
+
+/* (Opc) “Firma” o notas */
+.rpt-notes {
+    margin-top: 14px;
+    color: var(--muted);
+    font-size: 11px;
+}

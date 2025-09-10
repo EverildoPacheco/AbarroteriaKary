@@ -1,0 +1,62 @@
+﻿@using System.Linq
+@using AbarroteriaKary.ModelsPartial
+@model IEnumerable<AbarroteriaKary.ModelsPartial.AreasViewModel>
+
+@{
+    // ✔ Blindaje: si Model es null, usamos una lista vacía
+    var items = (Model ?? Enumerable.Empty<AreasViewModel>()).ToList();
+}
+
+<table class="rpt-table">
+    <thead>
+        <tr>
+            <th style="width:22%;">Código</th>
+            <th>Área</th>
+            <th style="width:18%;">Fecha creación</th>
+            <th style="width:14%;">Estado</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @if (items.Count == 0)
+        {
+            <!-- ✔ Mensaje cuando no hay filas (mismo look & feel) -->
+            <tr>
+                <td colspan="4" class="t-center" style="padding:10px;">
+                    <em>Sin datos para los filtros seleccionados.</em>
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var x in items)
+            {
+                // ✔ Normalización/seguridad de campos
+                var codigo = x?.areaId ?? "-";
+                var nombre = x?.areaNombre ?? "-";
+
+                // Si por alguna razón FechaCreacion viniera default, mostramos "-"
+                var fechaTxt = (x?.FechaCreacion == default(DateTime))
+                ? "-"
+                : x!.FechaCreacion.ToString("dd/MM/yyyy");
+
+                // Estado: color + capitalización "Activo/Inactivo"
+                var estadoRaw = (x?.ESTADO ?? "").Trim();
+                bool activo = string.Equals(estadoRaw, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+                var cls = activo ? "estado-activo" : "estado-inactivo";
+                var estadoTxt = string.IsNullOrWhiteSpace(estadoRaw)
+                ? "-"
+                : (char.ToUpper(estadoRaw[0]) + estadoRaw.Substring(1).ToLower());
+
+                <tr>
+                    <td>@codigo</td>
+                    <td>@nombre</td>
+                    <td>@fechaTxt</td>
+                    <td class="t-center">
+                        <span class="estado-text @cls">@estadoTxt</span>
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

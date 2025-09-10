@@ -1,0 +1,229 @@
+﻿@{
+    Layout = null;
+    // URL absoluta: wkhtmltopdf descarga las fuentes vía HTTP(s)
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"]</title>
+
+
+    <style>
+        /* === Poppins (usar @@ en Razor) === */
+        @@font-face {
+            font-family: 'Poppins';
+            src: url('@(baseUrl + "/fonts/Poppins-Regular.ttf")') format('truetype');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @@font-face {
+            font-family: 'Poppins';
+            src: url('@(baseUrl + "/fonts/Poppins-SemiBold.ttf")') format('truetype');
+            font-weight: 600;
+            font-style: normal;
+        }
+
+        @@font-face {
+            font-family: 'Poppins';
+            src: url('@(baseUrl + "/fonts/Poppins-Bold.ttf")') format('truetype');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        @@font-face {
+            font-family: 'Poppins';
+            src: url('@(baseUrl + "/fonts/Poppins-Italic.ttf")') format('truetype');
+            font-weight: 400;
+            font-style: italic;
+        }
+
+        /* ===== Tipografía base + compactado con Poppins ===== */
+        body {
+            font-family: 'Poppins', Arial, Helvetica, sans-serif;
+            line-height: 1.20;
+        }
+
+        h1, h2, h3 {
+            margin: 0 0 6px 0;
+        }
+
+        .rpt-title {
+            font-family: 'Poppins', Arial, Helvetica, sans-serif;
+            font-weight: 700;
+            line-height: 1.10;
+        }
+
+        .rpt-sub {
+            line-height: 1.15;
+            color: #434445;
+            font-size: 15px;
+        }
+
+        /* ===== Header con logo ===== */
+        .rpt-topline {
+            border-top: 2px solid #bca9a0;
+            margin-top: 6px;
+        }
+
+        .rpt-botline {
+            border-bottom: 2px solid #bca9a0;
+            padding-bottom: 6px;
+        }
+
+        .rpt-header {
+            margin-top: 6px;
+        }
+
+        .rpt-header__row {
+            display: table;
+            width: 100%;
+        }
+
+        .rpt-header__cell {
+            display: table-cell;
+            vertical-align: middle;
+        }
+
+        .rpt-header__cell--logo {
+            width: 56px;
+        }
+
+        .rpt-header__logo {
+            height: 42px;
+        }
+
+        .rpt-title {
+            font-size: 20px;
+            letter-spacing: .5px;
+            text-align: center;
+            color: #000;
+        }
+
+        .rpt-sub {
+            text-align: center;
+        }
+
+        /* ===== Tabla principal ===== */
+        .rpt-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+            .rpt-table th, .rpt-table td {
+                border: 0.5px solid #9b9b9b;
+                padding: 6px 8px;
+            }
+
+            .rpt-table thead th {
+                background: #95b5c0; /* encabezado fuerte */
+                color: #0b1f27; /* tinta encabezado  */
+                text-align: center; /* títulos centrados */
+                font-weight: 590; /* SemiBold (tu preferencia) */
+                font-size: 11.5px; /* normalizado Poppins≈Arial */
+                line-height: 1.15;
+                letter-spacing: .2px;
+            }
+
+            .rpt-table tbody td {
+                font-size: 11px; /* normalizado Poppins≈Arial */
+                line-height: 1.15;
+                letter-spacing: .1px;
+            }
+
+            .rpt-table tbody tr:nth-child(even) {
+                background: #eaf2f5;
+            }
+        /* zebra */
+        .t-right {
+            text-align: right;
+        }
+
+        .t-center {
+            text-align: center;
+        }
+
+        /* ===== Cuadritos de Filtro/Fecha/Generado ===== */
+        .meta-outer {
+            width: 100%;
+            border-collapse: separate;
+        }
+
+            .meta-outer td {
+                vertical-align: top;
+            }
+
+            .meta-outer .col-left {
+                width: 50%;
+                padding-right: 16px;
+            }
+
+            .meta-outer .col-right {
+                width: 50%;
+                padding-left: 100px;
+            }
+        /* “pegado” a la derecha con padding */
+
+        .meta-box {
+            display: inline-table;
+            border-collapse: collapse;
+            margin: 0 0 10px 0;
+            width: 35mm;
+            table-layout: fixed;
+            font-size: 11px;
+            letter-spacing: .5px;
+        }
+
+            .meta-box th, .meta-box td {
+                border: 0.5px solid #595b5c;
+                padding: 4px 8px;
+                line-height: 1.10;
+            }
+
+            .meta-box th {
+                width: 32mm;
+                background: #c9b2a5;
+                color: #000;
+                text-align: left;
+                white-space: nowrap;
+                font-weight: 600; /* SemiBold etiquetas */
+            }
+
+            .meta-box td {
+                width: 35mm;
+                height: 2mm;
+                background: #fff;
+                color: #000;
+            }
+
+        /* ===== Estado (solo color texto) ===== */
+        .estado-text {
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .estado-activo {
+            color: #0f5132;
+        }
+
+        .estado-inactivo {
+            color: #b02a37;
+        }
+
+        /* ===== Línea divisora grande ===== */
+        .rpt-divider {
+            border-top: 2px solid #bca9a0;
+            margin: 10px 0;
+        }
+    </style>
+
+
+
+</head>
+<body>
+    @RenderBody()
+</body>
+</html>

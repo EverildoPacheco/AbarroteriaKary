@@ -7,6 +7,9 @@ using AbarroteriaKary.Services.Correlativos;
 using Microsoft.AspNetCore.Authentication.Cookies; // arriba
 using Microsoft.EntityFrameworkCore;
 using System;
+using Rotativa.AspNetCore;
+using AbarroteriaKary.Services.Reportes;   // <-- AGREGAR
+
 
 
 
@@ -37,6 +40,8 @@ builder.Services.Configure<AbarroteriaKary.Services.Mail.SmtpOptions>(
 builder.Services.AddScoped<AbarroteriaKary.Services.Mail.IEmailSender,
                            AbarroteriaKary.Services.Mail.SmtpEmailSender>();
 
+//REportes
+builder.Services.AddScoped<IReporteExportService, ReporteExportService>(); // <-- AGREGAR
 
 
 
@@ -77,6 +82,8 @@ builder.Services.AddSession(options =>
 builder.Services.AddAntiforgery();
 
 var app = builder.Build();
+RotativaConfiguration.Setup(app.Environment.WebRootPath, "Rotativa"); // usa wwwroot/Rotativa
+
 
 if (!app.Environment.IsDevelopment())
 {

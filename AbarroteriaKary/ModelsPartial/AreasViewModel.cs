@@ -23,13 +23,11 @@ namespace AbarroteriaKary.ModelsPartial
         // String que ya usas en listados / consultas
         [ValidateNever]
         [Display(Name = "Estado")]
-        public string estadoArea { get; set; }
+        public string ESTADO { get; set; } = "ACTIVO";
 
-
-        [ValidateNever]
-        // ✔ Nuevo: flag para el Create/Edit (checkbox)
+        // Checkbox en Create/Edit. Se mapea ↔ ESTADO.
         [Display(Name = "Activo")]
-        public bool estadoActivo { get; set; } = true;
+        public bool EstadoActivo { get; set; } = true;
 
 
         [Display(Name = "Fecha de creación")]

@@ -2,19 +2,28 @@
 using AbarroteriaKary.Models;
 using AbarroteriaKary.ModelsPartial;
 using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T>
-using AbarroteriaKary.Services.Correlativos;
 using AbarroteriaKary.Services.Auditoria;
-
+using AbarroteriaKary.Services.Correlativos;
 using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
+using AbarroteriaKary.Services.Reportes;
+using DocumentFormat.OpenXml.Spreadsheet;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
+using Rotativa.AspNetCore;
+using Rotativa.AspNetCore.Options;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
+
 
 
 namespace AbarroteriaKary.Controllers
@@ -23,15 +32,21 @@ namespace AbarroteriaKary.Controllers
     {
         private readonly KaryDbContext _context;
         private readonly ICorrelativoService _correlativos;
-        //private readonly IAuditoriaService _auditoria;
+        private readonly IReporteExportService _exportSvc;
+        private readonly IAuditoriaService _auditoria;
 
 
-        public AreasController(KaryDbContext context, ICorrelativoService correlativos)
+        public AreasController(KaryDbContext context, ICorrelativoService correlativos, IReporteExportService exportSvc, IAuditoriaService auditoria)
         {
             _context = context;
             _correlativos = correlativos;
+            _exportSvc = exportSvc;
+            _auditoria = auditoria;
+
 
         }
+
+
 
         [HttpGet]
         public async Task<IActionResult> Index(
@@ -78,7 +93,7 @@ namespace AbarroteriaKary.Controllers
                     areaId = a.AREA_ID,
                     areaNombre = a.AREA_NOMBRE,
                     areaDescripcion = a.AREA_DESCRIPCION,
-                    estadoArea = a.ESTADO,
+                    ESTADO = a.ESTADO,
                     FechaCreacion = a.FECHA_CREACION
                 });
 
@@ -99,7 +114,7 @@ namespace AbarroteriaKary.Controllers
             ViewBag.Q = q;
             ViewBag.FDesde = resultado.RouteValues["fDesde"];
             ViewBag.FHasta = resultado.RouteValues["fHasta"];
-
+            ViewBag.Usuario = await _auditoria.GetUsuarioNombreAsync(); // o tu método
             return View(resultado);
         }
 
@@ -116,6 +131,185 @@ namespace AbarroteriaKary.Controllers
             if (DateTime.TryParse(input, out d)) return d;
             return null;
         }
+
+
+
+        //----------------------------Reporete
+
+
+
+            [AllowAnonymous] // si tu sitio requiere login, esto evita bloqueos del motor al pedir el footer
+            [HttpGet]
+            public IActionResult PdfFooter()
+            {
+                // Vista compartida del pie
+                return View("~/Views/Shared/_PdfFooter.cshtml");
+            }
+
+    private IQueryable<AreasViewModel> BuildAreasQuery(string estadoNorm, string? q, DateTime? desde, DateTime? hasta)
+        {
+            var qry = _context.AREA
+                .AsNoTracking()
+                .Where(a => !a.ELIMINADO);
+
+            if (estadoNorm is "ACTIVO" or "INACTIVO")
+                qry = qry.Where(a => a.ESTADO == estadoNorm);
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var term = $"%{q.Trim()}%";
+                qry = qry.Where(a =>
+                    EF.Functions.Like(a.AREA_ID, term) ||
+                    EF.Functions.Like(a.AREA_NOMBRE, term));
+            }
+
+            if (desde.HasValue) qry = qry.Where(a => a.FECHA_CREACION >= desde.Value.Date);
+            if (hasta.HasValue) qry = qry.Where(a => a.FECHA_CREACION < hasta.Value.Date.AddDays(1));
+
+            return qry
+                .OrderBy(a => a.AREA_ID)
+                .Select(a => new AreasViewModel
+                {
+                    areaId = a.AREA_ID,
+                    areaNombre = a.AREA_NOMBRE,
+                    areaDescripcion = a.AREA_DESCRIPCION,
+                    ESTADO = a.ESTADO,
+                    FechaCreacion = a.FECHA_CREACION
+                });
+        }
+
+
+
+
+        // GET: /Areas/Exportar?formato=pdf|xlsx|docx&estado=ACTIVO&q=&fDesde=&fHasta=
+
+
+        private string GetUsuarioActual()
+        {
+            // 1) Claims (cookie de autenticación)
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                if (!string.IsNullOrWhiteSpace(User.Identity!.Name))
+                    return User.Identity.Name!;
+                string[] keys = {
+            ClaimTypes.Name, ClaimTypes.GivenName, ClaimTypes.Email,
+            "name","usuario","user","UserName","UsuarioNombre"
+        };
+                foreach (var k in keys)
+                {
+                    var c = User.FindFirst(k);
+                    if (c != null && !string.IsNullOrWhiteSpace(c.Value))
+                        return c.Value;
+                }
+            }
+
+            // 2) Session (si la llenas en tu login)
+            var ses = HttpContext?.Session?.GetString("UsuarioNombre")
+                   ?? HttpContext?.Session?.GetString("UserName");
+            if (!string.IsNullOrWhiteSpace(ses)) return ses!;
+
+            // 3) Fallback final
+            return "Admin";
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> Exportar(
+      string formato = "pdf",
+      string? estado = "ACTIVO",
+      string? q = null,
+      string? fDesde = null,
+      string? fHasta = null,
+      string? by = null)
+        {
+            // 1) Lee PRIMERO del querystring (lo que manda el dropdown)
+            var qs = Request?.Query;
+            string estadoParam = !string.IsNullOrWhiteSpace(qs?["estado"]) ? qs!["estado"].ToString() : estado;
+            string qParam = !string.IsNullOrWhiteSpace(qs?["q"]) ? qs!["q"].ToString() : q;
+            string fDesdeParam = !string.IsNullOrWhiteSpace(qs?["fDesde"]) ? qs!["fDesde"].ToString() : fDesde;
+            string fHastaParam = !string.IsNullOrWhiteSpace(qs?["fHasta"]) ? qs!["fHasta"].ToString() : fHasta;
+            string byParam = !string.IsNullOrWhiteSpace(qs?["by"]) ? qs!["by"].ToString() : by;
+
+            // 2) Normaliza estado
+            var estadoNorm = (estadoParam ?? "ACTIVO").Trim().ToUpperInvariant();
+            if (estadoNorm is not ("ACTIVO" or "INACTIVO" or "TODOS")) estadoNorm = "ACTIVO";
+
+            // 3) Fechas
+            DateTime? desde = ParseDate(fDesdeParam);
+            DateTime? hasta = ParseDate(fHastaParam);
+
+            // 4) Data
+            var datos = await BuildAreasQuery(estadoNorm, qParam, desde, hasta).ToListAsync();
+
+            // 5) ViewData tipado + modelo dentro de ViewData (evita Model=null en Rotativa)
+            var pdfViewData = new ViewDataDictionary<IEnumerable<AreasViewModel>>(
+                new EmptyModelMetadataProvider(),
+                new ModelStateDictionary())
+            {
+                Model = datos ?? new List<AreasViewModel>()
+            };
+            pdfViewData["Filtro_Estado"] = estadoNorm;
+            pdfViewData["Filtro_Q"] = qParam;
+            pdfViewData["Filtro_Desde"] = desde?.ToString("dd/MM/yyyy");
+            pdfViewData["Filtro_Hasta"] = hasta?.ToString("dd/MM/yyyy");
+
+            var usuario = GetUsuarioActual();
+            if ((string.IsNullOrWhiteSpace(usuario) || usuario == "Admin") && !string.IsNullOrWhiteSpace(byParam))
+                usuario = byParam;
+            pdfViewData["Usuario"] = usuario;
+
+            var stamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
+
+            switch ((formato ?? "").ToLowerInvariant())
+            {
+                case "pdf":
+                    {
+                        var footerUrl = Url.Action("PdfFooter", "Areas", null, Request.Scheme);
+
+                        var pdf = new ViewAsPdf("~/Views/Areas/AreasPdf.cshtml")
+                        {
+                            ViewData = pdfViewData,
+                            PageSize = Size.Letter,
+                            PageOrientation = Orientation.Portrait,
+                            PageMargins = new Margins(10, 10, 20, 12),
+                            CustomSwitches = "--disable-smart-shrinking --print-media-type " +
+                                             $"--footer-html \"{footerUrl}\" --footer-spacing 4"
+                        };
+
+                        var bytes = await pdf.BuildFile(ControllerContext);
+                        Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+                        Response.Headers["Pragma"] = "no-cache";
+                        Response.Headers["Expires"] = "0";
+                        return File(bytes, "application/pdf");
+                    }
+
+                case "xlsx":
+                case "excel":
+                    {
+                        var xlsx = _exportSvc.GenerarExcelAreas(datos);
+                        return File(
+                            xlsx,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            $"Reporte_Areas_{stamp}.xlsx");
+                    }
+
+                case "docx":
+                case "word":
+                    {
+                        var docx = _exportSvc.GenerarWordAreas(datos);
+                        return File(
+                            docx,
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            $"Reporte_Areas_{stamp}.docx");
+                    }
+
+                default:
+                    return BadRequest("Formato no soportado. Use pdf | xlsx | docx.");
+            }
+        }
+
+
+
 
 
 
@@ -137,8 +331,8 @@ namespace AbarroteriaKary.Controllers
                 areaId = a.AREA_ID,
                 areaNombre = a.AREA_NOMBRE,
                 areaDescripcion = a.AREA_DESCRIPCION,
-                estadoArea = a.ESTADO,                            // para badges en listado
-                estadoActivo = string.Equals(a.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase),
+                ESTADO = a.ESTADO,                            // para badges en listado
+                EstadoActivo = string.Equals(a.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase),
                 FechaCreacion = a.FECHA_CREACION
             };
 
@@ -154,7 +348,8 @@ namespace AbarroteriaKary.Controllers
             var vm = new AreasViewModel
             {
                 areaId = await _correlativos.PeekNextAreaIdAsync(), // solo mostrar
-                estadoArea = "ACTIVO",
+                ESTADO = "ACTIVO",
+                EstadoActivo = true,
                 FechaCreacion = DateTime.Now
             };
 
@@ -175,7 +370,8 @@ namespace AbarroteriaKary.Controllers
                 return View(vm);
             }
 
-            var userName = User?.Identity?.Name ?? "Sistema";
+            var ahora = DateTime.Now;
+            var usuarioNombre = await _auditoria.GetUsuarioNombreAsync(); // ★ AQUÍ LA INTEGRACIÓN
 
             await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable);
             try
@@ -187,10 +383,10 @@ namespace AbarroteriaKary.Controllers
                     AREA_ID = nuevoId,
                     AREA_NOMBRE = (vm.areaNombre ?? string.Empty).Trim(),
                     AREA_DESCRIPCION = vm.areaDescripcion?.Trim(),
-                    ESTADO = vm.estadoActivo ? "ACTIVO" : "INACTIVO",
+                    ESTADO = vm.EstadoActivo ? "ACTIVO" : "INACTIVO",
                     ELIMINADO = false,
-                    CREADO_POR = userName,
-                    FECHA_CREACION = DateTime.Now
+                    CREADO_POR = usuarioNombre,
+                    FECHA_CREACION = ahora
                 };
 
                 _context.Add(entidad);
@@ -231,8 +427,8 @@ namespace AbarroteriaKary.Controllers
                 areaId = entidad.AREA_ID,
                 areaNombre = entidad.AREA_NOMBRE,
                 areaDescripcion = entidad.AREA_DESCRIPCION,
-                estadoArea = entidad.ESTADO,
-                estadoActivo = string.Equals(entidad.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase),
+                ESTADO = entidad.ESTADO,
+                EstadoActivo = string.Equals(entidad.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase),
                 FechaCreacion = entidad.FECHA_CREACION
             };
 
@@ -256,7 +452,7 @@ namespace AbarroteriaKary.Controllers
             // normalización
             var nuevoNombre = (vm.areaNombre ?? string.Empty).Trim();
             var nuevaDesc = vm.areaDescripcion?.Trim();
-            var nuevoEstado = vm.estadoActivo ? "ACTIVO" : "INACTIVO";
+            var nuevoEstado = vm.EstadoActivo ? "ACTIVO" : "INACTIVO";
 
             // ¿hay cambios?
             var sinCambios =
@@ -270,12 +466,16 @@ namespace AbarroteriaKary.Controllers
                 return RedirectToAction(nameof(Edit), new { id });
             }
 
+            var ahora = DateTime.Now;
+            var usuarioNombre = await _auditoria.GetUsuarioNombreAsync(); // ★ AQUÍ LA INTEGRACIÓN
+
+
             // aplicar cambios + auditoría
             entidad.AREA_NOMBRE = nuevoNombre;
             entidad.AREA_DESCRIPCION = nuevaDesc;
             entidad.ESTADO = nuevoEstado;
-            entidad.MODIFICADO_POR = User?.Identity?.Name ?? "Sistema";
-            entidad.FECHA_MODIFICACION = DateTime.Now;
+            entidad.MODIFICADO_POR = usuarioNombre;
+            entidad.FECHA_MODIFICACION = ahora;
 
             try
             {

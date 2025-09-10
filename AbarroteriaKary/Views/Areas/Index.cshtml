@@ -27,6 +27,8 @@
                 <i class="fa-solid fa-circle-plus"></i><span>Agregar</span>
             </a>
 
+
+
             <!-- Filtros de estado (★ preserva pageSize y reinicia a página 1) -->
             <a asp-action="Index" asp-route-estado="TODOS" asp-route-q="@q"
                asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
@@ -49,6 +51,33 @@
                 <i class="fa-solid fa-ban me-1"></i>Inactivo
             </a>
 
+            <!-- Aquí necesito que este el boton o drawlist del reporte  -->
+            <!-- Aquí necesito que este el boton o drawlist del reporte  -->
+            <!-- Aquí necesito que este el boton o drawlist del reporte  -->
+            <!-- Aquí necesito que este el boton o drawlist del reporte  -->
+            @{
+                var repVm = new AbarroteriaKary.ModelsPartial.ReporteDropdownVM
+                {
+                    Controller = "Areas",
+                    ExportAction = "Exportar",
+                    Label = "Reporte",
+                    SizeCss = "btn btn-ak-primary btn-ak-square",
+
+                    // ★ Estos cuatro deben venir de lo que está mostrando la grilla
+                    Estado = ViewBag.Estado as string,      // "ACTIVO" | "INACTIVO" | "TODOS"
+                    Q = ViewBag.Q as string,
+                    FDesde = ViewBag.FDesde as string,      // "yyyy-MM-dd"
+                    FHasta = ViewBag.FHasta as string
+                };
+            }
+            @await Html.PartialAsync("~/Views/Shared/Reportes/_ReporteDropdown.cshtml", repVm)
+
+
+
+
+
+
+            
             <!-- Buscador + Rango -->
             <form id="frmFiltros" method="get" asp-action="Index"
                   class="d-inline-flex align-items-center gap-2">
@@ -95,17 +124,17 @@
 <!-- Tabla -->
 <div class="table-responsive">
     
-    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra">
+    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra js-sortable">
 
         <thead class="text-center thead-kary">
             <tr>
                 @* ★ Encabezados seguros cuando no hay Items *@
                 @if (Model.Items.Any())
                 {
-                    <th>@Html.DisplayNameFor(m => m.Items[0].areaId)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].areaNombre)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].estadoArea)</th>
+                    <th data-type="number">@Html.DisplayNameFor(m => m.Items[0].areaId)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].areaNombre)</th>
+                    <th data-type="date:dd/MM/yyyy">@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
+                    <th data-type="number">@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
                 }
                 else
                 {
@@ -131,16 +160,18 @@
             {
                 foreach (var area in Model.Items)
                 {
-                    bool esActivo = string.Equals(area.estadoArea, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+                    bool esActivo = string.Equals(area.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
                     <tr>
                         <td class="text-monospace">@Html.DisplayFor(_ => area.areaId)</td>
                         <td>@Html.DisplayFor(_ => area.areaNombre)</td>
                         <td>@area.FechaCreacion.ToString("dd/MM/yyyy")</td>
-                        <td class="text-center">
+
+                        <td class="text-center" data-sort-value="@(esActivo ? 1 : 0)">
                             <span class="badge text-white @(esActivo ? "bg-success" : "bg-danger")">
                                 @(esActivo ? "Activo" : "Inactivo")
                             </span>
                         </td>
+
                         <td class="text-center acciones">
                             <a href="@Url.Action("Edit", "Areas", new { id = area.areaId })" class="btn btn-sm me-2" title="Editar">
                                 <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">

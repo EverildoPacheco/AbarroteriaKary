@@ -92,26 +92,26 @@
 
 <!-- Tabla -->
 <div class="table-responsive">
-    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra">
+    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra js-sortable">
         <thead class="text-center thead-kary">
             <tr>
                 @* ★ Encabezados seguros cuando no hay Items *@
                 @if (Model.Items.Any())
                 {
-                    <th>@Html.DisplayNameFor(m => m.Items[0].IdRol)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].NombreRol)</th>
+                    <th data-type="number">@Html.DisplayNameFor(m => m.Items[0].IdRol)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].NombreRol)</th>
                     // <th>@Html.DisplayNameFor(m => m.Items[0].AREA_NOMBRE)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].DescripcionRol)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].DescripcionRol)</th>
+                    <th data-type="date:dd/MM/yyyy">@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
+                    <th data-type="number">@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
                 }
                 else
                 {
-                    <th>Código</th>
-                    <th>Nombre del puesto</th>
-                    <th>Descripción</th>
-                    <th>Fecha de creación</th>
-                    <th>Estado</th>
+                    <th data-type="number">Código</th>
+                    <th data-type="text">Nombre del puesto</th>
+                    <th data-type="text">Descripción</th>
+                    <th data-type="date:dd/MM/yyyy">Fecha de creación</th>
+                    <th >Estado</th>
                 }
                 <th>Acciones</th>
             </tr>
@@ -139,11 +139,12 @@
                         </td>
                         <td>@(p.FechaCreacion?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT")))</td>
 
-                        <td class="text-center">
+                        <td class="text-center" data-sort-value="@(esActivo ? 1 : 0)">
                             <span class="badge text-white @(esActivo ? "bg-success" : "bg-danger")">
                                 @(esActivo ? "Activo" : "Inactivo")
                             </span>
                         </td>
+
                         <td class="text-center acciones">
                             <a href="@Url.Action("Edit", "Roles", new { id = p.IdRol })" class="btn btn-sm me-2" title="Editar">
                                 <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">

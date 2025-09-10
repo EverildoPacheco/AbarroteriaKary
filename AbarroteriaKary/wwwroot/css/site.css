@@ -20,3 +20,30 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+
+
+/* === Dropdown de Reporte (solo dentro de .ak-report-dd) === */
+.ak-report-dd .dropdown-menu{
+  /* Variables de Bootstrap 5: cambian los estados del item */
+  --bs-dropdown-bg: #ffffff;                   /* fondo del menú */
+  --bs-dropdown-border-color: rgba(0,0,0,.12); /* borde del menú */
+  --bs-dropdown-link-color: #213547;           /* color normal */
+  --bs-dropdown-link-hover-color: #0f5132;     /* hover texto */
+  --bs-dropdown-link-hover-bg: #ecf5ef;        /* hover fondo (verde muy claro) */
+  --bs-dropdown-link-active-color: #ffffff;    /* click/active texto */
+  --bs-dropdown-link-active-bg: #9fc095;       /* click/active fondo (su verde) */
+}
+
+/* Compatibilidad / refuerzo por si su Bootstrap no toma las vars */
+.ak-report-dd .dropdown-item:hover,
+.ak-report-dd .dropdown-item:focus{
+  color:#0f5132;
+  background-color:#ecf5ef;
+}
+
+.ak-report-dd .dropdown-item.active,
+.ak-report-dd .dropdown-item:active {
+    color: #000000;
+    background-color: #95b5c0;
+}

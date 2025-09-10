@@ -1,0 +1,108 @@
+﻿@model AbarroteriaKary.ModelsPartial.ReporteDropdownVM
+@using Microsoft.AspNetCore.Http
+@using System.Collections.Generic
+
+@{
+    // 1) Tomamos TODO lo que ya está en la URL actual (estado, q, fDesde, fHasta…)
+    var currentQ = ViewContext.HttpContext?.Request?.Query;
+    var route = new Dictionary<string, string>(System.StringComparer.OrdinalIgnoreCase);
+    if (currentQ != null)
+    {
+        foreach (var kv in currentQ)
+            route[kv.Key] = kv.Value.ToString();
+    }
+
+    // 2) Si el VM trae algo, sobrescribe
+    if (!string.IsNullOrWhiteSpace(Model?.Estado)) route["estado"] = Model.Estado;
+    if (!string.IsNullOrWhiteSpace(Model?.Q)) route["q"] = Model.Q;
+    if (!string.IsNullOrWhiteSpace(Model?.FDesde)) route["fDesde"] = Model.FDesde; // yyyy-MM-dd
+    if (!string.IsNullOrWhiteSpace(Model?.FHasta)) route["fHasta"] = Model.FHasta; // yyyy-MM-dd
+
+    // 3) Defaults/fallbacks
+    if (!route.ContainsKey("estado") || string.IsNullOrWhiteSpace(route["estado"]))
+        route["estado"] = "ACTIVO";
+
+    // 4) Usuario: usa lo que enviaste desde Index (ViewBag.Usuario),
+    //    si no, intenta con claims o con sesión.
+    var byParam = (ViewBag.Usuario as string)
+                  ?? User?.Identity?.Name
+                  ?? Context?.Session?.GetString("UsuarioNombre");
+
+    // 5) Valores finales que usaremos en Url.Action (evita nulls)
+    var estadoFinal = route.TryGetValue("estado", out var _e) ? _e : "ACTIVO";
+    var qFinal = route.TryGetValue("q", out var _q) ? _q : null;
+    var fDesdeFinal = route.TryGetValue("fDesde", out var _d) ? _d : null;
+    var fHastaFinal = route.TryGetValue("fHasta", out var _h) ? _h : null;
+    var byFinal = string.IsNullOrWhiteSpace(byParam) ? null : byParam;
+
+    // 6) Controller/Action/estilos con fallback
+    var controller = string.IsNullOrWhiteSpace(Model?.Controller)
+                     ? (ViewContext.RouteData.Values["controller"]?.ToString() ?? "Areas")
+                     : Model.Controller;
+    var action = string.IsNullOrWhiteSpace(Model?.ExportAction) ? "Exportar" : Model.ExportAction;
+    var label = string.IsNullOrWhiteSpace(Model?.Label) ? "Exportar" : Model.Label;
+    var btnCss = string.IsNullOrWhiteSpace(Model?.SizeCss) ? "btn btn-success" : Model.SizeCss;
+
+    // 7) HREFs construidos explícitamente (sin tag helpers)
+    var hrefPdf = Url.Action(action, controller, new { formato = "pdf", estado = estadoFinal, q = qFinal, fDesde = fDesdeFinal, fHasta = fHastaFinal, by = byFinal });
+    var hrefXlsx = Url.Action(action, controller, new { formato = "xlsx", estado = estadoFinal, q = qFinal, fDesde = fDesdeFinal, fHasta = fHastaFinal });
+    var hrefDocx = Url.Action(action, controller, new { formato = "docx", estado = estadoFinal, q = qFinal, fDesde = fDesdeFinal, fHasta = fHastaFinal });
+}
+
+<div class="dropdown ak-report-dd">
+    <button class="@btnCss dropdown-toggle" type="button" id="btnExportar"
+            data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="fa-solid fa-file-export me-1"></i>@label
+    </button>
+
+    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="btnExportar">
+        <li>
+            <a class="dropdown-item js-export"
+               target="_blank" rel="noopener"
+               data-skip-loading="1" data-kary-noloading="1"
+               href="@hrefPdf">PDF</a>
+        </li>
+        <li>
+            <a class="dropdown-item js-export"
+               data-skip-loading="1" data-kary-noloading="1"
+               href="@hrefXlsx">Excel (.xlsx)</a>
+        </li>
+        <li>
+            <a class="dropdown-item js-export"
+               data-skip-loading="1" data-kary-noloading="1"
+               href="@hrefDocx">Word (.docx)</a>
+        </li>
+    </ul>
+</div>
+
+<!-- (Opcional) mini feedback visual -->
+<script>
+    (function () {
+      if (window.__karyExportInit) return; window.__karyExportInit = true;
+      document.addEventListener('click', function (ev) {
+        const link = ev.target.closest('a.js-export');
+        if (!link) return;
+        link.setAttribute('data-kary-noloading', '1');
+        link.setAttribute('data-skip-loading', '1');
+        if (window.KaryLoading && typeof KaryLoading.hide === 'function') {
+          setTimeout(() => KaryLoading.hide(), 0);
+        }
+        const dd = link.closest('.dropdown');
+        const toggle = dd ? dd.querySelector('.dropdown-toggle') : null;
+        if (toggle) {
+          toggle.classList.add('btn--tiny-loading');
+          setTimeout(() => toggle.classList.remove('btn--tiny-loading'), 1500);
+        }
+      }, true);
+    })();
+</script>
+
+<!-- DEBUG (puedes quitarlo): muestra la URL que van a abrir -->
+
+
+<div style="font:12px/1.2 monospace; padding:6px;">
+  <div>PDF: @hrefPdf</div>
+  <div>XLSX: @hrefXlsx</div>
+  <div>DOCX: @hrefDocx</div>
+</div>
+

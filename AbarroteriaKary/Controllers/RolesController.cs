@@ -35,9 +35,10 @@ namespace AbarroteriaKary.Controllers
 
         // GET: Roles
         // GET: Roles
+
         public async Task<IActionResult> Index(
-            string? estado, string? q = null, string? fDesde = null, string? fHasta = null,
-            int page = 1, int pageSize = 10)
+    string? estado, string? q = null, string? fDesde = null, string? fHasta = null,
+    int page = 1, int pageSize = 10)
         {
             // 0) Normaliza estado
             var estadoNorm = (estado ?? "ACTIVO").Trim().ToUpperInvariant();
@@ -122,6 +123,142 @@ namespace AbarroteriaKary.Controllers
             if (DateTime.TryParse(input, out d)) return d;
             return null;
         }
+
+
+        //    public async Task<IActionResult> Index(
+        //string? estado, string? q = null, string? fDesde = null, string? fHasta = null,
+        //string sort = "IdRol", string dir = "asc",                // ★ NUEVO
+        //int page = 1, int pageSize = 10)
+        //    {
+        //        // 0) Normaliza estado
+        //        var estadoNorm = (estado ?? "ACTIVO").Trim().ToUpperInvariant();
+        //        if (estadoNorm is not ("ACTIVO" or "INACTIVO" or "TODOS"))
+        //            estadoNorm = "ACTIVO";
+
+        //        // 1) Parseo de fechas
+        //        DateTime? desde = ParseDate(fDesde);
+        //        DateTime? hasta = ParseDate(fHasta);
+
+        //        // 2) Base query (ignorar eliminados)
+        //        var qry = _context.ROL
+        //            .AsNoTracking()
+        //            .Where(r => !r.ELIMINADO);
+
+        //        // 3) Filtro por estado
+        //        if (estadoNorm is "ACTIVO" or "INACTIVO")
+        //            qry = qry.Where(r => r.ESTADO == estadoNorm);
+
+        //        // 4) Búsqueda
+        //        if (!string.IsNullOrWhiteSpace(q))
+        //        {
+        //            var term = $"%{q.Trim()}%";
+        //            qry = qry.Where(r =>
+        //                EF.Functions.Like(r.ROL_ID, term) ||
+        //                EF.Functions.Like(r.ROL_NOMBRE, term) ||
+        //                EF.Functions.Like(r.ROL_DESCRIPCION, term));
+        //        }
+
+        //        // 5) Rango de fechas (inclusivo)
+        //        if (desde.HasValue) qry = qry.Where(r => r.FECHA_CREACION >= desde.Value.Date);
+        //        if (hasta.HasValue) qry = qry.Where(r => r.FECHA_CREACION < hasta.Value.Date.AddDays(1));
+
+        //        // 6) Ordenamiento server-side (antes de proyectar)
+        //        //    Whitelist de columnas para evitar inyección.
+        //        sort = (sort ?? "IdRol").Trim();
+        //        dir = (dir ?? "asc").Trim().ToLowerInvariant();
+        //        bool asc = dir != "desc";
+
+        //        // Mapeo de nombres "amigables" a columnas reales
+        //        //  IdRol, NombreRol, DescripcionRol, FechaCreacion, ESTADO
+        //        IOrderedQueryable<Models.ROL> orderedQry = (sort, asc) switch
+        //        {
+        //            ("NombreRol", true) => qry.OrderBy(r => r.ROL_NOMBRE),
+        //            ("NombreRol", false) => qry.OrderByDescending(r => r.ROL_NOMBRE),
+
+        //            ("DescripcionRol", true) => qry.OrderBy(r => r.ROL_DESCRIPCION),
+        //            ("DescripcionRol", false) => qry.OrderByDescending(r => r.ROL_DESCRIPCION),
+
+        //            ("FechaCreacion", true) => qry.OrderBy(r => r.FECHA_CREACION),
+        //            ("FechaCreacion", false) => qry.OrderByDescending(r => r.FECHA_CREACION),
+
+        //            ("ESTADO", true) => qry.OrderBy(r => r.ESTADO),
+        //            ("ESTADO", false) => qry.OrderByDescending(r => r.ESTADO),
+
+        //            // Default: IdRol
+        //            ("IdRol", true) => qry.OrderBy(r => r.ROL_ID),
+        //            ("IdRol", false) => qry.OrderByDescending(r => r.ROL_ID),
+
+        //            _ => qry.OrderBy(r => r.ROL_ID) // fallback
+        //        };
+
+        //        // (Opcional) Orden secundario para estabilidad visual
+        //        if (!(sort == "IdRol"))
+        //            orderedQry = orderedQry.ThenBy(r => r.ROL_ID);
+
+        //        // 7) PROYECCIÓN a ViewModel (antes de paginar)
+        //        var proyectado = orderedQry.Select(r => new AbarroteriaKary.ModelsPartial.RolViewModel
+        //        {
+        //            IdRol = r.ROL_ID,
+        //            NombreRol = r.ROL_NOMBRE,
+        //            DescripcionRol = r.ROL_DESCRIPCION,
+        //            ESTADO = r.ESTADO,
+        //            FechaCreacion = r.FECHA_CREACION
+        //        });
+
+        //        // 8) Paginación
+        //        var permitidos = new[] { 10, 25, 50, 100 };
+        //        pageSize = permitidos.Contains(pageSize) ? pageSize : 10;
+
+        //        var resultado = await proyectado.ToPagedAsync(page, pageSize);
+
+        //        // 9) RouteValues (para pager y para preservación en enlaces)
+        //        resultado.RouteValues["estado"] = estadoNorm;
+        //        resultado.RouteValues["q"] = q;
+        //        resultado.RouteValues["fDesde"] = desde?.ToString("yyyy-MM-dd");
+        //        resultado.RouteValues["fHasta"] = hasta?.ToString("yyyy-MM-dd");
+        //        resultado.RouteValues["sort"] = sort;   // ★ NUEVO
+        //        resultado.RouteValues["dir"] = dir;    // ★ NUEVO
+
+        //        // Toolbar
+        //        ViewBag.Estado = estadoNorm;
+        //        ViewBag.Q = q;
+        //        ViewBag.FDesde = resultado.RouteValues["fDesde"];
+        //        ViewBag.FHasta = resultado.RouteValues["fHasta"];
+        //        ViewBag.Sort = sort;   // ★ NUEVO (para iconos en la vista)
+        //        ViewBag.Dir = dir;    // ★ NUEVO
+
+        //        return View(resultado);
+        //    }
+
+
+
+
+        //    private static DateTime? ParseDate(string? input)
+        //    {
+        //        if (string.IsNullOrWhiteSpace(input)) return null;
+
+        //        var formats = new[] { "dd/MM/yyyy", "yyyy-MM-dd" };
+        //        if (DateTime.TryParseExact(input, formats,
+        //            CultureInfo.GetCultureInfo("es-GT"),
+        //            DateTimeStyles.None, out var d))
+        //            return d;
+
+        //        if (DateTime.TryParse(input, out d)) return d;
+        //        return null;
+        //    }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

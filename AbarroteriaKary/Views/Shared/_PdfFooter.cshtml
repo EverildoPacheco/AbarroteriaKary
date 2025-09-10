@@ -1,0 +1,53 @@
+﻿@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        .pdf-footer__line {
+            border-top: 1px solid #d9cac3; /* ← color/grosor de la línea */
+            margin-bottom: 4px;
+        }
+
+        .pdf-footer__text {
+            font-family: 'Poppins', Arial, Helvetica, sans-serif;
+            font-size: 8pt;
+            color: #434445; /* ← color de “Página X de Y” */
+            text-align: right;
+        }
+    </style>
+</head>
+<body>
+    <div class="pdf-footer__line"></div>
+    <div class="pdf-footer__text">
+        Página <span class="page"></span> de <span class="topage"></span>
+    </div>
+
+    <!-- Fallback robusto: si wkhtmltopdf no rellena .page/.topage, lo hacemos con JS -->
+    <script type="text/javascript">
+        (function () {
+          function q() {
+            var r = {}, s = window.location.search.substring(1).split('&');
+            for (var i = 0; i < s.length; i++) {
+              var p = s[i].split('=', 2);
+              r[decodeURIComponent(p[0])] = decodeURIComponent(p[1] || '');
+            }
+            return r;
+          }
+          var vars = q();
+          var p = vars.page || '';
+          var tp = vars.topage || '';
+
+          var set = function (sel, val) {
+            var els = document.querySelectorAll(sel);
+            for (var i = 0; i < els.length; i++) els[i].textContent = val;
+          };
+          // Intenta escribir en ambas convenciones (.page/.topage y #page/#topage)
+          set('.page, #page', p);
+          set('.topage, #topage', tp);
+        })();
+    </script>
+</body>
+</html>
