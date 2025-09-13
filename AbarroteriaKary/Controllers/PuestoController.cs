@@ -5,16 +5,23 @@ using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T
 using AbarroteriaKary.Services.Auditoria;
 using AbarroteriaKary.Services.Correlativos;
 using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
+using AbarroteriaKary.Services.Reportes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
+using Rotativa.AspNetCore;
+using Rotativa.AspNetCore.Options;
+using System;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
-
 
 
 namespace AbarroteriaKary.Controllers
@@ -24,12 +31,16 @@ namespace AbarroteriaKary.Controllers
         private readonly KaryDbContext _context;
         private readonly ICorrelativoService _correlativos;
         private readonly IAuditoriaService _auditoria;
+        private readonly IReporteExportService _exportSvc;
 
-        public PuestoController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria)
+
+        public PuestoController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria, IReporteExportService exportSvc)
         {
             _context = context;
             _correlativos = correlativos;
             _auditoria = auditoria;
+            _exportSvc = exportSvc;
+
 
 
         }
@@ -121,6 +132,200 @@ namespace AbarroteriaKary.Controllers
             if (DateTime.TryParse(input, out d)) return d;
             return null;
         }
+
+
+
+
+
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult PdfFooter()
+        {
+            // Vista compartida del pie
+            return View("~/Views/Shared/Reportes/_PdfFooter.cshtml");
+        }
+
+        private IQueryable<PuestoViewModel> BuildPuestoQuery(string estadoNorm, string? q, DateTime? desde, DateTime? hasta)
+        {
+            var qry = _context.PUESTO
+                .AsNoTracking()
+                .Where(a => !a.ELIMINADO);
+
+            if (estadoNorm is "ACTIVO" or "INACTIVO")
+                qry = qry.Where(a => a.ESTADO == estadoNorm);
+
+            if (!string.IsNullOrWhiteSpace(q))
+            {
+                var term = $"%{q.Trim()}%";
+                qry = qry.Where(a =>
+                    EF.Functions.Like(a.PUESTO_ID, term) ||
+                    EF.Functions.Like(a.PUESTO_NOMBRE, term));
+            }
+
+            if (desde.HasValue) qry = qry.Where(a => a.FECHA_CREACION >= desde.Value.Date);
+            if (hasta.HasValue) qry = qry.Where(a => a.FECHA_CREACION < hasta.Value.Date.AddDays(1));
+
+            return qry
+                .OrderBy(a => a.PUESTO_ID)
+                .Select(a => new PuestoViewModel
+                {
+                    PUESTO_ID = a.PUESTO_ID,
+                    PUESTO_NOMBRE = a.PUESTO_NOMBRE,
+                    PUESTO_DESCRIPCION = a.PUESTO_DESCRIPCION,
+                    AREA_NOMBRE = a.AREA.AREA_NOMBRE,
+                    ESTADO = a.ESTADO,
+                    FECHA_CREACION = a.FECHA_CREACION
+                });
+        }
+
+        // GET: /Areas/Exportar?formato=pdf|xlsx|docx&estado=ACTIVO&q=&fDesde=&fHasta=
+
+        private string GetUsuarioActual()
+        {
+            // 1) Claims (cookie de autenticación)
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                if (!string.IsNullOrWhiteSpace(User.Identity!.Name))
+                    return User.Identity.Name!;
+                string[] keys = {
+            ClaimTypes.Name, ClaimTypes.GivenName, ClaimTypes.Email,
+            "name","usuario","user","UserName","UsuarioNombre"
+        };
+                foreach (var k in keys)
+                {
+                    var c = User.FindFirst(k);
+                    if (c != null && !string.IsNullOrWhiteSpace(c.Value))
+                        return c.Value;
+                }
+            }
+
+            // 2) Session (si la llenas en tu login)
+            var ses = HttpContext?.Session?.GetString("UsuarioNombre")
+                   ?? HttpContext?.Session?.GetString("UserName");
+            if (!string.IsNullOrWhiteSpace(ses)) return ses!;
+
+            // 3) Fallback final
+            return "Admin";
+        }
+
+
+        [HttpGet]
+        public async Task<IActionResult> Exportar(
+      string formato = "pdf",
+      string? estado = "ACTIVO",
+      string? q = null,
+      string? fDesde = null,
+      string? fHasta = null,
+      string? by = null)
+        {
+            // 1) Lee PRIMERO del querystring (lo que manda el dropdown)
+            var qs = Request?.Query;
+            string estadoParam = !string.IsNullOrWhiteSpace(qs?["estado"]) ? qs!["estado"].ToString() : estado;
+            string qParam = !string.IsNullOrWhiteSpace(qs?["q"]) ? qs!["q"].ToString() : q;
+            string fDesdeParam = !string.IsNullOrWhiteSpace(qs?["fDesde"]) ? qs!["fDesde"].ToString() : fDesde;
+            string fHastaParam = !string.IsNullOrWhiteSpace(qs?["fHasta"]) ? qs!["fHasta"].ToString() : fHasta;
+            string byParam = !string.IsNullOrWhiteSpace(qs?["by"]) ? qs!["by"].ToString() : by;
+
+            // 2) Normaliza estado
+            var estadoNorm = (estadoParam ?? "ACTIVO").Trim().ToUpperInvariant();
+            if (estadoNorm is not ("ACTIVO" or "INACTIVO" or "TODOS")) estadoNorm = "ACTIVO";
+
+            // 3) Fechas
+            DateTime? desde = ParseDate(fDesdeParam);
+            DateTime? hasta = ParseDate(fHastaParam);
+
+            // 4) Data
+            var datos = await BuildPuestoQuery(estadoNorm, qParam, desde, hasta).ToListAsync();
+
+            // 5) ViewData tipado + modelo dentro de ViewData (evita Model=null en Rotativa)
+            var pdfViewData = new ViewDataDictionary<IEnumerable<PuestoViewModel>>(
+                new EmptyModelMetadataProvider(),
+                new ModelStateDictionary())
+            {
+                Model = datos ?? new List<PuestoViewModel>()
+            };
+            pdfViewData["Filtro_Estado"] = estadoNorm;
+            pdfViewData["Filtro_Q"] = qParam;
+            pdfViewData["Filtro_Desde"] = desde?.ToString("dd/MM/yyyy");
+            pdfViewData["Filtro_Hasta"] = hasta?.ToString("dd/MM/yyyy");
+
+            var usuario = GetUsuarioActual();
+            if ((string.IsNullOrWhiteSpace(usuario) || usuario == "Admin") && !string.IsNullOrWhiteSpace(byParam))
+                usuario = byParam;
+            pdfViewData["Usuario"] = usuario;
+
+            var stamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
+
+            switch ((formato ?? "").ToLowerInvariant())
+            {
+                case "pdf":
+                    {
+                        var footerUrl = Url.Action("PdfFooter", "Puesto", null, Request.Scheme);
+
+                        var pdf = new ViewAsPdf("~/Views/Puesto/PuestosPdf.cshtml")
+                        {
+                            ViewData = pdfViewData,
+                            PageSize = Size.Letter,
+                            PageOrientation = Orientation.Portrait,
+                            PageMargins = new Margins(10, 10, 20, 12),
+                            CustomSwitches =
+                                "--disable-smart-shrinking --print-media-type " +
+                                $"--footer-html \"{footerUrl}\" --footer-spacing 4 " +
+                                "--load-error-handling ignore --load-media-error-handling ignore"
+                                                // ↑ estos dos ayudan a que ignore assets que fallen al cargar
+                        };
+
+                        var bytes = await pdf.BuildFile(ControllerContext);
+                        Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+                        Response.Headers["Pragma"] = "no-cache";
+                        Response.Headers["Expires"] = "0";
+                        return File(bytes, "application/pdf");
+                    }
+
+                case "xlsx":
+                case "excel":
+                    {
+                        var xlsx = _exportSvc.GenerarExcelPuestos(datos);
+                        return File(
+                            xlsx,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            $"Reporte_Areas_{stamp}.xlsx");
+                    }
+
+                case "docx":
+                case "word":
+                    {
+                        var docx = _exportSvc.GenerarWordPuestos(datos);
+                        return File(
+                            docx,
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            $"Reporte_Areas_{stamp}.docx");
+                    }
+
+                default:
+                    return BadRequest("Formato no soportado. Use pdf | xlsx | docx.");
+            }
+
+
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

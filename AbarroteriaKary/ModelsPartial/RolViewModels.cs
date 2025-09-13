@@ -1,6 +1,7 @@
-﻿using System;
+﻿using AbarroteriaKary.ModelsPartial.Commons;
+using System;
 using System.ComponentModel.DataAnnotations;
-using AbarroteriaKary.ModelsPartial.Commons;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace AbarroteriaKary.ModelsPartial
 {
@@ -16,7 +17,7 @@ namespace AbarroteriaKary.ModelsPartial
 
 
         [Display(Name = "Nombre")]
-        [Required(ErrorMessage = "El nombre del rol es obligatorio.")]
+            [Required(ErrorMessage = "El nombre del rol es obligatorio.")]
         [StringLength(100, ErrorMessage = "Máximo 100 caracteres.")]
         public string NombreRol
         {
@@ -48,6 +49,8 @@ namespace AbarroteriaKary.ModelsPartial
         // Auditoría (para la tarjeta)
 
         [Display(Name = "Fecha de creación")]
+        //[Column(TypeName = "datetime")]
+
         public DateTime? FechaCreacion { get; set; }
 
         // Utilidades (opcional)

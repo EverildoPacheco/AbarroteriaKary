@@ -1,0 +1,315 @@
+﻿@using AbarroteriaKary.ModelsPartial
+@model ProductoViewModel
+
+@{
+    ViewData["Title"] = "Nuevo Producto";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // PRG (Post-Redirect-Get): valores enviados desde el controlador tras guardar
+    var savedOk = TempData["SavedOk"] as bool?;
+    var savedName = TempData["SavedName"] as string ?? "";
+
+    // (Opcional) Si siguió mi sugerencia de enviar TempData["LastImagePath"] en el POST Create:
+    var lastImage = TempData["LastImagePath"] as string ?? "";
+}
+
+<div class="ak-page">
+    <!-- Encabezado -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Ingresar nuevo producto</h1>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+
+            <!-- Formulario -->
+            <!-- IMPORTANTE: enctype para permitir subir archivos -->
+            <form asp-action="Create" method="post" enctype="multipart/form-data" id="form-create-producto" novalidate>
+                @Html.AntiForgeryToken()
+
+                <!-- Resumen de validaciones -->
+                <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+
+                <!-- Card del formulario -->
+                <div class="card ak-card translucent shadow-sm w-100">
+                    <div class="card-body ak-form">
+
+                        <!-- Código (solo lectura, lo genera el correlativo) -->
+                        <!-- IDENTIFICACIÓN (izq: 2 filas)  |  VISTA PREVIA (der fija a la orilla) -->
+                        <!-- IDENTIFICACIÓN (izq) | VISTA PREVIA (der) -->
+                        <div class="row gx-xl-2 gy-3 align-items-start">
+                            @* menos espacio horizontal en XL *@
+
+                            <!-- Izquierda: ahora ocupa 9/12 en XL -->
+                            <div class="col-12 col-xl-9">
+                                <div class="row gx-xl-2 gy-4">
+                                    <!-- Fila 1: Código + Activo -->
+                                    <!-- Fila 1: Código + Activo (uniforme) -->
+                                    <div class="row gx-xl-2 gy-2 align-items-end">
+                                        <div class="col-md-10">
+                                            <label asp-for="ProductoId" class="form-label">Código</label>
+                                            <input asp-for="ProductoId" class="form-control" readonly />
+                                        </div>
+
+                                        <div class="col-md-2 d-flex align-items-end">
+                                            <!-- quitamos mt-3 y usamos mb-1 para pegarlo al input -->
+                                            <div class="form-check form-switch ms-md-3 mb-0 d-flex align-items-center gap-2">
+                                                <input class="form-check-input ak-checkbox js-loading" asp-for="EstadoActivo" id="chk-estado" />
+                                                <label class="form-check-label fw-bold js-loading" for="chk-estado">Activo</label>
+                                            </div>
+                                        </div>
+
+                                        <!-- Texto de ayuda en una fila aparte (no afecta la alineación del switch) -->
+                                        <div class="col-12">
+                                            <div class="form-text">Se genera automáticamente.</div>
+                                        </div>
+                                    </div>
+
+
+                                    <!-- Fila 2: Nombre 6/12 + Código interno 6/12 (uniforme y más anchos) -->
+                                    <div class="col-md-6">
+                                        <label asp-for="ProductoNombre" class="form-label">Nombre*</label>
+                                        <input asp-for="ProductoNombre" class="form-control" placeholder="Ej. Arroz Súper Selecto 1 lb" />
+                                        <span asp-validation-for="ProductoNombre" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="CodigoProducto" class="form-label"></label>
+                                        <input asp-for="CodigoProducto" class="form-control" placeholder="Opcional: SKU / Código de barras" />
+                                        <span asp-validation-for="CodigoProducto" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Derecha: ahora 3/12 en XL, pegada a la orilla -->
+                            <div class="col-12 col-xl-3 d-flex flex-column align-items-end text-end mt-3 mt-xl-3">
+                                <div class="ak-preview-box ak-preview-box--tight ak-preview-box--right">
+                                    <img id="img-preview"
+                                         src="@(TempData["LastImagePath"] as string ?? "")"
+                                         alt="Vista previa"
+                                         class="ak-preview-img" />
+                                    <span id="img-placeholder" class="ak-preview-placeholder">Sin imagen</span>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+                        <!-- Descripción -->
+                        <div class="mb-3">
+                            <label asp-for="ProductoDescripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="ProductoDescripcion" class="form-control" rows="3" placeholder="Detalle breve del producto"></textarea>
+                            <span asp-validation-for="ProductoDescripcion" class="text-danger"></span>
+                        </div>
+
+                        <!-- ======= Bloque de catálogos (Subcategoría, Tipo, Unidad, Material, Empaque, Marca) ======= -->
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label asp-for="SubCategoriaId" class="form-label"></label>
+                                <select asp-for="SubCategoriaId" asp-items="Model.Subcategorias" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="SubCategoriaId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="TipoProductoId" class="form-label"></label>
+                                <select asp-for="TipoProductoId" asp-items="Model.TiposProducto" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="TipoProductoId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="UnidadMedidaId" class="form-label"></label>
+                                <select asp-for="UnidadMedidaId" asp-items="Model.UnidadesMedida" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="UnidadMedidaId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="MaterialEnvaseId" class="form-label"></label>
+                                <select asp-for="MaterialEnvaseId" asp-items="Model.MaterialesEnvase" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="MaterialEnvaseId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="TipoEmpaqueId" class="form-label"></label>
+                                <select asp-for="TipoEmpaqueId" asp-items="Model.TiposEmpaque" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="TipoEmpaqueId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="MarcaId" class="form-label"></label>
+                                <select asp-for="MarcaId" asp-items="Model.Marcas" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="MarcaId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+
+                        <!-- === Upload centrado y estilizado === -->
+                        <div class="row g-3 mt-2">
+                            <div class="col-12 text-center">
+                                <label class="form-label fw-bold d-block mb-2">Archivo de imagen</label>
+
+                                <!-- Input real (accesible), oculto visualmente -->
+                                <input asp-for="ImagenArchivo"
+                                       id="ImagenArchivo"
+                                       class="visually-hidden"
+                                       type="file"
+                                       accept=".jpg,.jpeg,.png,.webp" />
+
+                                <!-- Botón estilizado (label asociado al input) -->
+                                <label for="ImagenArchivo" class="ak-upload-btn" id="btn-upload-img">
+                                    <i class="fa-solid fa-arrow-up-from-bracket ak-upload-icon" aria-hidden="true"></i>
+                                    <span class="ak-upload-text">Cargue una imagen...</span>
+                                </label>
+
+                                <div class="mt-2">
+                                    <small class="text-muted">Formatos permitidos: JPG, PNG, WEBP. Tamaño máx: 2 MB.</small>
+                                </div>
+
+                                <span asp-validation-for="ImagenArchivo" class="text-danger d-block mt-1"></span>
+                            </div>
+                        </div>
+
+
+
+                      
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card ak-card ak-actions-card w-100 mt-3">
+                    <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+                        <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">
+                            <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+                        </a>
+                        <button type="reset" class="btn btn-ak btn-ak-success">
+                            <i class="fa-solid fa-eraser ak-icon"></i> Limpiar
+                        </button>
+                        <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                            <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Mensaje de éxito tras PRG (opcional, según su plantilla con modales KarySwal) -->
+            @if (savedOk == true)
+            {
+                <div class="alert alert-success mt-3">
+                    Producto <strong>@savedName</strong> guardado correctamente.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const formId = '#form-create-producto';
+            const form = document.querySelector(formId);
+
+            // Proteger salida con cambios sin guardar (links/botones con .js-leave)
+            if (form && window.KarySwal && typeof KarySwal.guardUnsaved === 'function') {
+                KarySwal.guardUnsaved(formId, '.js-leave');
+            }
+
+            // Modal de éxito tras PRG (usa TempData del controlador)
+            @if (savedOk == true)
+            {
+                    <text>
+                    if (window.KarySwal && typeof KarySwal.saveSuccess === 'function') {
+                        KarySwal.saveSuccess({
+                            title: '¡Producto guardado!',
+                            text: 'El registro "@savedName" se creó correctamente.',
+                            indexUrl: '@Url.Action("Index", "Productos")',
+                            createUrl: '@Url.Action("Create", "Productos")'
+                        });
+                    }
+                    </text>
+            }
+
+            // Vista previa de la imagen en cliente (sin subir aún)
+        const fileInput   = document.getElementById('ImagenArchivo');
+        const previewImg  = document.getElementById('img-preview');
+        const placeholder = document.getElementById('img-placeholder');
+
+
+
+
+
+                    // Al cargar la página (por TempData), muestre/oculte correcto:
+          (function initPreviewVisibility() {
+            const hasSrc = !!(previewImg && previewImg.getAttribute('src'));
+            if (previewImg)   previewImg.style.display = hasSrc ? 'block' : 'none';
+            if (placeholder)  placeholder.style.display = hasSrc ? 'none'  : 'inline';
+          })();
+
+          if (fileInput && previewImg && placeholder) {
+            fileInput.addEventListener('change', function () {
+              const f = (this.files && this.files.length) ? this.files[0] : null;
+              if (!f) {
+                previewImg.removeAttribute('src');
+                previewImg.style.display = 'none';
+                placeholder.style.display = 'inline';
+                return;
+              }
+              const allowed = ['image/jpeg', 'image/png', 'image/webp'];
+              if (allowed.indexOf(f.type) === -1) {
+                alert('Tipo de archivo no permitido. Use JPG, PNG o WEBP.');
+                this.value = '';
+                previewImg.removeAttribute('src');
+                previewImg.style.display = 'none';
+                placeholder.style.display = 'inline';
+                return;
+              }
+              if (f.size > (2 * 1024 * 1024)) {
+                alert('La imagen supera el tamaño máximo (2 MB).');
+                this.value = '';
+                previewImg.removeAttribute('src');
+                previewImg.style.display = 'none';
+                placeholder.style.display = 'inline';
+                return;
+              }
+              const url = URL.createObjectURL(f);
+              previewImg.src = url;
+              previewImg.style.display = 'block';
+              placeholder.style.display = 'none';
+            });
+          }
+        })();
+
+               
+        (function(){
+          const input = document.getElementById('ImagenArchivo');
+          const btn   = document.getElementById('btn-upload-img');
+          const text  = btn?.querySelector('.ak-upload-text');
+          const base  = 'Cargue una imagen';
+
+          if (input && btn && text) {
+            input.addEventListener('change', function(){
+              if (this.files && this.files.length) {
+                text.textContent = this.files[0].name;
+                btn.classList.add('has-file');
+              } else {
+                text.textContent = base;
+                btn.classList.remove('has-file');
+              }
+            });
+          }
+        })();
+    </script>
+}

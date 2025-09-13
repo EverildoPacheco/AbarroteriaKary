@@ -133,6 +133,7 @@
                 {
                     <th data-type="number">@Html.DisplayNameFor(m => m.Items[0].areaId)</th>
                     <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].areaNombre)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].areaDescripcion)</th>
                     <th data-type="date:dd/MM/yyyy">@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
                     <th data-type="number">@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
                 }
@@ -164,6 +165,8 @@
                     <tr>
                         <td class="text-monospace">@Html.DisplayFor(_ => area.areaId)</td>
                         <td>@Html.DisplayFor(_ => area.areaNombre)</td>
+                        <td>@Html.DisplayFor(_ => area.areaDescripcion)</td>
+
                         <td>@area.FechaCreacion.ToString("dd/MM/yyyy")</td>
 
                         <td class="text-center" data-sort-value="@(esActivo ? 1 : 0)">

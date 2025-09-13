@@ -1,0 +1,62 @@
+﻿@using System.Linq
+@using AbarroteriaKary.ModelsPartial
+@model IEnumerable<AbarroteriaKary.ModelsPartial.EmpleadoListItemViewModel>
+
+@{
+    var items = (Model ?? Enumerable.Empty<EmpleadoListItemViewModel>()).ToList();
+}
+
+<table class="rpt-table">
+    <thead>
+        <tr>
+            <th style="width:12%;">Código</th>
+            <th style="width:23%;">Empleado</th>
+            <th>Puesto</th>
+            <th style="width:12%;">CUI</th>
+            <th style="width:10%;">Teléfono</th>
+            <th style="width:10%;">Género</th>
+            <th style="width:12%;">Fecha ingreso</th>
+            <th style="width:11%;">Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (items.Count == 0)
+        {
+            <tr>
+                <td colspan="8" class="t-center" style="padding:10px;">
+                    <em>Sin datos para los filtros seleccionados.</em>
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var x in items)
+            {
+                var id = x?.EmpleadoId ?? "-";
+                var nom = string.IsNullOrWhiteSpace(x?.EmpleadoNombre) ? "-" : x!.EmpleadoNombre;
+                var psto = string.IsNullOrWhiteSpace(x?.PuestoNombre) ? "-" : x!.PuestoNombre;
+                var cui = string.IsNullOrWhiteSpace(x?.CUI) ? "-" : x!.CUI;
+                var tel = string.IsNullOrWhiteSpace(x?.Telefono) ? "-" : x!.Telefono;
+                var gen = string.IsNullOrWhiteSpace(x?.Genero) ? "-" : x!.Genero;
+
+                var fTxt = (x?.FechaIngreso == default(DateOnly)) ? "-" : $"{x!.FechaIngreso:dd/MM/yyyy}";
+
+                var raw = (x?.ESTADO ?? "").Trim();
+                bool activo = string.Equals(raw, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+                var cls = activo ? "estado-activo" : "estado-inactivo";
+                var estadoTxt = string.IsNullOrWhiteSpace(raw) ? "-" : (char.ToUpper(raw[0]) + raw.Substring(1).ToLower());
+
+                <tr>
+                    <td>@id</td>
+                    <td>@nom</td>
+                    <td>@psto</td>
+                    <td>@cui</td>
+                    <td>@tel</td>
+                    <td>@gen</td>
+                    <td class="t-center">@fTxt</td>
+                    <td class="t-center"><span class="estado-text @cls">@estadoTxt</span></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

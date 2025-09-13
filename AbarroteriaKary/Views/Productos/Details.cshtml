@@ -1,0 +1,274 @@
+﻿@model AbarroteriaKary.ModelsPartial.ProductoDetailsViewModel
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Detalle de producto";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    bool esActivo = Model.EstadoActivo;
+    var aud = ViewBag.Auditoria; // objeto anónimo con los campos de auditoría
+
+    var img = string.IsNullOrWhiteSpace(Model.ImagenUrl) ? "" : Url.Content(Model.ImagenUrl);
+}
+
+<div class="ak-page">
+
+    <!-- Franja 1: Título -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Detalle de producto</h1>
+    </div>
+
+    <!-- Franja 2: Contenido -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+
+            <!-- Card translúcida (mismo look que Crear/Editar) -->
+            <div class="card ak-card translucent shadow-sm w-100">
+                <div class="card-body">
+
+                    <!-- Layout 2 columnas: Izq datos en "DL", Der vista previa -->
+                    <div class="row g-4">
+                        <!-- IZQUIERDA -->
+                        <div class="col-12 col-xl-9">
+                            <!-- Fila 1 -->
+                            <div class="row g-4 ak-dl-row">
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Código</div>
+                                        <div class="ak-dl__value text-monospace">@Model.ProductoId</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Nombre</div>
+                                        <div class="ak-dl__value">@Model.ProductoNombre</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Código interno</div>
+                                        <div class="ak-dl__value">
+                                            @(!string.IsNullOrWhiteSpace(Model.CodigoProducto) ? Model.CodigoProducto : "—")
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Estado</div>
+                                        <div class="ak-dl__value">
+                                            <span class="badge @(esActivo ? "bg-success" : "bg-danger") text-white px-3 py-2">
+                                                @(esActivo ? "ACTIVO" : "INACTIVO")
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fila 2 -->
+                            <div class="row g-4 mt-1 ak-dl-row">
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Subcategoría</div>
+                                        <div class="ak-dl__value">@Model.SubCategoriaNombre</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Tipo de producto</div>
+                                        <div class="ak-dl__value">@Model.TipoProductoNombre</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Unidad de medida</div>
+                                        <div class="ak-dl__value">@Model.UnidadMedidaNombre</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Marca</div>
+                                        <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.MarcaNombre) ? Model.MarcaNombre : "—")</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Fila 3 -->
+                            <div class="row g-4 mt-1 ak-dl-row">
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Material del envase</div>
+                                        <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.MaterialEnvaseNombre) ? Model.MaterialEnvaseNombre : "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Tipo de empaque</div>
+                                        <div class="ak-dl__value">@(!string.IsNullOrWhiteSpace(Model.TipoEmpaqueNombre) ? Model.TipoEmpaqueNombre : "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Fecha de creación</div>
+                                        <div class="ak-dl__value">
+                                            @Model.FechaCreacion.ToString("dd/MM/yyyy HH:mm", CultureInfo.GetCultureInfo("es-GT"))
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Descripción -->
+                            <div class="row g-4 mt-1">
+                                <div class="col-12">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Descripción</div>
+                                        <div class="ak-dl__value">
+                                            @(!string.IsNullOrWhiteSpace(Model.ProductoDescripcion) ? Model.ProductoDescripcion : "—")
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- DERECHA: Vista previa -->
+                        <div class="col-12 col-xl-3 d-flex flex-column align-items-end text-end">
+                            <label class="form-label mb-1 pe-1">Vista previa</label>
+                            <div class="ak-preview-box ak-preview-box--tight ak-preview-box--right">
+                                <img id="img-preview"
+                                     src="@img"
+                                     alt="Vista previa de @Model.ProductoNombre"
+                                     class="ak-preview-img"
+                                     style="display:@(string.IsNullOrWhiteSpace(img) ? "none" : "block");" />
+                                <span id="img-placeholder" class="ak-preview-placeholder"
+                                      style="display:@(string.IsNullOrWhiteSpace(img) ? "inline" : "none");">Sin imagen</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            @* ─────────────────────────────────────────────────────────────
+               Toggle Bootstrap para Auditoría (Data API)
+               ───────────────────────────────────────────────────────────── *@
+            @if (aud != null)
+            {
+                <div class="d-flex justify-content-end mt-3">
+                    <div class="form-check form-switch">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               role="switch"
+                               id="toggleAuditoria"
+                               data-bs-toggle="collapse"
+                               data-bs-target="#cardAuditoria"
+                               aria-controls="cardAuditoria"
+                               aria-expanded="false" />
+                        <label class="form-check-label" for="toggleAuditoria">Mostrar auditoría</label>
+                    </div>
+                </div>
+
+                <div id="cardAuditoria" class="collapse">
+                    <div class="card ak-card w-100 mt-3">
+                        <div class="card-body">
+                            <h6 class="mb-3">
+                                <i class="fa-regular fa-clipboard me-2"></i>Auditoría
+                            </h6>
+
+                            <div class="row g-4 ak-dl-row">
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Creado por</div>
+                                        <div class="ak-dl__value">@((string)aud.CreadoPor ?? "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Fecha de creación</div>
+                                        <div class="ak-dl__value">
+                                            @(aud.FechaCreacion == null ? "—" : string.Format("{0:dd/MM/yyyy HH:mm}", aud.FechaCreacion))
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Modificado por</div>
+                                        <div class="ak-dl__value">@((string)aud.ModificadoPor ?? "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Fecha de modificación</div>
+                                        <div class="ak-dl__value">
+                                            @(aud.FechaModificacion == null ? "—" : string.Format("{0:dd/MM/yyyy HH:mm}", aud.FechaModificacion))
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row g-4 mt-1">
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Eliminado (lógico)</div>
+                                        <div class="ak-dl__value">@(Model.Eliminado ? "Sí" : "No")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Eliminado por</div>
+                                        <div class="ak-dl__value">@((string)aud.EliminadoPor ?? "—")</div>
+                                    </div>
+                                </div>
+                                <div class="col-12 col-lg-3">
+                                    <div class="ak-dl">
+                                        <div class="ak-dl__label">Fecha de eliminación</div>
+                                        <div class="ak-dl__value">
+                                            @(aud.FechaEliminacion == null ? "—" : string.Format("{0:dd/MM/yyyy HH:mm}", aud.FechaEliminacion))
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Franja 3: Acciones -->
+            <div class="card ak-card ak-actions-card w-100 mt-3">
+                <div class="card-body d-flex justify-content-center gap-4 flex-wrap">
+                    <a asp-action="Index" class="btn btn-ak btn-ak-success">
+                        <i class="fa-solid fa-arrow-left ak-icon"></i> Regresar
+                    </a>
+                    <a asp-action="Edit" asp-route-id="@Model.ProductoId" class="btn btn-ak btn-ak-primary">
+                        <i class="fa-solid fa-pen-to-square ak-icon"></i> Editar
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    @* Opcional: Fallback JS si NO quieres usar data-bs-* o si algún día falta Bootstrap JS *@
+    <script>
+      (function () {
+        const sw  = document.getElementById('toggleAuditoria');
+        const box = document.getElementById('cardAuditoria');
+        if (!sw || !box) return;
+
+        // Si Bootstrap está, data-bs-* ya funciona y no necesitamos nada más.
+        // Fallback: si por alguna razón no funciona el Data API, descomenta esto:
+        /*
+        sw.addEventListener('change', function(){
+          if (sw.checked) {
+            box.classList.add('show');
+            box.style.display = 'block';
+          } else {
+            box.classList.remove('show');
+            box.style.display = 'none';
+          }
+        });
+        */
+      })();
+    </script>
+}

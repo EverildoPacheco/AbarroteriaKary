@@ -116,7 +116,12 @@ namespace AbarroteriaKary.Services.Correlativos
         public async Task<string> NextMarcaIdAsync(CancellationToken ct = default)
             => await NextAsync("MAR", 7, _context.MARCA.Select(x => x.MARCA_ID), ct);
 
+        //----------------------------------------------------------
+        public async Task<string> PeekNextProductoIdAsync(CancellationToken ct = default)
+         => await PeekAsync("PRD", 7, _context.PRODUCTO.Select(x => x.PRODUCTO_ID), ct);
 
+        public async Task<string> NextProductoIdAsync(CancellationToken ct = default)
+            => await NextAsync("PRD", 7, _context.PRODUCTO.Select(x => x.PRODUCTO_ID), ct);
 
 
 

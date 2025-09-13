@@ -5,16 +5,23 @@ using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T
 using AbarroteriaKary.Services.Auditoria;
 using AbarroteriaKary.Services.Correlativos;
 using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
+using AbarroteriaKary.Services.Reportes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.EntityFrameworkCore;
+using Rotativa.AspNetCore;
+using Rotativa.AspNetCore.Options;
+using System;
 using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading.Tasks;
-
 
 
 namespace AbarroteriaKary.Controllers
@@ -24,14 +31,16 @@ namespace AbarroteriaKary.Controllers
         private readonly KaryDbContext _context;
         private readonly ICorrelativoService _correlativos;
         private readonly IAuditoriaService _auditoria;
+        private readonly IReporteExportService _exportSvc;
 
 
-        public EmpleadosController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria)
+
+        public EmpleadosController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria, IReporteExportService exportSvc)
         {
             _context = context;
             _correlativos = correlativos;
             _auditoria = auditoria;
-
+            _exportSvc = exportSvc;
         }
 
         // GET: Empleados
@@ -185,6 +194,223 @@ namespace AbarroteriaKary.Controllers
             if (DateTime.TryParse(input, out d)) return d;
             return null;
         }
+
+
+
+
+
+        //----------------------------Reporete------------------------------------
+
+        [AllowAnonymous]
+        [HttpGet]
+        public IActionResult PdfFooter()
+        {
+            // Vista compartida del pie
+            return View("~/Views/Shared/Reportes/_PdfFooter.cshtml");
+        }
+
+        private IQueryable<EmpleadoListItemViewModel> BuildEmpleadosQuery(
+     string estadoNorm, string? q, DateTime? desde, DateTime? hasta)
+        {
+            var term = string.IsNullOrWhiteSpace(q) ? null : $"%{q.Trim()}%";
+
+            var baseQry =
+                from e in _context.EMPLEADO.AsNoTracking().Where(e => !e.ELIMINADO)
+                    // LEFT JOIN PERSONA (EMPLEADO_ID ↔ PERSONA_ID)
+                join p0 in _context.PERSONA on e.EMPLEADO_ID equals p0.PERSONA_ID into gp
+                from p in gp.DefaultIfEmpty()
+                    // LEFT JOIN PUESTO (PUESTO_ID)
+                join pu0 in _context.PUESTO on e.PUESTO_ID equals pu0.PUESTO_ID into gpu
+                from pu in gpu.DefaultIfEmpty()
+                select new { e, p, pu };
+
+            if (estadoNorm is "ACTIVO" or "INACTIVO")
+                baseQry = baseQry.Where(x => x.e.ESTADO == estadoNorm);
+
+            if (term != null)
+            {
+                baseQry = baseQry.Where(x =>
+                    EF.Functions.Like(x.e.EMPLEADO_ID, term) ||
+                    (x.p != null && (
+                        EF.Functions.Like(x.p.PERSONA_PRIMERNOMBRE, term) ||
+                        EF.Functions.Like(x.p.PERSONA_SEGUNDONOMBRE, term) ||
+                        EF.Functions.Like(x.p.PERSONA_PRIMERAPELLIDO, term) ||
+                        EF.Functions.Like(x.p.PERSONA_SEGUNDOAPELLIDO, term) ||
+                        EF.Functions.Like(x.p.PERSONA_CUI, term)
+                    )) ||
+                    (x.pu != null && EF.Functions.Like(x.pu.PUESTO_NOMBRE, term))
+                );
+            }
+
+            // Rango (igual que en otros módulos, si quieres puedes usar FECHA_CREACION del empleado)
+            if (desde.HasValue) baseQry = baseQry.Where(x => x.e.FECHA_CREACION >= desde.Value.Date);
+            if (hasta.HasValue) baseQry = baseQry.Where(x => x.e.FECHA_CREACION < hasta.Value.Date.AddDays(1));
+
+            return baseQry
+                .OrderBy(x => x.e.EMPLEADO_ID)
+                .Select(x => new EmpleadoListItemViewModel
+                {
+                    EmpleadoId = x.e.EMPLEADO_ID,
+                    EmpleadoNombre =
+                        (x.p == null)
+                            ? ""
+                            : (
+                                (x.p.PERSONA_PRIMERNOMBRE ?? "")
+                                + (string.IsNullOrWhiteSpace(x.p.PERSONA_SEGUNDONOMBRE) ? "" : " " + x.p.PERSONA_SEGUNDONOMBRE)
+                                + (string.IsNullOrWhiteSpace(x.p.PERSONA_TERCERNOMBRE) ? "" : " " + x.p.PERSONA_TERCERNOMBRE)
+                                + " " + (x.p.PERSONA_PRIMERAPELLIDO ?? "")
+                                + (string.IsNullOrWhiteSpace(x.p.PERSONA_SEGUNDOAPELLIDO) ? "" : " " + x.p.PERSONA_SEGUNDOAPELLIDO)
+                                + (string.IsNullOrWhiteSpace(x.p.PERSONA_APELLIDOCASADA) ? "" : " " + x.p.PERSONA_APELLIDOCASADA)
+                              ).Trim(),
+                    PuestoNombre = x.pu != null ? x.pu.PUESTO_NOMBRE : "",
+                    CUI = (x.p == null) ? "" : (x.p.PERSONA_CUI ?? ""),
+                    Telefono = (x.p == null)
+                    ? ""
+                    : ((x.p.PERSONA_TELEFONOMOVIL ?? x.p.PERSONA_TELEFONOCASA) ?? ""),
+                    Genero = x.e.EMPLEADO_GENERO ?? "",
+                    FechaIngreso = x.e.EMPLEADO_FECHAINGRESO,   // ← de la tabla EMPLEADO
+                    ESTADO = x.e.ESTADO
+                });
+        }
+
+
+
+
+
+        // GET: /Areas/Exportar?formato=pdf|xlsx|docx&estado=ACTIVO&q=&fDesde=&fHasta=
+
+        private string GetUsuarioActual()
+        {
+            // 1) Claims (cookie de autenticación)
+            if (User?.Identity?.IsAuthenticated == true)
+            {
+                if (!string.IsNullOrWhiteSpace(User.Identity!.Name))
+                    return User.Identity.Name!;
+                string[] keys = {
+            ClaimTypes.Name, ClaimTypes.GivenName, ClaimTypes.Email,
+            "name","usuario","user","UserName","UsuarioNombre"
+        };
+                foreach (var k in keys)
+                {
+                    var c = User.FindFirst(k);
+                    if (c != null && !string.IsNullOrWhiteSpace(c.Value))
+                        return c.Value;
+                }
+            }
+
+            // 2) Session (si la llenas en tu login)
+            var ses = HttpContext?.Session?.GetString("UsuarioNombre")
+                   ?? HttpContext?.Session?.GetString("UserName");
+            if (!string.IsNullOrWhiteSpace(ses)) return ses!;
+
+            // 3) Fallback final
+            return "Admin";
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Exportar(
+        string formato = "pdf",
+        string? estado = "ACTIVO",
+        string? q = null,
+        string? fDesde = null,
+        string? fHasta = null,
+        string? by = null)
+        {
+            // 1) Querystring primero
+            var qs = Request?.Query;
+            string estadoParam = !string.IsNullOrWhiteSpace(qs?["estado"]) ? qs!["estado"].ToString() : estado;
+            string qParam = !string.IsNullOrWhiteSpace(qs?["q"]) ? qs!["q"].ToString() : q;
+            string fDesdeParam = !string.IsNullOrWhiteSpace(qs?["fDesde"]) ? qs!["fDesde"].ToString() : fDesde;
+            string fHastaParam = !string.IsNullOrWhiteSpace(qs?["fHasta"]) ? qs!["fHasta"].ToString() : fHasta;
+            string byParam = !string.IsNullOrWhiteSpace(qs?["by"]) ? qs!["by"].ToString() : by;
+
+            // 2) Normaliza estado
+            var estadoNorm = (estadoParam ?? "ACTIVO").Trim().ToUpperInvariant();
+            if (estadoNorm is not ("ACTIVO" or "INACTIVO" or "TODOS")) estadoNorm = "ACTIVO";
+
+            // 3) Fechas
+            DateTime? desde = ParseDate(fDesdeParam);
+            DateTime? hasta = ParseDate(fHastaParam);
+
+            // 4) Data
+            var datos = await BuildEmpleadosQuery(estadoNorm, qParam, desde, hasta).ToListAsync();
+
+            // 5) ViewData tipado
+            var pdfViewData = new ViewDataDictionary<IEnumerable<EmpleadoListItemViewModel>>(
+                new EmptyModelMetadataProvider(),
+                new ModelStateDictionary())
+            {
+                Model = datos ?? new List<EmpleadoListItemViewModel>()
+            };
+            pdfViewData["Filtro_Estado"] = estadoNorm;
+            pdfViewData["Filtro_Q"] = qParam;
+            pdfViewData["Filtro_Desde"] = desde?.ToString("dd/MM/yyyy");
+            pdfViewData["Filtro_Hasta"] = hasta?.ToString("dd/MM/yyyy");
+
+            var usuario = GetUsuarioActual();
+            if ((string.IsNullOrWhiteSpace(usuario) || usuario == "Admin") && !string.IsNullOrWhiteSpace(byParam))
+                usuario = byParam;
+            pdfViewData["Usuario"] = usuario;
+
+            var stamp = DateTime.Now.ToString("yyyyMMdd_HHmm");
+
+            switch ((formato ?? "").ToLowerInvariant())
+            {
+                case "pdf":
+                    {
+                        var footerUrl = Url.Action("PdfFooter", "Empleados", null, Request.Scheme);
+
+                        var pdf = new ViewAsPdf("~/Views/Empleados/EmpleadosPdf.cshtml")
+                        {
+                            ViewData = pdfViewData,
+                            PageSize = Size.Letter,
+                            PageOrientation = Orientation.Landscape, // Portrait-> Vertical / Landscape--> Horizontal
+                            PageMargins = new Margins(10, 10, 20, 12),
+                            CustomSwitches =
+                                "--disable-smart-shrinking --print-media-type " +
+                                $"--footer-html \"{footerUrl}\" --footer-spacing 4 " +
+                                "--load-error-handling ignore --load-media-error-handling ignore"
+                        };
+
+                        var bytes = await pdf.BuildFile(ControllerContext);
+                        Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate";
+                        Response.Headers["Pragma"] = "no-cache";
+                        Response.Headers["Expires"] = "0";
+                        return File(bytes, "application/pdf");
+                    }
+
+                case "xlsx":
+                case "excel":
+                    {
+                        // Si aún no tienes estos métodos, avísame y los agregamos.
+                        var xlsx = _exportSvc.GenerarExcelEmpleado(datos);
+                        return File(xlsx,
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                            $"Reporte_Empleados_{stamp}.xlsx");
+                    }
+
+                case "docx":
+                case "word":
+                    {
+                        var docx = _exportSvc.GenerarWordEmpleado(datos);
+                        return File(docx,
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            $"Reporte_Empleados_{stamp}.docx");
+                    }
+
+                default:
+                    return BadRequest("Formato no soportado. Use pdf | xlsx | docx.");
+            }
+        }
+
+
+
+
+
+
+
+
+
 
 
 

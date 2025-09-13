@@ -1,0 +1,48 @@
+﻿@using System.Linq
+@using AbarroteriaKary.ModelsPartial
+@model IEnumerable<AbarroteriaKary.ModelsPartial.RolViewModel>
+
+@{
+    var items = (Model ?? Enumerable.Empty<RolViewModel>()).ToList();
+}
+
+<table class="rpt-table">
+    <thead>
+        <tr>
+            <th style="width:15%;">Código</th>
+            <th>Rol</th>
+            <th>Descripción</th>
+            <th style="width:15%;">Fecha creación</th>
+            <th style="width:14%;">Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (items.Count == 0)
+        {
+            <tr><td colspan="5" class="t-center" style="padding:10px;"><em>Sin datos para los filtros seleccionados.</em></td></tr>
+        }
+        else
+        {
+            foreach (var x in items)
+            {
+                var id = x?.IdRol ?? "-";
+                var nom = x?.NombreRol ?? "-";
+                var desc = x?.DescripcionRol ?? "-";
+                var fTxt = (x?.FechaCreacion == default(DateTime)) ? "-" : $"{x!.FechaCreacion:dd/MM/yyyy}";
+
+                var raw = (x?.ESTADO ?? "").Trim();
+                bool activo = string.Equals(raw, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+                var cls = activo ? "estado-activo" : "estado-inactivo";
+                var estadoTxt = string.IsNullOrWhiteSpace(raw) ? "-" : (char.ToUpper(raw[0]) + raw.Substring(1).ToLower());
+
+                <tr>
+                    <td>@id</td>
+                    <td>@nom</td>
+                    <td>@desc</td>
+                    <td class="t-center">@fTxt</td>
+                    <td class="t-center"><span class="estado-text @cls">@estadoTxt</span></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

@@ -10,9 +10,10 @@
 <table class="rpt-table">
     <thead>
         <tr>
-            <th style="width:22%;">Código</th>
+            <th style="width:15%;">Código</th>
             <th>Área</th>
-            <th style="width:18%;">Fecha creación</th>
+            <th>Descripcion</th>
+            <th style="width:15%;">Fecha creación</th>
             <th style="width:14%;">Estado</th>
         </tr>
     </thead>
@@ -34,6 +35,8 @@
                 // ✔ Normalización/seguridad de campos
                 var codigo = x?.areaId ?? "-";
                 var nombre = x?.areaNombre ?? "-";
+                var descripcion = x?.areaDescripcion ?? "-";
+
 
                 // Si por alguna razón FechaCreacion viniera default, mostramos "-"
                 var fechaTxt = (x?.FechaCreacion == default(DateTime))
@@ -51,7 +54,8 @@
                 <tr>
                     <td>@codigo</td>
                     <td>@nombre</td>
-                    <td>@fechaTxt</td>
+                    <td>@descripcion</td>
+                    <td class="t-center">@fechaTxt</td>
                     <td class="t-center">
                         <span class="estado-text @cls">@estadoTxt</span>
                     </td>

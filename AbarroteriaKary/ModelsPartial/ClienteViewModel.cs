@@ -42,6 +42,11 @@ namespace AbarroteriaKary.ModelsPartial
         public string? SegundoApellido { get; set; }
 
 
+
+        [Display(Name = "ClienteNombre")]
+        public string ClienteNombre { get; set; } = string.Empty;
+
+
         [StringLength(13)]
         [Display(Name = "NIT")]
         [RegularExpression(@"^[0-9]{1,8}-?[0-9Kk]$", ErrorMessage = "NIT inválido (ej: 1234567-8 o 1234567K).")]
@@ -65,5 +70,8 @@ namespace AbarroteriaKary.ModelsPartial
 
         // CLIENTE block
         public string? clienteNota { get; set; }
+
+        [Display(Name = "Fecha Ingreso")]
+        public DateOnly FechaRegistro { get; set; }   // <-- antes era DateTime
     }
 }

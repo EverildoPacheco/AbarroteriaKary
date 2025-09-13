@@ -1,0 +1,63 @@
+﻿@using System.Linq
+@using AbarroteriaKary.ModelsPartial
+@model IEnumerable<AbarroteriaKary.ModelsPartial.ClienteViewModel>
+
+@{
+    var items = (Model ?? Enumerable.Empty<ClienteViewModel>()).ToList();
+}
+
+<table class="rpt-table">
+    <thead>
+        <tr>
+            <th style="width:8%;">Código</th>
+            <th style="width:19%;">Cliente</th>
+            <th style="width:7%;">CUI</th>
+            <th style="width:7%;">NIT</th>
+            <th style="width:7%;">Telefono</th>
+            <th style="width:16%;">Dirreccion</th>
+            <th style="width:7%;">Estado</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (items.Count == 0)
+        {
+            <tr>
+                <td colspan="8" class="t-center" style="padding:10px;">
+                    <em>Sin datos para los filtros seleccionados.</em>
+                </td>
+            </tr>
+        }
+        else
+        {
+            foreach (var x in items)
+            {
+                var id = x?.Id ?? "-";
+                var nom = string.IsNullOrWhiteSpace(x?.ClienteNombre) ? "-" : x!.ClienteNombre;
+                var cui = string.IsNullOrWhiteSpace(x?.CUI) ? "-" : x!.CUI;
+                var nit = string.IsNullOrWhiteSpace(x?.NIT) ? "-" : x!.NIT;
+                var tel = string.IsNullOrWhiteSpace(x?.TelefonoMovil) ? "-" : x!.TelefonoMovil;
+                var dir = string.IsNullOrWhiteSpace(x?.Direccion) ? "-" : x!.Direccion;
+
+
+@*                 var fTxt = (x?.FechaIngreso == default(DateOnly)) ? "-" : $"{x!.FechaIngreso:dd/MM/yyyy}";
+ *@
+                var raw = (x?.ESTADO ?? "").Trim();
+                bool activo = string.Equals(raw, "ACTIVO", StringComparison.OrdinalIgnoreCase);
+                var cls = activo ? "estado-activo" : "estado-inactivo";
+                var estadoTxt = string.IsNullOrWhiteSpace(raw) ? "-" : (char.ToUpper(raw[0]) + raw.Substring(1).ToLower());
+
+                <tr>
+                    <td>@id</td>
+                    <td>@nom</td>
+                    <td class="t-center">@cui</td>
+                    <td class="t-center">@nit</td>
+                    <td class="t-center">@tel</td>
+                    <td>@dir</td>
+
+                   @*  <td class="t-center">@fTxt</td> *@
+                    <td class="t-center"><span class="estado-text @cls">@estadoTxt</span></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

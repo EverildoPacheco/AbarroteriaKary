@@ -1,0 +1,337 @@
+﻿@using AbarroteriaKary.ModelsPartial
+@model ProductoViewModel
+
+@{
+    ViewData["Title"] = "Editar producto";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var updatedOk = ViewBag.UpdatedOk as bool?;
+    var updatedName = ViewBag.UpdatedName as string ?? "";
+    var noChanges = ViewBag.NoChanges as bool?;
+
+    // Imagen actual (si viene nula, no se muestra)
+    var currentImg = string.IsNullOrWhiteSpace(Model.ProductoImagen) ? "" : Url.Content(Model.ProductoImagen);
+}
+
+<div class="ak-page">
+    <!-- Encabezado -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Editar producto</h1>
+    </div>
+
+    <!-- Contenido principal -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+
+            <!-- Formulario -->
+            <form asp-action="Edit" asp-route-id="@Model.ProductoId"  method="post" enctype="multipart/form-data" id="form-edit-producto" novalidate>
+                @Html.AntiForgeryToken()
+
+                <!-- Resumen de validaciones -->
+                <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+
+                <!-- Card del formulario -->
+                <div class="card ak-card translucent shadow-sm w-100">
+                    <div class="card-body ak-form">
+
+                        <!-- Top: Identificación (izq) | Vista previa (der) -->
+                        <div class="row gx-xl-2 gy-3 align-items-start">
+
+                            <!-- Izquierda 9/12 -->
+                            <div class="col-12 col-xl-9">
+                                <div class="row gx-xl-2 gy-2 align-items-end">
+                                    <!-- Fila 1: Código + Activo (uniforme) -->
+                                    <div class="col-md-10">
+                                        <label asp-for="ProductoId" class="form-label">Código</label>
+                                        <input asp-for="ProductoId" class="form-control" readonly />
+                                    </div>
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <div class="form-check form-switch ms-md-3 mb-1 d-flex align-items-center gap-2">
+                                            <input class="form-check-input ak-checkbox js-loading" asp-for="EstadoActivo" id="chk-estado" />
+                                            <label class="form-check-label fw-bold js-loading" for="chk-estado">Activo</label>
+                                        </div>
+                                    </div>
+                                    <!-- ayuda (no desajusta el switch) -->
+                                    <div class="col-12">
+                                        <div class="form-text">Se genera automáticamente. (Solo lectura)</div>
+                                    </div>
+
+                                    <!-- Fila 2: Nombre + Código interno -->
+                                    <div class="col-md-6">
+                                        <label asp-for="ProductoNombre" class="form-label">Nombre*</label>
+                                        <input asp-for="ProductoNombre" class="form-control" />
+                                        <span asp-validation-for="ProductoNombre" class="text-danger"></span>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label asp-for="CodigoProducto" class="form-label"></label>
+                                        <input asp-for="CodigoProducto" class="form-control" placeholder="Opcional: SKU / Código de barras" />
+                                        <span asp-validation-for="CodigoProducto" class="text-danger"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Derecha 3/12: Vista previa -->
+                            <div class="col-12 col-xl-3 d-flex flex-column align-items-end text-end mt-3 mt-xl-3">
+                                <div class="ak-preview-box ak-preview-box--tight ak-preview-box--right">
+                                    <img id="img-preview"
+                                         src="@currentImg"
+                                         alt="Vista previa"
+                                         class="ak-preview-img"
+                                         style="display:@(string.IsNullOrWhiteSpace(currentImg) ? "none" : "block");" />
+                                    <span id="img-placeholder" class="ak-preview-placeholder"
+                                          style="display:@(string.IsNullOrWhiteSpace(currentImg) ? "inline" : "none");">
+                                        Sin imagen
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Descripción -->
+                        <div class="mb-3 mt-2">
+                            <label asp-for="ProductoDescripcion" class="form-label">Descripción</label>
+                            <textarea asp-for="ProductoDescripcion" class="form-control" rows="3" placeholder="Detalle breve del producto"></textarea>
+                            <span asp-validation-for="ProductoDescripcion" class="text-danger"></span>
+                        </div>
+
+                        <!-- Catálogos -->
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <label asp-for="SubCategoriaId" class="form-label"></label>
+                                <select asp-for="SubCategoriaId" asp-items="Model.Subcategorias" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="SubCategoriaId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="TipoProductoId" class="form-label"></label>
+                                <select asp-for="TipoProductoId" asp-items="Model.TiposProducto" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="TipoProductoId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="UnidadMedidaId" class="form-label"></label>
+                                <select asp-for="UnidadMedidaId" asp-items="Model.UnidadesMedida" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="UnidadMedidaId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="MaterialEnvaseId" class="form-label"></label>
+                                <select asp-for="MaterialEnvaseId" asp-items="Model.MaterialesEnvase" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="MaterialEnvaseId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="TipoEmpaqueId" class="form-label"></label>
+                                <select asp-for="TipoEmpaqueId" asp-items="Model.TiposEmpaque" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="TipoEmpaqueId" class="text-danger"></span>
+                            </div>
+
+                            <div class="col-md-4">
+                                <label asp-for="MarcaId" class="form-label"></label>
+                                <select asp-for="MarcaId" asp-items="Model.Marcas" class="form-select">
+                                    <option value="">Seleccione</option>
+                                </select>
+                                <span asp-validation-for="MarcaId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Upload centrado (reemplazar imagen) -->
+                        <div class="row g-3 mt-2">
+                            <div class="col-12 text-center">
+                                <label class="form-label fw-bold d-block mb-2">Reemplazar imagen</label>
+
+                                <!-- Input real oculto -->
+                                <input asp-for="ImagenArchivo" id="ImagenArchivo" class="visually-hidden"
+                                       type="file" accept=".jpg,.jpeg,.png,.webp" />
+
+                                <!-- Botón estilizado -->
+                                <label for="ImagenArchivo" class="ak-upload-btn" id="btn-upload-img">
+                                    <i class="fa-solid fa-arrow-up-from-bracket ak-upload-icon" aria-hidden="true"></i>
+                                    <span class="ak-upload-text">Seleccione un archivo...</span>
+                                </label>
+
+                                <div class="mt-2">
+                                    <small class="text-muted">
+                                        Formatos: JPG, PNG, WEBP. Tamaño máx: 2 MB. Si no selecciona nada, se mantiene la imagen actual.
+                                    </small>
+                                </div>
+                                <span asp-validation-for="ImagenArchivo" class="text-danger d-block mt-1"></span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card ak-card ak-actions-card w-100 mt-3">
+                    <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+                        <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">
+                            <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+                        </a>
+                        <button type="reset" class="btn btn-ak btn-ak-success">
+                            <i class="fa-solid fa-eraser ak-icon"></i> Limpiar
+                        </button>
+                        <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                            <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar cambios
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Mensajes PRG -->
+            @if (updatedOk == true)
+            {
+                <div class="alert alert-success mt-3">
+                    Producto <strong>@updatedName</strong> actualizado correctamente.
+                </div>
+            }
+            @if (noChanges == true)
+            {
+                <div class="alert alert-info mt-3">
+                    No se detectaron cambios para guardar.
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+          'use strict';
+
+          // ---------- Constantes ----------
+          const FORM_ID   = '#form-edit-producto';
+          const BTN_ID    = '#btn-guardar';
+          const input     = document.getElementById('ImagenArchivo');
+          const preview   = document.getElementById('img-preview');
+          const holder    = document.getElementById('img-placeholder');
+          const btnUpload = document.getElementById('btn-upload-img');
+          const btnText   = btnUpload ? btnUpload.querySelector('.ak-upload-text') : null;
+          const baseText  = 'Seleccione un archivo...';
+          const allowed   = ['image/jpeg', 'image/png', 'image/webp'];
+          const maxBytes  = 2 * 1024 * 1024;
+
+          // ---------- Safe submit (spinner + disabled) ----------
+          if (window.KaryForms && typeof KaryForms.bindSafeSubmit === 'function') {
+            KaryForms.bindSafeSubmit(FORM_ID, BTN_ID, {
+              spinnerHtml: '<i class="fa-solid fa-spinner fa-spin ak-icon"></i> Guardando...'
+            });
+          }
+
+          // Fallback anti doble submit + guard unsaved
+          const form = document.querySelector(FORM_ID);
+          const btn  = document.querySelector(BTN_ID);
+
+          if (form) {
+            form.addEventListener('submit', function () {
+              if (!form.checkValidity()) return;
+              if (btn) btn.disabled = true;
+            });
+
+            if (window.KarySwal && typeof KarySwal.guardUnsaved === 'function') {
+              KarySwal.guardUnsaved(FORM_ID, '.js-leave');
+            }
+          }
+
+          // ---------- Modales PRG ----------
+          // UpdatedOk
+          @if ((TempData["UpdatedOk"] as bool?) == true)
+          {
+                <text>
+                if (window.KarySwal && typeof KarySwal.saveSuccess === 'function') {
+                  KarySwal.saveSuccess({
+                    icon: 'success',
+                    title: '¡Actualizado exitosamente!',
+                    text: 'Los cambios de "@(TempData["UpdatedName"] as string ?? "")" se guardaron correctamente.',
+                    confirmText: 'Aceptar',
+                    showDenyButton: false,
+                    indexUrl: '@Url.Action("Index", "Productos")'
+                  });
+                } else {
+                  alert('Actualizado correctamente.');
+                  window.location.href = '@Url.Action("Index", "Productos")';
+                }
+                </text>
+          }
+
+          // NoChanges
+          @if ((TempData["NoChanges"] as bool?) == true)
+          {
+                <text>
+                if (window.KarySwal && typeof KarySwal.info === 'function') {
+                  KarySwal.info({
+                    title: 'Sin cambios',
+                    text: 'No se realizó ninguna modificación.',
+                    confirmText: 'Aceptar',
+                    redirectUrl: '@Url.Action("Index", "Productos")'
+                  });
+                } else {
+                  alert('No se realizó ninguna modificación.');
+                  window.location.href = '@Url.Action("Index", "Productos")';
+                }
+                </text>
+          }
+
+          // ---------- Preview de imagen en cliente ----------
+          function showPreview(url){
+            if (!preview || !holder) return;
+            if (url) {
+              preview.src = url;
+              preview.style.display = 'block';
+              holder.style.display = 'none';
+            } else {
+              preview.removeAttribute('src');
+              preview.style.display = 'none';
+              holder.style.display = 'inline';
+            }
+          }
+
+          if (input && preview && holder) {
+            input.addEventListener('change', function () {
+              const f = (this.files && this.files.length) ? this.files[0] : null;
+              if (!f) { showPreview(''); return; }
+
+              if (!allowed.includes(f.type)) {
+                alert('Tipo de archivo no permitido. Use JPG, PNG o WEBP.');
+                this.value = '';
+                showPreview('');
+                return;
+              }
+              if (f.size > maxBytes) {
+                alert('La imagen supera el tamaño máximo (2 MB).');
+                this.value = '';
+                showPreview('');
+                return;
+              }
+              const url = URL.createObjectURL(f);
+              showPreview(url);
+            });
+          }
+
+          // ---------- Mostrar nombre del archivo en el botón ----------
+          if (input && btnUpload && btnText) {
+            btnText.textContent = baseText; // estado inicial
+            input.addEventListener('change', function(){
+              if (this.files && this.files.length) {
+                btnText.textContent = this.files[0].name;
+                btnUpload.classList.add('has-file');
+              } else {
+                btnText.textContent = baseText;
+                btnUpload.classList.remove('has-file');
+              }
+            });
+          }
+        })();
+    </script>
+}

@@ -1,15 +1,8 @@
-﻿@* ================================
-   USUARIOS / INDEX (estilo Áreas/Puestos)
-   - Filtros: Estado, Búsqueda, Rango de fechas
-   - Columnas: ID Usuario, Usuario, Empleado, Rol, Fecha creación, Estado
-   - Paginación con _Pager
-   ================================= *@
-
-@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.UsuarioListItemViewModel>
+﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.ProductoListItemViewModel>
 @using System.Globalization
 
 @{
-    ViewData["Title"] = "Usuarios";
+    ViewData["Title"] = "Productos";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     string estado = (ViewBag.Estado as string) ?? "ACTIVO";
@@ -25,43 +18,42 @@
 <!-- CARD / TOOLBAR -->
 <div class="ak-toolbar mb-4 mt-4">
     <div class="ak-toolbar__row">
-        <h1 class="ak-toolbar__title m-0">Usuarios</h1>
+        <h1 class="ak-toolbar__title m-0">Productos</h1>
 
         <div class="ak-toolbar__right">
             <!-- Agregar -->
-            <a asp-action="Create"
+            <a asp-action="Create" asp-controller="Productos"
                class="btn btn-ak-primary btn-ak-square d-inline-flex align-items-center gap-2">
                 <i class="fa-solid fa-circle-plus"></i><span>Agregar</span>
             </a>
 
             <!-- Filtros de estado (★ preserva pageSize y reinicia a página 1) -->
-            <a asp-action="Index" asp-route-estado="TODOS" asp-route-q="@q"
+            <a asp-action="Index" asp-controller="Productos" asp-route-estado="TODOS" asp-route-q="@q"
                asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
                asp-route-page="1" asp-route-pageSize="@Model.PageSize"
                class="btn btn-ak-filter btn-ak-square @(estado == "TODOS" ? "active" : "")">
                 <i class="fa-solid fa-layer-group me-1"></i>Todos
             </a>
 
-            <a asp-action="Index" asp-route-estado="ACTIVO" asp-route-q="@q"
+            <a asp-action="Index" asp-controller="Productos" asp-route-estado="ACTIVO" asp-route-q="@q"
                asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
                asp-route-page="1" asp-route-pageSize="@Model.PageSize"
                class="btn btn-ak-filter btn-ak-square @(estado == "ACTIVO" ? "active" : "")">
                 <i class="fa-solid fa-check me-1"></i>Activo
             </a>
 
-            <a asp-action="Index" asp-route-estado="INACTIVO" asp-route-q="@q"
+            <a asp-action="Index" asp-controller="Productos" asp-route-estado="INACTIVO" asp-route-q="@q"
                asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
                asp-route-page="1" asp-route-pageSize="@Model.PageSize"
                class="btn btn-ak-filter btn-ak-square @(estado == "INACTIVO" ? "active" : "")">
                 <i class="fa-solid fa-ban me-1"></i>Inactivo
             </a>
 
-
-
+            <!-- REPORTES -->
             @{
                 var repVm = new AbarroteriaKary.ModelsPartial.ReporteDropdownVM
                 {
-                    Controller = "Usuarios",
+                    Controller = "Producto",    // o "Productos" si ese es tu controlador
                     ExportAction = "Exportar",
                     Label = "Reporte",
                     SizeCss = "btn btn-ak-primary btn-ak-square",
@@ -73,16 +65,12 @@
             }
             @await Html.PartialAsync("~/Views/Shared/Reportes/_ReporteDropdown.cshtml", repVm)
 
-
-
-
-
             <!-- Buscador + Rango -->
-            <form id="frmFiltros" method="get" asp-action="Index"
+            <form id="frmFiltros" method="get" asp-action="Index" asp-controller="Productos"
                   class="d-inline-flex align-items-center gap-2">
                 <input type="hidden" name="estado" value="@estado" />
-                <input type="hidden" name="page" value="1" />                 @* ★ Reinicia página *@
-                <input type="hidden" name="pageSize" value="@Model.PageSize" />@* ★ Preserva pageSize *@
+                <input type="hidden" name="page" value="1" />                  @* ★ Reinicia página *@
+                <input type="hidden" name="pageSize" value="@Model.PageSize" />    @* ★ Preserva pageSize *@
 
                 <!-- RANGO -->
                 <div class="input-group ak-daterange-group" style="width:clamp(220px, 20vw, 260px);">
@@ -112,7 +100,7 @@
                         <i class="fas fa-search"></i>
                     </button>
                     <input name="q" value="@q" class="form-control border-start-0"
-                           placeholder="Buscar por ID, usuario, empleado o rol" />
+                           placeholder="Buscar por ID, nombre, código, subcategoría o marca" />
                 </div>
             </form>
         </div>
@@ -121,27 +109,33 @@
 
 <!-- Tabla -->
 <div class="table-responsive">
-    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra">
+    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra js-sortable">
         <thead class="text-center thead-kary">
             <tr>
+                <th style="width:72px;">Imagen</th>
+
                 @* ★ Encabezados seguros cuando no hay Items *@
                 @if (Model.Items.Any())
                 {
-                    <th>@Html.DisplayNameFor(m => m.Items[0].UsuarioId)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].NombreUsuario)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].EmpleadoNombre)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].RolNombre)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
-                    <th>@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].ProductoId)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].ProductoNombre)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].CodigoProducto)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].SubCategoriaNombre)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].MarcaNombre)</th>
+                    <th data-type="date:dd/MM/yyyy">@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
+                    <th data-type="number">@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
+
                 }
                 else
                 {
-                    <th>ID Usuario</th>
-                    <th>Usuario</th>
-                    <th>Empleado</th>
-                    <th>Rol</th>
-                    <th>Fecha creación</th>
+                    <th data-type="text">Código</th>
+                    <th data-type="text">Nombre</th>
+                    <th data-type="text">Código interno</th>
+                    <th data-type="text">Subcategoría</th>
+                    <th data-type="text">Marca</th>
+                    <th data-type="date:dd/MM/yyyy">Creado</th>
                     <th>Estado</th>
+
                 }
                 <th>Acciones</th>
             </tr>
@@ -151,39 +145,50 @@
             @if (!Model.Items.Any())
             {
                 <tr>
-                    <td colspan="7" class="text-center py-4 text-muted">
+                    <td colspan="9" class="text-center py-4 text-muted">
                         <i class="fa-regular fa-face-frown me-1"></i> No hay resultados.
                     </td>
                 </tr>
             }
             else
             {
-                foreach (var u in Model.Items)
+                foreach (var p in Model.Items)
                 {
-                    bool esActivo = u.EstadoActivo;
+                    bool esActivo = string.Equals(p.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
                     <tr>
-                        <td class="text-monospace">@u.UsuarioId</td>
-                        <td>@u.NombreUsuario</td>
-                        <td>@u.EmpleadoNombre</td>
-                        <td>@u.RolNombre</td>
-                        <td>@u.FechaCreacion.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT"))</td>
+                        <td>
+                            <div class="ak-thumb">
+                                @if (!string.IsNullOrWhiteSpace(p.ImagenUrl))
+                                {
+                                    <img src="@p.ImagenUrl" alt="@p.ProductoNombre" />
+                                }
+                                else
+                                {
+                                    <span class="ak-thumb-placeholder">—</span>
+                                }
+                            </div>
+                        </td>
 
-                        <td class="text-center">
+                        <td class="text-monospace">@p.ProductoId</td>
+                        <td>@p.ProductoNombre</td>
+                        <td>@(string.IsNullOrWhiteSpace(p.CodigoProducto) ? "-" : p.CodigoProducto)</td>
+                        <td>@p.SubCategoriaNombre</td>
+                        <td>@(string.IsNullOrWhiteSpace(p.MarcaNombre) ? "-" : p.MarcaNombre)</td>
+
+                       
+
+                        <td>@p.FechaCreacion.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT"))</td>
+                         <td class="text-center" data-sort-value="@(esActivo ? 1 : 0)">
                             <span class="badge text-white @(esActivo ? "bg-success" : "bg-danger")">
                                 @(esActivo ? "Activo" : "Inactivo")
                             </span>
                         </td>
+
                         <td class="text-center acciones">
-                            <a asp-action="Edit" asp-route-id="@u.UsuarioId"
-                               asp-route-estado="@estado" asp-route-q="@q" asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
-                               asp-route-page="@Model.Page" asp-route-pageSize="@Model.PageSize"
-                               class="btn btn-sm me-2" title="Editar">
+                            <a href="@Url.Action("Edit", "Productos", new { id = p.ProductoId })" class="btn btn-sm me-2" title="Editar">
                                 <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">
                             </a>
-                            <a asp-action="Details" asp-route-id="@u.UsuarioId"
-                               asp-route-estado="@estado" asp-route-q="@q" asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
-                               asp-route-page="@Model.Page" asp-route-pageSize="@Model.PageSize"
-                               class="btn btn-sm me-2" title="Ver">
+                            <a href="@Url.Action("Details", "Productos", new { id = p.ProductoId })" class="btn btn-sm me-2" title="Ver">
                                 <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
                             </a>
                         </td>
@@ -193,7 +198,7 @@
         </tbody>
     </table>
 
-    @* Paginador (mismo parcial que Áreas) *@
+    @* Paginador (mismo parcial que usas en otras pantallas) *@
     @await Html.PartialAsync("_Pager", Model)
 </div>
 
@@ -247,13 +252,11 @@
               fDesde.value = '';
               fHasta.value = '';
               try { picker.clearSelection(); } catch {}
-              // Si NO quiere forzar "ACTIVO" al limpiar, comente la siguiente línea:
-              if (estadoH) estadoH.value = 'ACTIVO';
+              if (estadoH) estadoH.value = 'ACTIVO'; // opcional
               form.submit();
             });
           }
 
-          // (Solo estética) cursor de “click” en el header
           picker.on('render', () => {
             document.querySelectorAll(
               '.litepicker .month-item-header .month-name, .litepicker .month-item-header .year-number'

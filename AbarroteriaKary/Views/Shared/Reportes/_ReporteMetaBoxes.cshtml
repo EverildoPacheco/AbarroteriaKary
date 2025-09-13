@@ -1,0 +1,76 @@
+﻿@using AbarroteriaKary.ModelsPartial
+@model ReporteMetaVM
+
+@{
+    // Determinar clase de color para el estado (mismas clases del layout)
+    var filtroRaw = (Model?.Estado ?? "ACTIVO").Trim().ToUpperInvariant();
+    bool esActivo = string.Equals(filtroRaw, "ACTIVO", System.StringComparison.OrdinalIgnoreCase);
+    var claseEstado = esActivo ? "estado-activo" : "estado-inactivo";
+    // “Activo / Inactivo / Todos”
+    var filtroTexto = string.IsNullOrWhiteSpace(filtroRaw) ? "-" :
+        (char.ToUpper(filtroRaw[0]) + filtroRaw.Substring(1).ToLower());
+    bool hayQ = !string.IsNullOrWhiteSpace(Model?.Busqueda);
+    bool hayRango = !string.IsNullOrWhiteSpace(Model?.Desde) || !string.IsNullOrWhiteSpace(Model?.Hasta);
+}
+
+<table class="meta-outer">
+    <tr>
+        <td class="col-left">
+            <table class="meta-box">
+                <tr>
+                    <th>Filtro:</th>
+                    <td><span class="estado-text @claseEstado">@filtroTexto</span></td>
+                </tr>
+            </table>
+        </td>
+
+        <td class="col-right">
+            <table class="meta-box">
+                <tr>
+                    <th>Fecha / hora:</th>
+                    <td>@Model?.FechaHora</td>
+                </tr>
+            </table>
+        </td>
+    </tr>
+
+    <tr>
+        <td class="col-left">
+            <table class="meta-box">
+                <tr>
+                    <th>Generado por:</th>
+                    <td>@(string.IsNullOrWhiteSpace(Model?.Usuario) ? "Admin" : Model!.Usuario)</td>
+                </tr>
+            </table>
+        </td>
+
+        <td class="col-right">
+            @if (hayQ)
+            {
+                <table class="meta-box">
+                    <tr>
+                        <th>Búsqueda:</th>
+                        <td>@Model!.Busqueda</td>
+                    </tr>
+                </table>
+            }
+        </td>
+    </tr>
+
+    @if (hayRango)
+    {
+        <tr>
+            <td class="col-left">
+                <table class="meta-box">
+                    <tr>
+                        <th>Rango:</th>
+                        <td>@($"{Model!.Desde} - {Model!.Hasta}")</td>
+                    </tr>
+                </table>
+            </td>
+            <td class="col-right"></td>
+        </tr>
+    }
+</table>
+
+<div class="rpt-divider"></div>

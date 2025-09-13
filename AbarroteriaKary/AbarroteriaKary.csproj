@@ -24,9 +24,9 @@
   <ItemGroup>
     <Folder Include="Data\" />
     <Folder Include="ModelsMetadata\" />
-    <Folder Include="ModelsPartial\Reportes\" />
     <Folder Include="wwwroot\img\sidebar\" />
     <Folder Include="wwwroot\Rotativa\" />
+    <Folder Include="wwwroot\uploads\productos\" />
   </ItemGroup>
 
 </Project>

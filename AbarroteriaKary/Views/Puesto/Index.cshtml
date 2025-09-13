@@ -1,12 +1,4 @@
-﻿@* ================================
-   PUESTO / INDEX
-   - Estilo idéntico al Index de Áreas
-   - Filtros: Estado, Búsqueda, Rango de fechas
-   - Columnas: ID, Nombre del puesto, Área, Fecha creación, Descripción, Estado
-   - Paginación con _Pager (igual que Áreas)
-   ================================= *@
-
-@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.PuestoViewModel>
+﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.PuestoViewModel>
 @using System.Globalization
 
 @{
@@ -56,6 +48,23 @@
                class="btn btn-ak-filter btn-ak-square @(estado == "INACTIVO" ? "active" : "")">
                 <i class="fa-solid fa-ban me-1"></i>Inactivo
             </a>
+
+
+                 @{
+                var repVm = new AbarroteriaKary.ModelsPartial.ReporteDropdownVM
+                {
+                    Controller = "Puesto",
+                    ExportAction = "Exportar",
+                    Label = "Reporte",
+                    SizeCss = "btn btn-ak-primary btn-ak-square",
+                    Estado = ViewBag.Estado as string,
+                    Q = ViewBag.Q as string,
+                    FDesde = ViewBag.FDesde as string,
+                    FHasta = ViewBag.FHasta as string
+                };
+            }
+
+            @await Html.PartialAsync("~/Views/Shared/Reportes/_ReporteDropdown.cshtml", repVm)
 
             <!-- Buscador + Rango -->
             <form id="frmFiltros" method="get" asp-action="Index"

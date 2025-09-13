@@ -17,9 +17,6 @@ using AbarroteriaKary.Services.Reportes;   // <-- AGREGAR
 var builder = WebApplication.CreateBuilder(args);
 
 
-
-
-
 // MVC
 builder.Services.AddControllersWithViews();
 

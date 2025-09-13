@@ -1,28 +1,28 @@
-﻿using AbarroteriaKary.Data;
+﻿using System;
+using AbarroteriaKary.Data;
 using AbarroteriaKary.Models;
 using AbarroteriaKary.ModelsPartial;
-using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T>
 using AbarroteriaKary.Services.Auditoria;
 using AbarroteriaKary.Services.Correlativos;
 using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
 using AbarroteriaKary.Services.Reportes;
-using DocumentFormat.OpenXml.Spreadsheet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Rotativa.AspNetCore;
 using Rotativa.AspNetCore.Options;
-using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Globalization;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+//using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T>
+//using System.Threading.Tasks;
+//using Microsoft.AspNetCore.Http;
+//using System.Linq;
+//using System.Collections.Generic;
+//using Microsoft.AspNetCore.Mvc.Rendering;
+//using DocumentFormat.OpenXml.Spreadsheet;
 
 
 
@@ -143,7 +143,7 @@ namespace AbarroteriaKary.Controllers
             public IActionResult PdfFooter()
             {
                 // Vista compartida del pie
-                return View("~/Views/Shared/_PdfFooter.cshtml");
+                return View("~/Views/Shared/Reportes/_PdfFooter.cshtml");
             }
 
     private IQueryable<AreasViewModel> BuildAreasQuery(string estadoNorm, string? q, DateTime? desde, DateTime? hasta)

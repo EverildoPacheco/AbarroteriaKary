@@ -1,6 +1,7 @@
-﻿@model AbarroteriaKary.ModelsPartial.ReporteDropdownVM
-@using Microsoft.AspNetCore.Http
+﻿@model ReporteDropdownVM
 @using System.Collections.Generic
+@using AbarroteriaKary.ModelsPartial
+@using Microsoft.AspNetCore.Http
 
 @{
     // 1) Tomamos TODO lo que ya está en la URL actual (estado, q, fDesde, fHasta…)
@@ -97,7 +98,7 @@
     })();
 </script>
 
-<!-- DEBUG (puedes quitarlo): muestra la URL que van a abrir -->
+<!-- DEBUG (puedes quitarlo): muestra la URL que van a abrir 
 
 
 <div style="font:12px/1.2 monospace; padding:6px;">
@@ -106,3 +107,4 @@
   <div>DOCX: @hrefDocx</div>
 </div>
 
+ -->
