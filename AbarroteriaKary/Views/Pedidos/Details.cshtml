@@ -1,105 +1,133 @@
-﻿@model AbarroteriaKary.Models.PEDIDO
-
+﻿@model AbarroteriaKary.ModelsPartial.PedidoViewModel
+@using System.Globalization
 @{
-    Layout = null;
+    ViewData["Title"] = "Detalle de Pedido";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var empresaProv = ViewBag.ProveedorEmpresa as string ?? "-";
+    var estadoNom = ViewBag.EstadoNombre as string ?? "-";
+    var esGT = CultureInfo.GetCultureInfo("es-GT");
 }
 
-<!DOCTYPE html>
+<link rel="stylesheet" href="~/css/Pedidos.css" asp-append-version="true" />
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Details</title>
-</head>
-<body>
+<h2 class="mb-3">@ViewData["Title"]</h2>
 
-<div>
-    <h4>PEDIDO</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_PEDIDO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_PEDIDO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_ENTREGA_ESTIMADA)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_ENTREGA_ESTIMADA)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OBSERVACIONES)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OBSERVACIONES)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CREADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CREADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_CREACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_CREACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MODIFICADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MODIFICADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_MODIFICACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_MODIFICACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ELIMINADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ELIMINADO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ELIMINADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ELIMINADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_ELIMINACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_ELIMINACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ESTADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ESTADO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ESTADO_PEDIDO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ESTADO_PEDIDO.ESTADO_PEDIDO_ID)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PROVEEDOR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PROVEEDOR.PROVEEDOR_ID)
-        </dd>
-    </dl>
+<div class="k-encabezado">
+    <div class="row g-3">
+        <div class="col-md-3">
+            <label>Orden</label>
+            <input class="form-control" value="@Model.PedidoId" readonly />
+        </div>
+
+        <div class="col-md-3">
+            <label>Proveedor</label>
+            <input class="form-control" value="@empresaProv" readonly />
+        </div>
+
+        <div class="col-md-3">
+            <label>Fecha del pedido</label>
+            <input class="form-control" value="@(Model.FechaPedido?.ToString("dd/MM/yyyy HH:mm") ?? "")" readonly />
+        </div>
+
+        <div class="col-md-3">
+            <label>Fecha entrega estimada</label>
+            <input class="form-control"
+                   value="@(Model.FechaPosibleEntrega.HasValue? Model.FechaPosibleEntrega.Value.ToString("dd/MM/yyyy", esGT) : "-")"
+                   readonly />
+        </div>
+
+        <div class="col-md-3">
+            <label>Estado</label>
+            <input class="form-control" value="@estadoNom" readonly />
+        </div>
+
+        <div class="col-md-3 d-flex align-items-end">
+            <div class="form-check d-flex align-items-center gap-2">
+                <input type="checkbox" class="form-check-input" @(Model.EstadoActivo ? "checked" : "") disabled />
+                <label class="form-check-label fw-bold">Activo</label>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <label>Observaciones</label>
+            <textarea class="form-control" rows="2" readonly>@(Model.Observacion ?? "")</textarea>
+        </div>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.PEDIDO_ID">Edit</a> |
-    <a asp-action="Index">Back to List</a>
+
+<!-- DETALLE (solo lectura) -->
+<div class="k-bloque">
+    <div class="table-responsive">
+        <table class="table k-table" id="tblDetalle">
+            <thead>
+                <tr>
+                    <th style="width:110px">Código</th>
+                    <th style="min-width:160px">Nombre</th>
+                    <th>Descripción</th>
+                    <th style="width:100px">Imagen</th>
+                    <th style="width:110px">Cantidad</th>
+                    <th style="width:130px">Precio compra</th>
+                    <th style="width:130px">Precio venta</th>
+                    <th style="width:150px">Vencimiento</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if ((Model.Lineas?.Any() ?? false) == false)
+                {
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-3">
+                            <em>Este pedido no tiene líneas.</em>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    foreach (var l in Model.Lineas)
+                    {
+                        <tr>
+                            <td>@(l.ProductoId ?? "-")</td>
+                            <td>@(l.NombreProducto ?? "-")</td>
+                            <td>@(l.DescripcionProducto ?? "-")</td>
+                            <td>
+                                <img class="k-img" src="@(l.ImagenUrl ?? "")" onerror="this.src='';" alt="">
+                            </td>
+                            <td class="text-end">
+                                @(((int)l.Cantidad).ToString("N0", esGT))
+                            </td>
+                            <td class="text-end">
+                                @((l.PrecioPedido ?? 0m).ToString("N2", esGT))
+                            </td>
+                            <td class="text-end">
+                                @((l.PrecioVenta ?? 0m).ToString("N2", esGT))
+                            </td>
+                            <td class="text-center">
+                                @(l.FechaVencimiento.HasValue ? $"{l.FechaVencimiento:dd/MM/yyyy}" : "-")
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
 </div>
-</body>
-</html>
+
+<!-- Acciones -->
+<div class="card ak-card ak-actions-card w-100 mt-3">
+    <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+        <a asp-action="Index" class="btn btn-ak btn-ak-cancel">
+            <i class="fa-solid fa-arrow-left ak-icon"></i> Volver
+        </a>
+        <a asp-action="Edit" asp-route-id="@Model.PedidoId" class="btn btn-ak btn-ak-primary">
+            <i class="fa-solid fa-pen-to-square ak-icon"></i> Editar
+        </a>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Identificador de página (por si tu JS global lo usa para no enganchar handlers)
+        window.PAGE = { module: 'Pedidos', view: 'Details' };
+    </script>
+}

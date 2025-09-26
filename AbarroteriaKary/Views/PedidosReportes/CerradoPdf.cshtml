@@ -1,0 +1,85 @@
+﻿@model AbarroteriaKary.ModelsPartial.PedidoCerradoVM
+@{
+    Layout = "~/Views/Shared/Reportes/_PdfLayout.cshtml";
+    ViewData["Title"] = ViewData["Title"] ?? $"Pedido {Model.PedidoId} - Orden cerrada";
+}
+
+<!-- ===== Header estilo PDF ===== -->
+<div class="rpt-topline"></div>
+<div class="rpt-header rpt-botline">
+    <div class="rpt-header__row">
+        <div class="rpt-header__cell rpt-header__cell--logo">
+            <img class="rpt-header__logo" src="~/img/Logos/Logo.png" alt="Logo" />
+        </div>
+        <div class="rpt-header__cell">
+            <h1 class="rpt-title">Orden cerrada</h1>
+            <div class="rpt-sub">Pedido @Model.PedidoId</div>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("~/Views/Shared/Reportes/_ReporteMetaBoxes.cshtml",
+    new AbarroteriaKary.ModelsPartial.ReporteMetaVM {
+        Estado = "ACTIVO", /* ilustrativo */
+        FechaHora = DateTime.Now.ToString("dd/MM/yyyy HH:mm"),
+        Usuario = (ViewBag.Usuario as string) ?? "Admin",
+        Desde = Model.FechaPedido.ToString("dd/MM/yyyy"),
+        Hasta = (Model.FechaRecibido?.ToString("dd/MM/yyyy")) ?? "-"
+    })
+
+<table class="rpt-table">
+  <thead>
+    <tr>
+      <th>Proveedor</th>
+      <th>Fecha pedido</th>
+      <th>Fecha recibido</th>
+      <th>Observación</th>
+      <th>Estado</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>@Model.ProveedorNombre</td>
+      <td class="t-center">@Model.FechaPedido:dd/MM/yyyy</td>
+      <td class="t-center">@((Model.FechaRecibido.HasValue) ? Model.FechaRecibido.Value.ToString("dd/MM/yyyy") : "-")</td>
+      <td>@(string.IsNullOrWhiteSpace(Model.Observacion) ? "-" : Model.Observacion)</td>
+      <td class="t-center">@Model.EstadoNombre</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="rpt-divider"></div>
+
+<table class="rpt-table">
+  <thead>
+    <tr>
+      <th style="width:18mm;">Código</th>
+      <th>Producto</th>
+      <th class="t-center" style="width:20mm;">Cant.</th>
+      <th class="t-right"  style="width:25mm;">Precio compra</th>
+      <th class="t-right"  style="width:25mm;">Subtotal</th>
+      <th class="t-center" style="width:28mm;">Vencimiento</th>
+    </tr>
+  </thead>
+  <tbody>
+    @foreach (var l in Model.Lineas)
+    {
+      <tr>
+        <td class="t-center">@l.Codigo</td>
+        <td>@l.Nombre</td>
+        <td class="t-center">@l.Cantidad</td>
+        <td class="t-right">@l.PrecioCompra.ToString("C")</td>
+        <td class="t-right">@l.Subtotal.ToString("C")</td>
+        <td class="t-center">@((l.FechaVencimiento.HasValue) ? l.FechaVencimiento.Value.ToString("dd/MM/yyyy") : "-")</td>
+      </tr>
+    }
+    <tr>
+      <td colspan="4" class="t-right"><strong>Total</strong></td>
+      <td class="t-right"><strong>@Model.Total.ToString("C")</strong></td>
+      <td></td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- Footer para wkhtmltopdf -->
+@await Html.PartialAsync("~/Views/Shared/Reportes/_PdfFooter.cshtml")

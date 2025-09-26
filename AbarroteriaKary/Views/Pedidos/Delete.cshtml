@@ -1,108 +1,233 @@
-﻿@model AbarroteriaKary.Models.PEDIDO
+﻿// ====== EDIT ======
+document.addEventListener('DOMContentLoaded', () => {
+  if (!window.PAGE || window.PAGE.module !== 'Pedidos' || window.PAGE.view !== 'Edit') return;
 
-@{
-    Layout = null;
-}
+  // ------- Utils -------
+  const $q  = (sel, root = document) => root.querySelector(sel);
+  const $qa = (sel, root = document) => Array.from(root.querySelectorAll(sel));
+  const fmt = (s) => (s ?? '').toString().trim();
+  const swalErr = (text) => {
+    if (window.Swal) return Swal.fire({ icon: 'error', title: 'Validación', text });
+    alert(text);
+    return Promise.resolve();
+  };
+  function unlockSave(btnSel = '#btn-guardar') {
+    try {
+      if (window.KaryForms && typeof KaryForms.unlock === 'function') {
+        KaryForms.unlock(btnSel);
+      } else {
+        const b = document.querySelector(btnSel);
+        if (b) { b.disabled = false; b.removeAttribute('aria-busy'); }
+      }
+    } catch { /* noop */ }
+  }
 
-<!DOCTYPE html>
+  // ------- Refs -------
+  const cfg       = window.PEDIDOS || {};
+  const form      = $q('#frmPedidoEdit');
+  const btnGuardar= $q('#btn-guardar');
+  const tbody     = $q('#tblDetalle tbody');
+  const txtBuscar = $q('#txtBuscarProducto');
+  const boxSug    = $q('#sugerencias');
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Delete</title>
-</head>
-<body>
+  // ------- Delegación: quitar fila (EXISTENTES + NUEVAS) -------
+  if (tbody) {
+    tbody.addEventListener('click', (ev) => {
+      const delBtn = ev.target.closest('.k-del');
+      if (!delBtn) return;
+      const tr = delBtn.closest('tr');
+      if (!tr) return;
+      tr.remove();
+    });
 
-<h3>Are you sure you want to delete this?</h3>
-<div>
-    <h4>PEDIDO</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_PEDIDO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_PEDIDO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_ENTREGA_ESTIMADA)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_ENTREGA_ESTIMADA)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OBSERVACIONES)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OBSERVACIONES)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CREADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CREADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_CREACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_CREACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MODIFICADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MODIFICADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_MODIFICACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_MODIFICACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ELIMINADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ELIMINADO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ELIMINADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ELIMINADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_ELIMINACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_ELIMINACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ESTADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ESTADO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ESTADO_PEDIDO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ESTADO_PEDIDO.ESTADO_PEDIDO_ID)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PROVEEDOR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PROVEEDOR.PROVEEDOR_ID)
-        </dd>
-    </dl>
-    
-    <form asp-action="Delete">
-        <input type="hidden" asp-for="PEDIDO_ID" />
-        <input type="submit" value="Delete" class="btn btn-danger" /> |
-        <a asp-action="Index">Back to List</a>
-    </form>
-</div>
-</body>
-</html>
+    // Normalizar cantidad >= 1 (en cualquier fila)
+    tbody.addEventListener('change', (ev) => {
+      const inp = ev.target.closest('input[data-field="cantidad"]');
+      if (!inp) return;
+      let v = parseInt(inp.value || '0', 10);
+      if (isNaN(v) || v < 1) v = 1;
+      inp.value = v;
+    });
+  }
+
+  // ------- Autocomplete para agregar NUEVAS líneas -------
+  if (txtBuscar && boxSug && cfg?.urls?.buscar) {
+    let lastQ = '';
+    txtBuscar.addEventListener('input', async (e) => {
+      const q = fmt(e.target.value);
+      if (q.length < 2) { boxSug.classList.add('d-none'); boxSug.innerHTML = ''; return; }
+      if (q === lastQ) return; lastQ = q;
+
+      try {
+        const res  = await fetch(`${cfg.urls.buscar}?q=${encodeURIComponent(q)}&top=20`);
+        const list = await res.json();
+        renderSuggest(list);
+      } catch (err) { console.error(err); }
+    });
+
+    function renderSuggest(list) {
+      if (!list || list.length === 0) { boxSug.classList.add('d-none'); boxSug.innerHTML = ''; return; }
+      const esc = (s) => (s ?? '').toString()
+        .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+
+      boxSug.innerHTML = list.map(p => `
+<div class="k-suggest-item"
+     data-id="${esc(p.productoId)}"
+     data-cod="${esc(p.codigoProducto)}"
+     data-nom="${esc(p.nombreProducto)}"
+     data-desc="${esc(p.descripcionProducto || '')}"
+     data-img="${esc(p.imagenUrl || '')}">
+    <img class="k-img" src="${esc(p.imagenUrl || '')}" onerror="this.src='';" alt="">
+    <div>
+        <div><strong>${esc(p.nombreProducto)}</strong></div>
+        <div class="text-muted" style="font-size:12px">${esc(p.productoId)} — ${esc(p.descripcionProducto || '')}</div>
+    </div>
+</div>`).join('');
+      boxSug.classList.remove('d-none');
+
+      $qa('.k-suggest-item', boxSug).forEach(item => {
+        item.addEventListener('click', () => {
+          const prod = {
+            id:        item.dataset.id,   // PRODUCTO_ID
+            codigo:    item.dataset.cod,  // Código interno/barras (solo display)
+            nombre:    item.dataset.nom,
+            descripcion:item.dataset.desc,
+            img:       item.dataset.img
+          };
+          addLineOrIncrement(prod);
+          boxSug.classList.add('d-none');
+          boxSug.innerHTML = '';
+          txtBuscar.value = '';
+        });
+      });
+    }
+  }
+
+  // ------- Agregar o sumar línea -------
+  function addLineOrIncrement(p) {
+    if (!p?.id) { swalErr('Producto inválido'); return; }
+
+    let row = tbody.querySelector(`tr[data-id="${p.id}"]`);
+    if (row) {
+      const $cant = row.querySelector('input[data-field="cantidad"]');
+      $cant.value = (parseInt($cant.value || '0',10) || 0) + 1;
+      return;
+    }
+
+    const esc = (s) => (s ?? '').toString()
+      .replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
+
+    const tr = document.createElement('tr');
+    tr.dataset.id    = p.id;    // PRODUCTO_ID
+    tr.dataset.detid = '';      // vacío = NUEVA
+    tr.innerHTML = `
+<td><span data-field="codigo">${esc(p.id)}</span></td>
+<td><span data-field="nombre">${esc(p.nombre)}</span></td>
+<td><span data-field="desc">${esc(p.descripcion)}</span></td>
+<td><img class="k-img" src="${esc(p.img || '')}" onerror="this.src='';" alt=""></td>
+<td><input type="number" class="form-control form-control-sm" value="1" min="1" step="1" data-field="cantidad"></td>
+<td><input type="number" class="form-control form-control-sm" value="0" min="0" step="0.01" data-field="precio-pedido"></td>
+<td><input type="number" class="form-control form-control-sm" value="0" min="0" step="0.01" data-field="precio-venta"></td>
+<td><input type="date" class="form-control form-control-sm" data-field="vencimiento"></td>
+<td class="text-center"><button type="button" class="k-del" title="Quitar">&times;</button></td>
+    `;
+    tbody.appendChild(tr);
+  }
+
+  // ------- Reindex Hidden Inputs (EDIT) -------
+  function reindexHiddenInputsEdit() {
+    // limpia anteriores
+    $qa('input[type="hidden"][data-dynamic="1"]').forEach(x => x.remove());
+
+    const rows = $qa('#tblDetalle tbody tr');
+    rows.forEach((r, i) => {
+      const detId = r.dataset.detid || ''; // string (vacío = nuevo)
+      const prod  = r.dataset.id;
+      const cant  = parseInt(r.querySelector('input[data-field="cantidad"]').value || '0', 10);
+      const pPed  = r.querySelector('input[data-field="precio-pedido"]').value || '0';
+      const pVen  = r.querySelector('input[data-field="precio-venta"]').value || '0';
+      const fv    = r.querySelector('input[data-field="vencimiento"]').value || ''; // yyyy-MM-dd o ''
+
+      const h = (name, val) => {
+        const inp = document.createElement('input');
+        inp.type = 'hidden'; inp.name = name; inp.value = val ?? '';
+        inp.setAttribute('data-dynamic', '1');
+        form.appendChild(inp);
+      };
+      h(`Lineas[${i}].DetallePedidoId`, detId);
+      h(`Lineas[${i}].ProductoId`, prod);
+      h(`Lineas[${i}].Cantidad`, String(cant));
+      h(`Lineas[${i}].PrecioPedido`, pPed);
+      h(`Lineas[${i}].PrecioVenta`, pVen);
+      h(`Lineas[${i}].FechaVencimiento`, fv);
+    });
+  }
+
+  // ------- Submit (VALIDA + REINDEX) -------
+  if (form) {
+    // 1) Tu validación primero (para poder desbloquear si se cancela)
+    form.addEventListener('submit', (ev) => {
+      const rows = $qa('#tblDetalle tbody tr');
+      const spanLinea = document.querySelector('[data-valmsg-for="Lineas"]');
+      if (spanLinea) spanLinea.textContent = '';
+
+      if (rows.length === 0) {
+        ev.preventDefault();
+        if (spanLinea) spanLinea.textContent = 'Debe agregar al menos un producto.';
+        swalErr('Debe agregar al menos un producto.')
+          .then(() => unlockSave('#btn-guardar'));
+        return false;
+      }
+
+      for (const r of rows) {
+        const c  = r.querySelector('input[data-field="cantidad"]');
+        const pc = parseFloat(r.querySelector('input[data-field="precio-pedido"]').value || '0');
+        const pv = parseFloat(r.querySelector('input[data-field="precio-venta"]').value || '0');
+
+        let v = parseInt(c.value || '0', 10);
+        if (isNaN(v) || v < 1) {
+          ev.preventDefault();
+          swalErr('Todas las cantidades deben ser enteros positivos.')
+            .then(() => unlockSave('#btn-guardar'));
+          return false;
+        }
+        if (pc < 0 || pv < 0) {
+          ev.preventDefault();
+          swalErr('Precios no pueden ser negativos.')
+            .then(() => unlockSave('#btn-guardar'));
+          return false;
+        }
+      }
+
+      reindexHiddenInputsEdit();
+      return true;
+    });
+
+    // 2) Luego, si lo usas, el helper que bloquea botón/spinner
+    if (window.KaryForms && typeof KaryForms.bindSafeSubmit === 'function') {
+      KaryForms.bindSafeSubmit('#frmPedidoEdit', '#btn-guardar', {
+        spinnerHtml: '<i class="fa-solid fa-spinner fa-spin ak-icon"></i> Guardando...'
+      });
+    }
+
+    // 3) Proteger salida si hay cambios
+    if (window.KarySwal && typeof KarySwal.guardUnsaved === 'function') {
+      KarySwal.guardUnsaved('#frmPedidoEdit', '.js-leave');
+    }
+  }
+
+  // ------- PRG Modals (opcional) -------
+  if (cfg.updatedOk && window.KarySwal?.saveSuccess) {
+    KarySwal.saveSuccess({
+      title: '¡Pedido actualizado!',
+      text: `Los cambios del pedido "${cfg.updatedName || cfg.pedidoId}" se guardaron correctamente.`,
+      indexUrl: cfg.urls.index
+    });
+  } else if (cfg.noChanges && window.KarySwal?.info) {
+    KarySwal.info({
+      title: 'Sin cambios',
+      text: 'No se realizó ninguna modificación.',
+      redirectUrl: cfg.urls.index
+    });
+  }
+});

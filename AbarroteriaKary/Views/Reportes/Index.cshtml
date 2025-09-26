@@ -1,0 +1,21 @@
+﻿@{
+    ViewData["Title"] = "Reportes";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/css/reportes-hub.css" asp-append-version="true" />
+
+<h2 class="mb-3">Reportes</h2>
+
+<div class="rpt-cards">
+    <a class="rpt-card" href="@Url.Action("Hub", "PedidosReportes")">
+        <div class="rpt-card__media">
+            <img src="~/img/reportes/pedidos-cover.png" alt="Reportes de Pedido" asp-append-version="true" />
+        </div>
+        <div class="rpt-card__body">
+            <h5>Reportes de Pedido</h5>
+            <p>Generales, cotizaciones, compras por proveedor y pedidos cerrados.</p>
+        </div>
+    </a>
+</div>
+
+<script src="~/js/reportes-hub.js" asp-append-version="true" defer></script>

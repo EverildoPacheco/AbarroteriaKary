@@ -1,0 +1,94 @@
+﻿@using AbarroteriaKary.ModelsPartial
+@model IEnumerable<PedidoReporteDetalleViewModel>
+@{
+    Layout = "~/Views/Shared/Reportes/_PdfLayout.cshtml";
+    ViewData["Title"] = "Pedido";
+
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+    var hdr = ViewBag.Header as PedidoReporteHeaderViewModel ?? new PedidoReporteHeaderViewModel();
+}
+
+<header class="rpt-header rpt-botline">
+    <div class="rpt-header__row">
+        <div class="rpt-header__cell rpt-header__cell--logo">
+            <img class="rpt-header__logo" src="@($"{baseUrl}/img/logologo.png")" alt="Logo" />
+        </div>
+        <div class="rpt-header__cell">
+            <h1 class="rpt-title">ABARROTERÍA KARY</h1>
+            <div class="rpt-sub">Pedido <strong>@(hdr.PedidoId ?? "-")</strong></div>
+            <h3 class="rpt-sub"> <strong>Cel:</strong> 12345678</h3>
+
+        </div>
+    </div>
+</header>
+
+<!-- Meta en 2 columnas -->
+<!-- Meta en 2 columnas (robusto para wkhtmltopdf) -->
+<section class="rpt-two rpt-botline">
+    <div class="rpt-two__row">
+        <!-- Columna izquierda -->
+        <div class="rpt-two__col rpt-two__col--l">
+            <div class="rpt-kv"><span class="rpt-kv__k">Proveedor:</span><span class="rpt-kv__v">@(!string.IsNullOrWhiteSpace(hdr.Empresa) ? hdr.Empresa : "-")</span></div>
+            <div class="rpt-kv"><span class="rpt-kv__k">Nit:</span><span class="rpt-kv__v">@(!string.IsNullOrWhiteSpace(hdr.ProveedorNit) ? hdr.ProveedorNit : "-")</span></div>
+            <div class="rpt-kv"><span class="rpt-kv__k">Tel:</span><span class="rpt-kv__v">@(!string.IsNullOrWhiteSpace(hdr.ProveedorTelefono) ? hdr.ProveedorTelefono : "-")</span></div>
+            <div class="rpt-kv"><span class="rpt-kv__k">Dir:</span><span class="rpt-kv__v">@(!string.IsNullOrWhiteSpace(hdr.ProveedorDireccion) ? hdr.ProveedorDireccion : "-")</span></div>
+            <div class="rpt-kv">
+                <span class="rpt-kv__k">Mail:</span>
+                <span class="rpt-kv__v">
+                    @(string.IsNullOrWhiteSpace(hdr.ProveedorCorreo) ? "-" : Html.Raw($"<a href=\"mailto:{hdr.ProveedorCorreo}\">{hdr.ProveedorCorreo}</a>"))
+                </span>
+            </div>
+        </div>
+
+        <!-- Columna derecha -->
+        <div class="rpt-two__col rpt-two__col--r">
+            <div class="rpt-kv"><span class="rpt-kv__k">Generado:</span><span class="rpt-kv__v">@(!string.IsNullOrWhiteSpace(hdr.FechaGenerada) ? hdr.FechaGenerada : "-")</span></div>
+            <div class="rpt-kv"><span class="rpt-kv__k">Pedido:</span><span class="rpt-kv__v">@(!string.IsNullOrWhiteSpace(hdr.FechaPedido) ? hdr.FechaPedido : "-")</span></div>
+            <div class="rpt-kv"><span class="rpt-kv__k">Entrega est.:</span><span class="rpt-kv__v">@(!string.IsNullOrWhiteSpace(hdr.FechaEntregaEstimada) ? hdr.FechaEntregaEstimada : "-")</span></div>
+            <div class="rpt-kv"><span class="rpt-kv__k">Estado Ped:</span><span class="rpt-kv__v">@(!string.IsNullOrWhiteSpace(hdr.EstadoNombre) ? hdr.EstadoNombre : "-")</span></div>
+            <div class="rpt-kv"><span class="rpt-kv__k">Usuario Gen:</span><span class="rpt-kv__v">@(!string.IsNullOrWhiteSpace(hdr.Usuario) ? hdr.Usuario : "-")</span></div>
+        </div>
+    </div>
+</section>
+
+
+
+@await Html.PartialAsync("_PedidosReporteTabla", Model);
+
+
+<style>
+
+  .rpt-two { margin-top: 8px; }
+  .rpt-two__row{
+    display: table; width:100%; table-layout: fixed; border-collapse: collapse;
+  }
+  .rpt-two__col{
+    display: table-cell; width:50%; vertical-align: top;
+    font-size: 12px; line-height: 1.35;
+  }
+  .rpt-two__col--l{ padding-right: 18px; }
+  .rpt-two__col--r{ padding-left: 22px; } /* mueve la segunda columna a la derecha */
+
+  /* Pares clave/valor */
+  .rpt-kv{ display: table; width:100%; margin: 3px 0; }
+  .rpt-kv__k{
+    display: table-cell; width: 132px; font-weight:700; color:#000;
+    white-space: nowrap; /* títulos alineados */
+  }
+  .rpt-kv__v{
+    display: table-cell; word-break: break-word; overflow-wrap: anywhere;
+  }
+  .rpt-kv__v a{ color:#0a58ca; text-decoration: underline; }
+
+  /* Tipografía un poquito más chica en el bloque meta */
+  .rpt-two .rpt-kv__k, .rpt-two .rpt-kv__v { font-size: 12px; }
+  /* Si lo quieres aún más pequeño, baja aquí, por ejemplo a 11px */
+  /* .rpt-two .rpt-kv__k, .rpt-two .rpt-kv__v { font-size: 11px; } */
+
+  /* En impresión ajusta un poco el padding/anchos (escapar  en Razor si hace falta con ) */
+   @@media print {
+    .rpt-two__col--l{ padding-right: 14px; }
+    .rpt-two__col--r{ padding-left: 18px; }
+    .rpt-kv__k{ width: 120px; }
+  }
+</style>

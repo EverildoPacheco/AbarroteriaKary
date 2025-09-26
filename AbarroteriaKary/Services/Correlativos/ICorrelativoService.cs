@@ -87,10 +87,26 @@ namespace AbarroteriaKary.Services.Correlativos
         Task<string> PeekNextProductoIdAsync(CancellationToken ct = default);
         Task<string> NextProductoIdAsync(CancellationToken ct = default);
 
-        // Ejemplos para otras entidades (cuando las necesite):
-        // Task<string> PeekNextRolIdAsync(CancellationToken ct = default);
-        // Task<string> NextRolIdAsync(CancellationToken ct = default);
-        // Task<string> PeekNextEmpleadoIdAsync(CancellationToken ct = default);
-        // Task<string> NextEmpleadoIdAsync(CancellationToken ct = default);
+        Task<string> PeekNextPedidosIdAsync(CancellationToken ct = default);
+        Task<string> NextPedidosIdAsync(CancellationToken ct = default);
+
+        Task<string> PeekNextDetallePedidosIdAsync(CancellationToken ct = default);
+
+
+        // obsoleto
+        Task<string> NextDetallePedidosIdAsync(CancellationToken ct = default);
+
+
+
+        //--------------------------------------------
+
+        // Rango de correlativos para DETALLE_PEDIDO (Opción B)
+        Task<IReadOnlyList<string>> NextDetallePedidosRangeAsync(int count, CancellationToken ct = default);
+
+        // (Opcional) ID único para un solo detalle desde SEQUENCE (si lo quisieras usar suelto)
+        Task<string> NextDetallePedidoFromSequenceAsync(CancellationToken ct = default);
+
+
+
     }
 }

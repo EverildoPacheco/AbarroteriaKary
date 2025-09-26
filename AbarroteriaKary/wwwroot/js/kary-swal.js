@@ -83,6 +83,8 @@ window.KarySwal = (function () {
         });
     }
 
+
+
     /**
      * Mensaje informativo simple (para "No se realizó ningún cambio", etc.)
      */

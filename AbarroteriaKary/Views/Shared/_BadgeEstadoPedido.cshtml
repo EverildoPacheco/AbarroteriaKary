@@ -1,0 +1,16 @@
+﻿@model string
+@{
+    var nombre = (Model ?? "").Trim().ToUpper();
+    string cls = nombre switch
+    {
+        "BORRADOR" => "ak-badge ak-badge-secondary",
+        "PENDIENTE" => "ak-badge ak-badge-warning",
+        "ENVIADO" => "ak-badge ak-badge-info",
+        "RECIBIDO" => "ak-badge ak-badge-primary",
+        "CERRADO" => "ak-badge ak-badge-success",
+        "FINALIZADO" => "ak-badge ak-badge-success",
+        "ANULADO" => "ak-badge ak-badge-danger",
+        _ => "ak-badge ak-badge-secondary"
+    };
+}
+<span class="@cls" title="Estado: @nombre" data-estado="@nombre">@nombre</span>

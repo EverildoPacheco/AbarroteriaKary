@@ -1,9 +1,15 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Data.SqlClient;                  // <-- IMPORTANTE
 using Microsoft.EntityFrameworkCore;
-using AbarroteriaKary.Data;   // su DbContext
-using AbarroteriaKary.Models; // sus entidades (AREA, PUESTO, etc.)
+using AbarroteriaKary.Data;
+using AbarroteriaKary.Models;
+using Microsoft.EntityFrameworkCore.Storage; // <-- necesario para GetDbTransaction()
+
 
 namespace AbarroteriaKary.Services.Correlativos
 {
@@ -124,11 +130,192 @@ namespace AbarroteriaKary.Services.Correlativos
             => await NextAsync("PRD", 7, _context.PRODUCTO.Select(x => x.PRODUCTO_ID), ct);
 
 
+        //----------------------------------------------------------
 
-        // ----------------- Núcleo reutilizable -----------------
+
+        public async Task<string> PeekNextPedidosIdAsync(CancellationToken ct = default)
+            => await PeekAsync("PED", 7, _context.PEDIDO.Select(x => x.PEDIDO_ID), ct);
+
+        public async Task<string> NextPedidosIdAsync(CancellationToken ct = default)
+            => await NextAsync("PED", 7, _context.PEDIDO.Select(x => x.PEDIDO_ID), ct);
+
+
+
+
+
+        //----------------------------------------------------------
+
+        public async Task<string> PeekNextDetallePedidosIdAsync(CancellationToken ct = default)
+            => await PeekAsync("DET", 7, _context.DETALLE_PEDIDO.Select(x => x.DETALLE_PEDIDO_ID), ct);
+
+        // obsoleto
+        public async Task<string> NextDetallePedidosIdAsync(CancellationToken ct = default)
+            => await NextAsync("DET", 7, _context.DETALLE_PEDIDO.Select(x => x.DETALLE_PEDIDO_ID), ct);
+
+
+
+
+
+
+
+        //// ----------------- Núcleo reutilizable -----------------
+        ///// <summary>
+        ///// Obtiene un “siguiente” tentativo (solo mostrar), sin bloquear.
+        ///// </summary>
+        //private static async Task<string> PeekAsync(
+        //    string prefix, int digits, IQueryable<string> idSource, CancellationToken ct)
+        //{
+        //    var last = await idSource
+        //        .Where(id => id.StartsWith(prefix))
+        //        .OrderByDescending(id => id)
+        //        .FirstOrDefaultAsync(ct);
+
+        //    return FormatNext(prefix, digits, last);
+        //}
+
+        ///// <summary>
+        ///// Obtiene el “siguiente” para insertar (llamar dentro de la transacción del POST).
+        ///// </summary>
+        //private static async Task<string> NextAsync(
+        //    string prefix, int digits, IQueryable<string> idSource, CancellationToken ct)
+        //{
+        //    var last = await idSource
+        //        .Where(id => id.StartsWith(prefix))
+        //        .OrderByDescending(id => id)
+        //        .FirstOrDefaultAsync(ct);
+
+        //    return FormatNext(prefix, digits, last);
+        //}
+
+        ///// <summary>
+        ///// Formatea: PREFIJO + número con ceros a la izquierda.
+        ///// </summary>
+        //private static string FormatNext(string prefix, int digits, string lastId)
+        //{
+        //    var totalLen = prefix.Length + digits;
+        //    var next = 1;
+
+        //    if (!string.IsNullOrWhiteSpace(lastId) && lastId.Length == totalLen)
+        //    {
+        //        var numPart = lastId.Substring(prefix.Length);
+        //        if (int.TryParse(numPart, out var n))
+        //            next = n + 1;
+        //    }
+
+        //    return $"{prefix}{next.ToString($"D{digits}")}";
+        //}
+
+
+
+
+        // =========================================================
+        // Opción B: SEQUENCE por rangos para DETALLE_PEDIDO
+        // =========================================================
+
         /// <summary>
-        /// Obtiene un “siguiente” tentativo (solo mostrar), sin bloquear.
+        /// Reserva un rango de IDs "DET0000001" .. "DET00000N" desde el SEQUENCE dbo.SEQ_DETALLE_PEDIDO.
+        /// Un solo round-trip a BD. Ideal para insertar muchos DETALLE_PEDIDO con un SaveChanges().
         /// </summary>
+        public async Task<IReadOnlyList<string>> NextDetallePedidosRangeAsync(int count, CancellationToken ct = default)
+        {
+            if (count <= 0) return Array.Empty<string>();
+
+            var db = _context.Database;
+            var conn = db.GetDbConnection(); // NO usar await using aquí
+
+            var openedHere = false;
+            if (conn.State != ConnectionState.Open)
+            {
+                await conn.OpenAsync(ct);
+                openedHere = true;
+            }
+
+            try
+            {
+                await using var cmd = conn.CreateCommand();
+                cmd.CommandText = "sys.sp_sequence_get_range";
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                // Enlazar a la MISMA transacción de EF si existe
+                var current = db.CurrentTransaction;
+                if (current != null)
+                {
+                    var dbTx = current.GetDbTransaction();
+                    cmd.Transaction = dbTx;
+                }
+
+                var pSeqName = new SqlParameter("@sequence_name", SqlDbType.NVarChar, 128) { Value = "dbo.SEQ_DETALLE_PEDIDO" };
+                var pSize = new SqlParameter("@range_size", SqlDbType.Int) { Value = count };
+                var pFirst = new SqlParameter("@range_first_value", SqlDbType.Variant) { Direction = ParameterDirection.Output };
+
+                cmd.Parameters.Add(pSeqName);
+                cmd.Parameters.Add(pSize);
+                cmd.Parameters.Add(pFirst);
+
+                await cmd.ExecuteNonQueryAsync(ct);
+
+                var firstVal = Convert.ToInt64(pFirst.Value);
+                var ids = new List<string>(count);
+                for (int i = 0; i < count; i++)
+                {
+                    var n = firstVal + i;
+                    ids.Add($"DET{n.ToString().PadLeft(7, '0')}");
+                }
+                return ids;
+            }
+            finally
+            {
+                // Si la abriste tú, CIERRALA, pero NO la “disposees”
+                if (openedHere && conn.State == ConnectionState.Open)
+                    await conn.CloseAsync();
+            }
+        }
+
+
+
+        /// <summary>
+        /// Obtiene un solo ID de detalle desde el SEQUENCE (NEXT VALUE FOR).
+        /// Úsalo solo si realmente necesitas una unidad (para rangos usa NextDetallePedidosRangeAsync).
+        /// </summary>
+        public async Task<string> NextDetallePedidoFromSequenceAsync(CancellationToken ct = default)
+        {
+            var db = _context.Database;
+            var conn = db.GetDbConnection();
+
+            var openedHere = false;
+            if (conn.State != ConnectionState.Open)
+            {
+                await conn.OpenAsync(ct);
+                openedHere = true;
+            }
+
+            try
+            {
+                await using var cmd = conn.CreateCommand();
+                cmd.CommandText = "SELECT NEXT VALUE FOR dbo.SEQ_DETALLE_PEDIDO;";
+                cmd.CommandType = CommandType.Text;
+
+                var current = db.CurrentTransaction;
+                if (current != null)
+                    cmd.Transaction = current.GetDbTransaction();
+
+                var result = await cmd.ExecuteScalarAsync(ct);
+                var val = Convert.ToInt64(result);
+                return $"DET{val.ToString().PadLeft(7, '0')}";
+            }
+            finally
+            {
+                if (openedHere && conn.State == ConnectionState.Open)
+                    await conn.CloseAsync();
+            }
+        }
+
+
+
+
+
+
+        // ----------------- Núcleo reutilizable que ya tenías -----------------
         private static async Task<string> PeekAsync(
             string prefix, int digits, IQueryable<string> idSource, CancellationToken ct)
         {
@@ -140,9 +327,6 @@ namespace AbarroteriaKary.Services.Correlativos
             return FormatNext(prefix, digits, last);
         }
 
-        /// <summary>
-        /// Obtiene el “siguiente” para insertar (llamar dentro de la transacción del POST).
-        /// </summary>
         private static async Task<string> NextAsync(
             string prefix, int digits, IQueryable<string> idSource, CancellationToken ct)
         {
@@ -154,9 +338,6 @@ namespace AbarroteriaKary.Services.Correlativos
             return FormatNext(prefix, digits, last);
         }
 
-        /// <summary>
-        /// Formatea: PREFIJO + número con ceros a la izquierda.
-        /// </summary>
         private static string FormatNext(string prefix, int digits, string lastId)
         {
             var totalLen = prefix.Length + digits;
@@ -168,8 +349,10 @@ namespace AbarroteriaKary.Services.Correlativos
                 if (int.TryParse(numPart, out var n))
                     next = n + 1;
             }
-
             return $"{prefix}{next.ToString($"D{digits}")}";
         }
     }
 }
+
+
+

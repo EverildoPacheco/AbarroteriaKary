@@ -1,0 +1,169 @@
+﻿:root {
+    --k-green-100: #e6efe6; /* fondo suave */
+    --k-green-300: #b9d0b8; /* bordes / headers */
+    --k-green-500: #8fb78e; /* bloques */
+    --k-green-700: #5f8860; /* acentos */
+    --k-gray-700: #3a3a3a;
+    --k-muted: #f7f7f7;
+}
+
+.k-encabezado {
+    background: var(--k-green-500);
+    border-radius: 8px;
+    padding: 16px;
+    color: #fff;
+    margin-bottom: 18px;
+}
+
+    .k-encabezado label {
+        font-weight: 600;
+    }
+
+    .k-encabezado .form-control, .k-encabezado .form-select {
+        height: 36px;
+        border: none;
+        border-radius: 6px;
+    }
+
+        .k-encabezado .form-control:focus, .k-encabezado .form-select:focus {
+            outline: 2px solid #ffffff55;
+            box-shadow: none;
+        }
+
+.k-bloque {
+    background: #fff;
+    border: 1px solid var(--k-green-300);
+    border-radius: 8px;
+    padding: 12px;
+    margin-bottom: 18px;
+}
+
+.k-table thead th {
+    background: var(--k-green-300);
+    color: #1a1a1a;
+    font-weight: 600;
+    border-bottom: none;
+}
+
+.k-table td, .k-table th {
+    vertical-align: middle;
+}
+
+.k-suggest {
+    position: relative;
+}
+
+.k-suggest-list {
+    position: absolute;
+    z-index: 20;
+    left: 0;
+    right: 0;
+    top: 100%;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    max-height: 280px;
+    overflow: auto;
+    box-shadow: 0 8px 24px rgba(0,0,0,.08);
+}
+
+.k-suggest-item {
+    padding: 10px 12px;
+    cursor: pointer;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+    .k-suggest-item:hover {
+        background: var(--k-green-100);
+    }
+
+.k-img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 6px;
+    border: 1px solid #eee;
+    background: #fff;
+}
+
+.k-del {
+    border: none;
+    background: #fff;
+    color: #b12a2a;
+    font-size: 20px;
+    line-height: 20px;
+}
+
+.k-btn-primary {
+    background: var(--k-green-700);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 600;
+}
+
+    .k-btn-primary:hover {
+        filter: brightness(.95);
+    }
+
+
+    /* ==========================
+   Badges de ESTADO DE PEDIDO
+   ========================== */
+/* Badges de ESTADO DE PEDIDO */
+.ak-badge {
+    display: inline-block;
+    padding: .25rem .6rem;
+    border-radius: 999px;
+    font-weight: 700;
+    font-size: .78rem;
+    line-height: 1;
+    letter-spacing: .3px;
+    vertical-align: middle;
+    white-space: nowrap;
+    user-select: none;
+}
+
+.ak-badge-success {
+    background-color: #2e7d32;
+    color: #ffffff;
+}
+/* CERRADO */
+.ak-badge-warning {
+    background-color: #d97706;
+    color: #ffffff;
+}
+/* PENDIENTE */
+.ak-badge-info {
+    background-color: #2563eb;
+    color: #ffffff;
+}
+/* ENVIADO */
+.ak-badge-primary {
+    background-color: #0f766e;
+    color: #ffffff;
+}
+/* RECIBIDO (teal) */
+.ak-badge-danger {
+    background-color: #b91c1c;
+    color: #ffffff;
+}
+/* ANULADO */
+.ak-badge-secondary {
+    background-color: #6b7280;
+    color: #ffffff;
+}
+/* BORRADOR */
+
+
+/* Mostrar solo la primera letra en mayúscula, resto minúscula */
+.ak-badge[data-estado] {
+    text-transform: lowercase; /* todo en minúscula */
+}
+
+    .ak-badge[data-estado]::first-letter {
+        text-transform: uppercase; /* primera letra en mayúscula */
+    }

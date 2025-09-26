@@ -1,0 +1,114 @@
+﻿@model AbarroteriaKary.ModelsPartial.ReporteHubIndexVM
+@{
+    ViewData["Title"] = "Reportes de Pedido";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link rel="stylesheet" href="~/css/pedidos-reportes.css" asp-append-version="true" />
+
+<h2 class="mb-3 d-flex align-items-center justify-content-between">
+  <span>Reportes de Pedido</span>
+  <a class="btn btn-outline-secondary" href="@Url.Action("Index","Reportes")">
+    <i class="fa fa-chevron-left me-1"></i> Volver
+  </a>
+</h2>
+
+<!-- Bloque 1: Tipo de reporte + filtros -->
+<div class="card ak-card p-3 mb-3">
+  <div class="row g-3">
+    <div class="col-md-4">
+      <label class="form-label">Tipo de reporte</label>
+      <select id="rpt-tipo" class="form-select">
+        <option value="GENERAL" selected>General (listado tipo Index)</option>
+        <option value="COTIZACION">Cotización (reimpresión de pedido)</option>
+        <option value="COMPRAS">Compras por proveedor (solo cerrados)</option>
+        <option value="CERRADO">Pedido cerrado (encabezado + detalle + total)</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- Bloque 2: Filtros dinámicos -->
+<form id="frmRpt" method="get" class="card ak-card p-3 mb-3">
+  <!-- GENERAL -->
+  <section data-rpt="GENERAL">
+    @await Html.PartialAsync("_FiltrosGeneral", Model.Filtros)
+  </section>
+
+  <!-- COTIZACION -->
+  <section data-rpt="COTIZACION" hidden>
+    @await Html.PartialAsync("_FiltrosCotizacion", Model.Filtros)
+  </section>
+
+  <!-- COMPRAS: filtros + picker proveedor -->
+  <section data-rpt="COMPRAS" hidden>
+    @await Html.PartialAsync("_FiltrosComprasProveedor", Model.Filtros)
+
+    @* Picker proveedor (con “Todos”) *@
+    @await Html.PartialAsync("_PickerProveedorCompras", Model.Filtros)
+  </section>
+
+  <!-- CERRADO: no pedimos PedidoId en input, usamos picker dinámico -->
+  <section data-rpt="CERRADO" hidden>
+    @await Html.PartialAsync("_FiltrosPedidoCerrado", Model.Filtros)
+
+    @* Picker de pedidos cerrados (lista + buscador + selección única) *@
+    @await Html.PartialAsync("_PickerPedidoCerrado", Model.Filtros)
+  </section>
+</form>
+
+<!-- Bloque 3: Acciones (abajo del todo) -->
+<div class="card ak-card p-3">
+  <div class="d-flex flex-wrap gap-2 justify-content-end align-items-center" id="exporters">
+    @* GENERAL (dropdown ya visible por defecto) *@
+    <span data-rpt="GENERAL">
+      @await Html.PartialAsync("~/Views/Shared/Reportes/_ReporteDropdown.cshtml",
+          new AbarroteriaKary.ModelsPartial.ReporteDropdownVM {
+              Controller = "PedidosReportes",
+              ExportAction = "ExportarGeneral",
+              Label = "Exportar General",
+              SizeCss = "btn btn-ak btn-ak-primary"
+          })
+    </span>
+
+    @* COTIZACION *@
+    <span data-rpt="COTIZACION" hidden>
+      @await Html.PartialAsync("~/Views/Shared/Reportes/_ReporteDropdown.cshtml",
+          new AbarroteriaKary.ModelsPartial.ReporteDropdownVM {
+              Controller = "PedidosReportes",
+              ExportAction = "Cotizacion",
+              Label = "Exportar Cotización",
+              SizeCss = "btn btn-ak btn-ak-primary"
+          })
+    </span>
+
+    @* COMPRAS *@
+    <span data-rpt="COMPRAS" hidden>
+      @await Html.PartialAsync("~/Views/Shared/Reportes/_ReporteDropdown.cshtml",
+          new AbarroteriaKary.ModelsPartial.ReporteDropdownVM {
+              Controller = "PedidosReportes",
+              ExportAction = "ComprasProveedor",
+              Label = "Exportar Compras",
+              SizeCss = "btn btn-ak btn-ak-primary"
+          })
+    </span>
+
+    @* CERRADO *@
+    <span data-rpt="CERRADO" hidden>
+      @await Html.PartialAsync("~/Views/Shared/Reportes/_ReporteDropdown.cshtml",
+          new AbarroteriaKary.ModelsPartial.ReporteDropdownVM {
+              Controller = "PedidosReportes",
+              ExportAction = "PedidoCerrado",
+              Label = "Exportar Pedido",
+              SizeCss = "btn btn-ak btn-ak-primary"
+          })
+    </span>
+
+    <button id="btn-generar" class="btn btn-ak btn-ak-success">
+      <i class="fa fa-play me-1"></i> Generar
+    </button>
+  </div>
+</div>
+
+@section Scripts {
+  <script src="~/js/pedidos-reportes-hub.js" asp-append-version="true" defer></script>
+}

@@ -81,8 +81,8 @@
                     <a class="kary-submenu__item @active("Producto", "Index")"
                        asp-controller="Stock" asp-action="Index">Stock</a>
 
-                    <a class="kary-submenu__item @active("Categoria", "Index")"
-                       asp-controller="Pedido" asp-action="Index">Pedido</a>
+                    <a class="kary-submenu__item @active("Pedidos", "Index")"
+                       asp-controller="Pedidos" asp-action="Index">Pedidos</a>
 
                 </div>
             </div>
@@ -232,11 +232,28 @@
             </div>
 
 
-@*         <a class="kary-menu__item @active("Permisos", "Index")"
-           asp-controller="Permisos" asp-action="Index">
-                <img src="~/img/sidebar/permiso.png" class="kary-icon" alt="" asp-append-version="true" />
-            <span>Permisos</span>
-        </a> *@
+
+
+
+            <div class="kary-menu__group" data-group="Reportes">
+                <button type="button"
+                        class="kary-menu__item js-submenu-toggle"
+                        aria-expanded="false"
+                        aria-controls="sm-Reportes">
+                    <img src="~/img/sidebar/permiso.png" class="kary-icon" alt="" asp-append-version="true" />
+                    <span class="kary-menu__title"><strong>REPORTES</strong></span>
+                </button>
+
+                <div id="sm-Reportes" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Reportes", "Index")"
+                       asp-controller="Reportes" asp-action="Index">Reportes</a>
+
+
+                </div>
+            </div>
+
+
+
 
     </nav>
     </div>

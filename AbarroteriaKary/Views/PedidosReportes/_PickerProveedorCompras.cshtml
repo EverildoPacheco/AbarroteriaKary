@@ -1,0 +1,32 @@
+﻿@model AbarroteriaKary.ModelsPartial.ReporteHubFiltroVM
+
+<div class="rpt-picker card ak-card mt-3">
+    <div class="card-body">
+        <div class="d-flex align-items-end justify-content-between mb-2 flex-wrap gap-2">
+            <div class="flex-grow-1 me-2">
+                <label class="form-label">Proveedor</label>
+                <input type="text" class="form-control" id="pv-buscar" placeholder="Filtrar proveedor..." />
+            </div>
+            <div class="text-muted small">
+                <span class="d-inline-block">Total: <strong id="pv-total">@Model.ProveedoresOpciones?.Count</strong></span>
+            </div>
+        </div>
+
+        <div class="rpt-list scroll-y" id="pv-list">
+            <label class="rpt-radio">
+                <input type="radio" name="ProveedorSeleccion" value="__TODOS__" checked />
+                <span>Todos los proveedores</span>
+            </label>
+
+            @foreach (var p in Model.ProveedoresOpciones)
+            {
+                <label class="rpt-radio" data-name="@p.Nombre.ToLower()">
+                    <input type="radio" name="ProveedorSeleccion" value="@p.Id" />
+                    <span>@p.Nombre</span>
+                </label>
+            }
+        </div>
+
+        <input type="hidden" name="ProveedorId" id="pv-proveedorId" value="__TODOS__" />
+    </div>
+</div>

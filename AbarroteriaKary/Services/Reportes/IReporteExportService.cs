@@ -30,5 +30,12 @@ namespace AbarroteriaKary.Services.Reportes
         byte[] GenerarExcelClientes(IEnumerable<ClienteViewModel> datos);
         byte[] GenerarWordClientes(IEnumerable<ClienteViewModel> datos);
 
+
+        byte[] GenerarExcelPedidosGeneral(IEnumerable<PedidoListItemViewModel> datos); // lo del Index
+        byte[] GenerarExcelComprasProveedorResumen(IEnumerable<ComprasProveedorResumenVM> datos);
+        byte[] GenerarExcelComprasProveedorDetalle(IEnumerable<ComprasProveedorDetalleVM> datos);
+        byte[] GenerarExcelPedidoCerrado(PedidoCerradoVM pedido);
+
+
     }
 }

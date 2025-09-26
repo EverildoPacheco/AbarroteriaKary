@@ -1,0 +1,27 @@
+﻿@model AbarroteriaKary.ModelsPartial.ReporteHubFiltroVM
+<div class="row g-3">
+    <div class="col-md-2">
+        <label class="form-label">Base fecha</label>
+        <select asp-for="BaseFecha" class="form-select">
+            <option value="recibido">Fecha recibida</option>
+            <option value="pedido">Fecha del pedido</option>
+        </select>
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Desde</label>
+        <input asp-for="Desde" type="date" class="form-control" />
+    </div>
+    <div class="col-md-2">
+        <label class="form-label">Hasta</label>
+        <input asp-for="Hasta" type="date" class="form-control" />
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Proveedor(es)</label>
+        <select asp-for="Proveedores" class="form-select" multiple>
+            @foreach (var p in Model.ProveedoresOpciones)
+            {
+                <option value="@p.Id">@p.Nombre</option>
+            }
+        </select>
+    </div>
+</div>

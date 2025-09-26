@@ -1,0 +1,34 @@
+﻿@model AbarroteriaKary.ModelsPartial.ReporteHubFiltroVM
+
+<div class="rpt-picker card ak-card mt-3">
+    <div class="card-body">
+        <div class="d-flex align-items-end justify-content-between mb-2 flex-wrap gap-2">
+            <div class="flex-grow-1 me-2">
+                <label class="form-label">Buscar pedido cerrado</label>
+                <input type="text" class="form-control" id="pc-buscar" placeholder="PED0000005, proveedor, observación..." />
+            </div>
+            <div class="text-muted small">
+                <span class="d-inline-block">Total: <strong id="pc-total">0</strong></span>
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle" id="pc-tabla">
+                <thead>
+                    <tr>
+                        <th style="width:40px"></th>
+                        <th>Pedido</th>
+                        <th>Proveedor</th>
+                        <th>Fecha pedido</th>
+                        <th>Fecha recibido</th>
+                        <th class="text-end">Total</th>
+                    </tr>
+                </thead>
+                <tbody><!-- filas via JS --></tbody>
+            </table>
+        </div>
+
+        <input type="hidden" name="PedidoId" id="pc-pedidoId" />
+        <div class="text-danger small" id="pc-error" style="display:none;">Debe seleccionar un pedido.</div>
+    </div>
+</div>

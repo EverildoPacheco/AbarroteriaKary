@@ -1,0 +1,50 @@
+﻿@model AbarroteriaKary.ModelsPartial.ReporteHubFiltroVM
+
+<form method="get" class="card ak-card p-3">
+    <div class="row g-2">
+
+        <!-- Base de fecha -->
+        <div class="col-md-2">
+            <label class="form-label">Base de fecha</label>
+            <select asp-for="BaseFecha" class="form-select">
+                <option value="pedido">Fecha del pedido</option>
+                <option value="recibido">Fecha recibida</option>
+            </select>
+        </div>
+
+        <!-- Rango -->
+        <div class="col-md-2">
+            <label class="form-label">Desde</label>
+            <input asp-for="Desde" type="date" class="form-control" />
+        </div>
+        <div class="col-md-2">
+            <label class="form-label">Hasta</label>
+            <input asp-for="Hasta" type="date" class="form-control" />
+        </div>
+
+        <!-- Proveedores (múltiple) -->
+        <div class="col-md-3">
+            <label class="form-label">Proveedor(es)</label>
+            <select asp-for="Proveedores" class="form-select" multiple>
+                @foreach (var p in Model.ProveedoresOpciones)
+                {
+                    <option value="@p.Id">@p.Nombre</option>
+                }
+            </select>
+            <small class="text-muted">Ctrl/Cmd para múltiples</small>
+        </div>
+
+        <!-- Búsqueda -->
+        <div class="col-md-3">
+            <label class="form-label">Buscar</label>
+            <input asp-for="Q" class="form-control" placeholder="Pedido, observación, producto..." />
+        </div>
+    </div>
+
+    <div class="mt-2 d-flex gap-2">
+        <button class="btn btn-ak btn-ak-primary" type="submit">
+            <i class="fa fa-filter me-1"></i> Aplicar
+        </button>
+        <a class="btn btn-outline-secondary" href="@Url.Action("Index", "PedidosReportes")">Limpiar</a>
+    </div>
+</form>

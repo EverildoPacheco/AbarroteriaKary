@@ -1,0 +1,68 @@
+﻿@model AbarroteriaKary.ModelsPartial.ComprasProveedorPageVM
+@{
+    ViewData["Title"] = "Compras por Proveedor";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<!-- Filtros locales (reutilizamos el de HUB para consistencia visual) -->
+@await Html.PartialAsync("_HubFiltros", Model.Filtros)
+
+<div class="d-flex justify-content-between align-items-center my-2">
+  <div>
+    <strong>Total periodo:</strong>
+    <span>@Model.MontoTotalPeriodo.ToString("C")</span>
+  </div>
+
+  <!-- Dropdown UNIVERSAL de exportar -->
+  @await Html.PartialAsync(
+        "~/Views/Shared/_ReporteDropdown.cshtml",
+        new AbarroteriaKary.ModelsPartial.ReporteDropdownVM {
+            Controller   = "PedidosReportes",
+            ExportAction = "ComprasProveedorExport",
+            Label        = "Exportar",
+            SizeCss      = "btn btn-ak btn-ak-primary"
+            // Este parcial arrastra q/fDesde/fHasta desde la URL automáticamente.
+        })
+</div>
+
+<div class="table-responsive">
+  <table class="table table-bordered table-striped align-middle">
+    <thead>
+      <tr>
+        <th>Proveedor</th>
+        <th class="text-center"># Pedidos</th>
+        <th class="text-center">Unidades</th>
+        <th class="text-end">Monto</th>
+        <th class="text-end">Ticket medio</th>
+        <th class="text-center">% Part.</th>
+        <th class="text-center">Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+    @if (Model.Items.Count == 0)
+    {
+      <tr><td colspan="7" class="text-center text-muted">Sin datos para el rango seleccionado.</td></tr>
+    }
+    else
+    {
+      foreach (var it in Model.Items)
+      {
+        <tr>
+          <td>@it.ProveedorNombre</td>
+          <td class="text-center">@it.CantPedidos</td>
+          <td class="text-center">@it.Unidades</td>
+          <td class="text-end">@it.Monto.ToString("C")</td>
+          <td class="text-end">@it.TicketMedio.ToString("C")</td>
+          <td class="text-center">@it.ParticipacionPorc.ToString("0.##")%</td>
+          <td class="text-center">
+            @* En una siguiente iteración puedes agregar un drill-down a detalle por proveedor *@
+            <span class="text-muted">—</span>
+          </td>
+        </tr>
+      }
+    }
+    </tbody>
+  </table>
+</div>

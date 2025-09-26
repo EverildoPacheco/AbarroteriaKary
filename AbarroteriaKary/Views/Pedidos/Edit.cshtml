@@ -1,100 +1,710 @@
-﻿@model AbarroteriaKary.Models.PEDIDO
-
+﻿@model AbarroteriaKary.ModelsPartial.PedidoViewModel
 @{
-    Layout = null;
+    ViewData["Title"] = "Editar Pedido";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var updatedOk     = TempData["UpdatedOk"] as bool?;
+    var noChanges     = TempData["NoChanges"] as bool?;
+    var cerradoOk     = TempData["CerradoOk"] as bool?;
+    var cerrarErrores = TempData["CerrarErrores"] as string;
+
+    var estadoActual = (Model.EstadoPedidoNombre ?? "").Trim().ToUpper();
+    bool esCerrado = ((ViewBag.EsCerrado as bool?) ?? false)
+                     || estadoActual == "CERRADO"
+                     || estadoActual == "FINALIZADO";
 }
 
-<!DOCTYPE html>
+<link rel="stylesheet" href="~/css/Pedidos.css" asp-append-version="true" />
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Edit</title>
-</head>
-<body>
+@* <h2 class="mb-3">@ViewData["Title"]</h2>
 
-<h4>PEDIDO</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="PEDIDO_ID" />
-            <div class="form-group">
-                <label asp-for="FECHA_PEDIDO" class="control-label"></label>
-                <input asp-for="FECHA_PEDIDO" class="form-control" />
-                <span asp-validation-for="FECHA_PEDIDO" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ESTADO_PEDIDO_ID" class="control-label"></label>
-                <select asp-for="ESTADO_PEDIDO_ID" class="form-control" asp-items="ViewBag.ESTADO_PEDIDO_ID"></select>
-                <span asp-validation-for="ESTADO_PEDIDO_ID" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FECHA_ENTREGA_ESTIMADA" class="control-label"></label>
-                <input asp-for="FECHA_ENTREGA_ESTIMADA" class="form-control" />
-                <span asp-validation-for="FECHA_ENTREGA_ESTIMADA" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="OBSERVACIONES" class="control-label"></label>
-                <input asp-for="OBSERVACIONES" class="form-control" />
-                <span asp-validation-for="OBSERVACIONES" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PROVEEDOR_ID" class="control-label"></label>
-                <select asp-for="PROVEEDOR_ID" class="form-control" asp-items="ViewBag.PROVEEDOR_ID"></select>
-                <span asp-validation-for="PROVEEDOR_ID" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CREADO_POR" class="control-label"></label>
-                <input asp-for="CREADO_POR" class="form-control" />
-                <span asp-validation-for="CREADO_POR" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FECHA_CREACION" class="control-label"></label>
-                <input asp-for="FECHA_CREACION" class="form-control" />
-                <span asp-validation-for="FECHA_CREACION" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="MODIFICADO_POR" class="control-label"></label>
-                <input asp-for="MODIFICADO_POR" class="form-control" />
-                <span asp-validation-for="MODIFICADO_POR" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FECHA_MODIFICACION" class="control-label"></label>
-                <input asp-for="FECHA_MODIFICACION" class="form-control" />
-                <span asp-validation-for="FECHA_MODIFICACION" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="ELIMINADO" /> @Html.DisplayNameFor(model => model.ELIMINADO)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="ELIMINADO_POR" class="control-label"></label>
-                <input asp-for="ELIMINADO_POR" class="form-control" />
-                <span asp-validation-for="ELIMINADO_POR" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FECHA_ELIMINACION" class="control-label"></label>
-                <input asp-for="FECHA_ELIMINACION" class="form-control" />
-                <span asp-validation-for="FECHA_ELIMINACION" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ESTADO" class="control-label"></label>
-                <input asp-for="ESTADO" class="form-control" />
-                <span asp-validation-for="ESTADO" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+  @if (!esCerrado)
+            {
+              
+                if (string.Equals(estadoActual, "RECIBIDO", StringComparison.OrdinalIgnoreCase))
+                {
+                    <button type="submit"
+                            id="btn-cerrar"
+                            class="btn btn-success"
+                            formaction="@Url.Action("Cerrar", "Pedidos", new { id = Model.PedidoId })"
+                            formmethod="post">
+                        @Html.AntiForgeryToken()
+                        <i class="fa fa-check-circle"></i> Cerrar (aplicar inventario)
+                    </button>
+                }
+            }
+ *@
+
+<!-- Header con botón Cerrar a la derecha -->
+<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
+    <h2 class="mb-0">@ViewData["Title"]</h2>
+
+    @* Mostrar solo si NO está cerrado y el estado actual es RECIBIDO *@
+    @if (!esCerrado && string.Equals(estadoActual, "RECIBIDO", StringComparison.OrdinalIgnoreCase))
+    {
+        <button type="submit"
+                id="btn-cerrar"
+                class="btn btn-ak btn-ak-cancel"
+                form="frmPedidoEdit"
+                formaction="@Url.Action("Cerrar", "Pedidos", new { id = Model.PedidoId })"
+                formmethod="post">
+            <i class="fa fa-check-circle ak-icon"></i>
+            Actualizar inventario
+        </button>
+    }
+</div>
+
+
+@if (updatedOk == true)
+{
+    <div class="alert alert-success">Se guardaron los cambios del pedido <strong>@(TempData["UpdatedName"] as string ?? Model.PedidoId)</strong>.</div>
+}
+@if (noChanges == true)
+{
+    <div class="alert alert-info">No hubo cambios para guardar.</div>
+}
+@if (cerradoOk == true)
+{
+    <div class="alert alert-success">El pedido se cerró correctamente.</div>
+}
+
+@if (esCerrado)
+{
+    <div class="alert alert-info">
+        Este pedido está <strong>CERRADO</strong>. Se muestra en solo lectura.
     </div>
-</div>
+}
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+@using (Html.BeginForm(
+    actionName: "Edit",
+    controllerName: "Pedidos",
+    routeValues: new { id = Model.PedidoId },
+    method: FormMethod.Post,
+    antiforgery: false,
+    htmlAttributes: new { id = "frmPedidoEdit", autocomplete = "off" }
+))
+{
+    @Html.AntiForgeryToken()
 
-</body>
-</html>
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+    <!-- ====== ENCABEZADO ====== -->
+    <div class="k-encabezado">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label>No. Pedido</label>
+                <input asp-for="PedidoId" class="form-control" readonly />
+            </div>
+
+            <div class="col-md-3">
+                <label>Proveedor</label>
+                <select asp-for="ProveedorId" asp-items="Model.Proveedores" class="form-select">
+                    <option value="">-- Seleccione proveedor --</option>
+                </select>
+                <span asp-validation-for="ProveedorId" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label>Fecha del pedido</label>
+                <input asp-for="FechaPedido" type="datetime-local" class="form-control" />
+                <span asp-validation-for="FechaPedido" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label>Fecha entrega estimada</label>
+                <input asp-for="FechaPosibleEntrega" type="date" class="form-control" />
+                <span asp-validation-for="FechaPosibleEntrega" class="text-danger"></span>
+            </div>
+
+            <div class="col-md-3">
+                <label>Estado</label>
+                <select asp-for="EstadoPedidoId" asp-items="Model.Estados" class="form-select" id="EstadoPedidoId"></select>
+                <span asp-validation-for="EstadoPedidoId" class="text-danger"></span>
+
+                <div class="text-muted small mt-1" id="nota-recibido" style="display:none;">
+                    <i class="fa fa-info-circle"></i>
+                    Al marcar <strong>RECIBIDO</strong>, se usará <strong>Fecha entrega estimada</strong> como fecha efectiva de recepción.
+                    Puede ajustarla antes de guardar.
+                </div>
+            </div>
+
+            <div class="col-md-3 d-flex align-items-end">
+                <div class="form-check d-flex align-items-center gap-2">
+                    <input class="form-check-input" asp-for="EstadoActivo" id="EstadoActivo" />
+                    <label class="form-check-label fw-bold" asp-for="EstadoActivo"></label>
+                </div>
+            </div>
+
+            <div class="col-12">
+                <label>Observaciones</label>
+                <textarea asp-for="Observacion" rows="2" class="form-control"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <!-- ====== BUSCADOR DE PRODUCTOS ====== -->
+    <div class="k-bloque">
+        <label class="mb-2">Agregar producto</label>
+        <div class="k-suggest">
+            <input id="txtBuscarProducto" class="form-control" placeholder="Buscar por código o nombre..." />
+            <div id="sugerencias" class="k-suggest-list d-none"></div>
+        </div>
+        <small class="text-muted">Escriba al menos 2 caracteres y presione sobre el resultado para agregarlo al detalle.</small>
+    </div>
+
+    <!-- ====== DETALLE EDITABLE ====== -->
+    <div class="k-bloque">
+        <div class="table-responsive">
+            <table class="table k-table" id="tblDetalle">
+                <thead>
+                    <tr>
+                        <th style="width:110px">Código</th>
+                        <th style="min-width:160px">Nombre</th>
+                        <th>Descripción</th>
+                        <th style="width:100px">Imagen</th>
+                        <th style="width:110px">Cantidad</th>
+                        <th style="width:130px">Precio compra</th>
+                        <th style="width:130px">Precio venta</th>
+                        <th style="width:150px">Vencimiento</th>
+                        <th style="width:80px">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (int i = 0; i < (Model.Lineas?.Count ?? 0); i++)
+                    {
+                        var l = Model.Lineas[i];
+                        <tr data-id="@l.ProductoId" data-detid="@l.DetallePedidoId">
+                            <td><span data-field="codigo">@l.ProductoId</span></td>
+                            <td><span data-field="nombre">@l.NombreProducto</span></td>
+                            <td><span data-field="desc">@l.DescripcionProducto</span></td>
+                            <td>
+                                <img class="k-img" src="@l.ImagenUrl" onerror="this.src='';" alt="">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm" value="@((int)l.Cantidad)" min="1" step="1" data-field="cantidad">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm" value="@((decimal)(l.PrecioPedido ?? 0))" min="0" step="0.01" data-field="precio-pedido">
+                            </td>
+                            <td>
+                                <input type="number" class="form-control form-control-sm" value="@((decimal)(l.PrecioVenta ?? 0))" min="0" step="0.01" data-field="precio-venta">
+                            </td>
+                            <td>
+                                <input type="date" class="form-control form-control-sm" value="@(l.FechaVencimiento.HasValue ? $"{l.FechaVencimiento:yyyy-MM-dd}" : "")" data-field="vencimiento">
+                            </td>
+                            <td class="text-center">
+                                <button type="button" class="k-del" title="Quitar">&times;</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <span class="text-danger" data-valmsg-for="Lineas" data-valmsg-replace="true"></span>
+    </div>
+
+    <!-- ====== ACCIONES ====== -->
+    <div class="card ak-card ak-actions-card w-100 mt-3">
+        <div class="card-body d-flex justify-content-center gap-3 flex-wrap">
+
+            <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave" id="btn-volver">
+                <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+            </a>
+
+          
+                <button type="reset" class="btn btn-ak btn-ak-success" id="btn-reset">
+                    <i class="fa-solid fa-eraser ak-icon"></i> Restablecer
+                </button>
+
+                <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                    <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar
+                </button>                   
+        </div>
+    </div>
+}
+
+
+
+
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Identificador de página (lo usa tu JS global/pedidos.js)
+        window.PAGE = { module: 'Pedidos', view: 'Edit' };
+
+        // PRG flags para esta vista (provienen de TempData en el controlador)
+        window.PEDIDOS = {
+            pedidoId: '@Model.PedidoId',
+            urls: {
+                buscar: '@Url.Action("BuscarProductos", "Pedidos")',
+                index:  '@Url.Action("Index", "Pedidos")'
+            },
+            updatedOk:   @(((TempData["UpdatedOk"] as bool?) ?? false).ToString().ToLowerInvariant()),
+            noChanges:   @(((TempData["NoChanges"] as bool?) ?? false).ToString().ToLowerInvariant()),
+            updatedName: '@(TempData["UpdatedName"] as string ?? Model.PedidoId)'
+        };
+    </script>
+
+    <script>
+        // ===== Nota dinámica para RECIBIDO (muestra/oculta según selección de estado)
+        (function () {
+            const ddlEstado = document.getElementById('EstadoPedidoId');
+            const nota = document.getElementById('nota-recibido');
+            function toggleNota() {
+                if (!ddlEstado || !nota) return;
+                const texto = (ddlEstado.options[ddlEstado.selectedIndex]?.text || '').trim().toUpperCase();
+                nota.style.display = (texto === 'RECIBIDO') ? 'block' : 'none';
+            }
+            toggleNota();
+            if (ddlEstado) ddlEstado.addEventListener('change', toggleNota);
+        })();
+
+        // ===== Confirmación al seleccionar ANULADO (KarySwal / SweetAlert2 / fallback)
+        (function () {
+            const ddl = document.getElementById('EstadoPedidoId');
+            if (!ddl) return;
+
+            let prevValue = ddl.value;
+            let prevText  = (ddl.options[ddl.selectedIndex]?.text || '').trim().toUpperCase();
+
+            ddl.addEventListener('change', function (ev) {
+                const value = ddl.value;
+                const text  = (ddl.options[ddl.selectedIndex]?.text || '').trim().toUpperCase();
+
+                if (text === 'ANULADO' && prevText !== 'ANULADO') {
+                    ev.preventDefault();
+
+                    const runConfirm = (onOk, onCancel) => {
+                        if (window.KarySwal?.confirm) {
+                            KarySwal.confirm({
+                                title: '¿Anular pedido?',
+                                text:  'El pedido quedará INACTIVO y no podrá editarse. ¿Desea continuar?',
+                                icon:  'warning',
+                                confirmButtonText: 'Sí, anular',
+                                cancelButtonText:  'No, cancelar'
+                            }).then(ok => ok ? onOk() : onCancel());
+                        } else if (window.Swal?.fire) {
+                            Swal.fire({
+                                title: '¿Anular pedido?',
+                                text:  'El pedido quedará INACTIVO y no podrá editarse. ¿Desea continuar?',
+                                icon:  'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Sí, anular',
+                                cancelButtonText:  'No, cancelar'
+                            }).then(r => r.isConfirmed ? onOk() : onCancel());
+                        } else {
+                            confirm('¿Anular pedido?') ? onOk() : onCancel();
+                        }
+                    };
+
+                    runConfirm(
+                        () => { prevValue = value; prevText = text; ddl.value = value; },
+                        () => { ddl.value = prevValue; }
+                    );
+                } else {
+                    prevValue = value;
+                    prevText  = text;
+                }
+            });
+        })();
+
+        // ===== Si marcan "Activo" estando en ANULADO, regresar a BORRADOR automáticamente
+        (function () {
+            const chk = document.getElementById('EstadoActivo');
+            const ddl = document.getElementById('EstadoPedidoId');
+            if (!chk || !ddl) return;
+
+            chk.addEventListener('change', function () {
+                const text = (ddl.options[ddl.selectedIndex]?.text || '').trim().toUpperCase();
+                if (chk.checked && text === 'ANULADO') {
+                    const optBorr = Array.from(ddl.options).find(o => (o.text || '').trim().toUpperCase() === 'BORRADOR');
+                    if (optBorr) {
+                        ddl.value = optBorr.value;
+                        if (window.KarySwal?.toast) KarySwal.toast('Se reactivó el pedido como BORRADOR.', 'success');
+                    }
+                }
+            });
+        })();
+
+        // ===== Utils modales (promesas) =====
+        function swalConfirmAsync(title, text, icon='question', confirmText='Sí', cancelText='No') {
+            return new Promise(resolve => {
+                if (window.KarySwal?.confirm) {
+                    KarySwal.confirm({ title, text, icon, confirmButtonText: confirmText, cancelButtonText: cancelText })
+                            .then(ok => resolve(!!ok));
+                } else if (window.Swal?.fire) {
+                    Swal.fire({ title, text, icon, showCancelButton: true, confirmButtonText: confirmText, cancelButtonText: cancelText })
+                        .then(r => resolve(!!r.isConfirmed));
+                } else {
+                    resolve(!!confirm(title + (text ? '\n' + text : '')));
+                }
+            });
+        }
+        function swalAlertAsync(title, text, icon='success') {
+            return new Promise(resolve => {
+                if (window.KarySwal?.alert) {
+                    const ret = KarySwal.alert({ title, text, icon });
+                    if (ret && typeof ret.then === 'function') ret.then(resolve);
+                    else setTimeout(resolve, 0);
+                } else if (window.Swal?.fire) {
+                    Swal.fire({ title, text, icon, confirmButtonText: 'Aceptar' }).then(() => resolve());
+                } else {
+                    alert(title + (text ? '\n' + text : ''));
+                    resolve();
+                }
+            });
+        }
+
+        // ===== Validación + Confirmación para "Cerrar (aplicar inventario)"
+        // Requiere: Precio compra > 0, Precio venta > 0 y Fecha de vencimiento en TODAS las líneas
+        (function () {
+            const btnCerrar = document.getElementById('btn-cerrar');
+            if (!btnCerrar) return;
+
+            btnCerrar.addEventListener('click', async function (ev) {
+                const form = document.getElementById('frmPedidoEdit');
+                if (!form) return;
+
+                // --- Validación de detalle ---
+                const filas = document.querySelectorAll('#tblDetalle tbody tr');
+                let hayErrores = false;
+
+                filas.forEach((tr) => {
+                    const precioCompra = parseFloat(tr.querySelector('input[data-field="precio-pedido"]')?.value || '0');
+                    const precioVenta  = parseFloat(tr.querySelector('input[data-field="precio-venta"]')?.value  || '0');
+                    const vencimiento  = (tr.querySelector('input[data-field="vencimiento"]')?.value || '').trim();
+
+                    const invalida = !(precioCompra > 0) || !(precioVenta > 0) || !vencimiento;
+                    tr.classList.toggle('table-warning', invalida);
+                    if (invalida) hayErrores = true;
+                });
+
+                // Si hay errores → aviso compacto y NO enviar
+                if (hayErrores) {
+                    ev.preventDefault();
+                    await swalAlertAsync(
+                        'Campos obligatorios al cerrar',
+                        'Complete Precio compra (> 0), Precio venta (> 0) y Fecha de vencimiento en todas las líneas.',
+                        'warning'
+                    );
+                    return;
+                }
+
+                // Confirmación antes de aplicar inventario
+                ev.preventDefault(); // detenemos envío por defecto
+                const ok = await swalConfirmAsync(
+                    '¿Actualizar inventario?',
+                    'Esta acción aplicará las entradas al inventario de este pedido.',
+                    'question',
+                    'Sí, actualizar',
+                    'No'
+                );
+                if (!ok) return;
+
+                // Enviar al endpoint del botón (formaction) usando el mismo form
+                const fa = btnCerrar.getAttribute('formaction') || form.getAttribute('action') || form.action;
+                const fm = btnCerrar.getAttribute('formmethod')  || form.getAttribute('method') || form.method || 'post';
+
+                form.action = fa;
+                form.method = fm;
+                form.submit();
+            });
+        })();
+
+        // ===== PRG Modals (TempData → KarySwal/Swal) con prioridad y ocultando banners .alert
+        (function () {
+            const cfg         = window.PEDIDOS || {};
+            const updatedOk   = (cfg.updatedOk === true) || (cfg.updatedOk === 'true');
+            const noChanges   = (cfg.noChanges === true) || (cfg.noChanges === 'true');
+            const updatedName = (typeof cfg.updatedName === 'string' && cfg.updatedName.trim().length > 0)
+                                ? cfg.updatedName.trim()
+                                : '@Model.PedidoId';
+
+            const cerradoOk        = @(((TempData["CerradoOk"] as bool?) ?? false).ToString().ToLowerInvariant());
+            const cerrarErroresRaw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((TempData["CerrarErrores"] as string) ?? ""));
+            const cerrarErrores    = (cerrarErroresRaw || '').toString().trim();
+
+            function hideBootstrapAlerts() {
+                document.querySelectorAll('.alert').forEach(el => el.style.display = 'none');
+            }
+
+            (async function runPRGModals() {
+                // Prioridad: 1) errores cierre  2) actualizado  3) cerrado ok  4) sin cambios
+                if (cerrarErrores.length > 0) {
+                    hideBootstrapAlerts();
+                    await swalAlertAsync(
+                        'Campos obligatorios al cerrar',
+                        'Complete Precio compra (> 0), Precio venta (> 0) y Fecha de vencimiento en todas las líneas.',
+                        'warning'
+                    );
+                } else if (updatedOk) {
+                    hideBootstrapAlerts();
+                    await swalAlertAsync('¡Actualizado exitosamente!', `Los cambios de "${updatedName}" se guardaron correctamente.`, 'success');
+                } else if (cerradoOk) {
+                    hideBootstrapAlerts();
+                    await swalAlertAsync('Inventario actualizado', 'El pedido se cerró y el inventario fue aplicado correctamente.', 'success');
+                    // Redirigir a Index al aceptar
+                    window.location.href = (window.PEDIDOS?.urls?.index) || '@Url.Action("Index", "Pedidos")';
+                } else if (noChanges) {
+                    hideBootstrapAlerts();
+                    await swalAlertAsync('Sin cambios', 'No se realizó ninguna modificación.', 'info');
+                }
+            })();
+        })();
+
+        // ===== Bloquear toda la UI si el pedido está CERRADO/FINALIZADO
+        (function () {
+            const ES_CERRADO = @(
+                (
+                        ((ViewBag.EsCerrado as bool?) ?? false)
+                        || string.Equals((Model.EstadoPedidoNombre ?? "").Trim().ToUpper(), "CERRADO")
+                        || string.Equals((Model.EstadoPedidoNombre ?? "").Trim().ToUpper(), "FINALIZADO")
+                ).ToString().ToLowerInvariant()
+                );
+
+            if (!ES_CERRADO) return;
+
+            const form = document.getElementById('frmPedidoEdit');
+            if (!form) return;
+
+            form.querySelectorAll('input, select, textarea, button').forEach(el => {
+                const isCancelar = el.id === 'btn-volver';
+                const isHidden   = el.type === 'hidden';
+                if (!isCancelar && !isHidden) el.disabled = true;
+            });
+        })();
+    </script>
+
+    <script src="~/js/pedidos.js" asp-append-version="true" defer></script>
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@* @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Identificador de página (lo usa tu JS global/pedidos.js)
+        window.PAGE = { module: 'Pedidos', view: 'Edit' };
+
+        // PRG flags para esta vista (provienen de TempData en el controlador)
+        window.PEDIDOS = {
+            pedidoId: '@Model.PedidoId',
+            urls: {
+                buscar: '@Url.Action("BuscarProductos", "Pedidos")',
+                index:  '@Url.Action("Index", "Pedidos")'
+            },
+            updatedOk:  @(((TempData["UpdatedOk"]  as bool?) ?? false).ToString().ToLowerInvariant()),
+            noChanges:  @(((TempData["NoChanges"]  as bool?) ?? false).ToString().ToLowerInvariant()),
+            updatedName: '@(TempData["UpdatedName"] as string ?? Model.PedidoId)'
+        };
+    </script>
+
+    <script>
+        // ===== Nota dinámica para RECIBIDO (muestra/oculta según selección de estado)
+        (function () {
+            const ddlEstado = document.getElementById('EstadoPedidoId');
+            const nota = document.getElementById('nota-recibido');
+            function toggleNota() {
+                if (!ddlEstado || !nota) return;
+                const texto = (ddlEstado.options[ddlEstado.selectedIndex]?.text || '').trim().toUpperCase();
+                nota.style.display = (texto === 'RECIBIDO') ? 'block' : 'none';
+            }
+            toggleNota();
+            if (ddlEstado) ddlEstado.addEventListener('change', toggleNota);
+        })();
+
+        // ===== Confirmación al seleccionar ANULADO (KarySwal / SweetAlert2 / fallback)
+        (function () {
+            const ddl = document.getElementById('EstadoPedidoId');
+            if (!ddl) return;
+
+            let prevValue = ddl.value;
+            let prevText  = (ddl.options[ddl.selectedIndex]?.text || '').trim().toUpperCase();
+
+            ddl.addEventListener('change', function (ev) {
+                const value = ddl.value;
+                const text  = (ddl.options[ddl.selectedIndex]?.text || '').trim().toUpperCase();
+
+                if (text === 'ANULADO' && prevText !== 'ANULADO') {
+                    ev.preventDefault();
+
+                    const runConfirm = (onOk, onCancel) => {
+                        if (window.KarySwal?.confirm) {
+                            KarySwal.confirm({
+                                title: '¿Anular pedido?',
+                                text:  'El pedido quedará INACTIVO y no podrá editarse. ¿Desea continuar?',
+                                icon:  'warning',
+                                confirmButtonText: 'Sí, anular',
+                                cancelButtonText:  'No, cancelar'
+                            }).then(ok => ok ? onOk() : onCancel());
+                        } else if (window.Swal?.fire) {
+                            Swal.fire({
+                                title: '¿Anular pedido?',
+                                text:  'El pedido quedará INACTIVO y no podrá editarse. ¿Desea continuar?',
+                                icon:  'warning',
+                                showCancelButton: true,
+                                confirmButtonText: 'Sí, anular',
+                                cancelButtonText:  'No, cancelar'
+                            }).then(r => r.isConfirmed ? onOk() : onCancel());
+                        } else {
+                            confirm('¿Anular pedido?') ? onOk() : onCancel();
+                        }
+                    };
+
+                    runConfirm(
+                        () => { prevValue = value; prevText = text; ddl.value = value; },
+                        () => { ddl.value = prevValue; }
+                    );
+                } else {
+                    prevValue = value;
+                    prevText  = text;
+                }
+            });
+        })();
+
+        // ===== Si marcan "Activo" estando en ANULADO, regresar a BORRADOR automáticamente
+        (function () {
+            const chk = document.getElementById('EstadoActivo');
+            const ddl = document.getElementById('EstadoPedidoId');
+            if (!chk || !ddl) return;
+
+            chk.addEventListener('change', function () {
+                const text = (ddl.options[ddl.selectedIndex]?.text || '').trim().toUpperCase();
+                if (chk.checked && text === 'ANULADO') {
+                    const optBorr = Array.from(ddl.options).find(o => (o.text || '').trim().toUpperCase() === 'BORRADOR');
+                    if (optBorr) {
+                        ddl.value = optBorr.value;
+                        if (window.KarySwal?.toast) KarySwal.toast('Se reactivó el pedido como BORRADOR.', 'success');
+                    }
+                }
+            });
+        })();
+
+        // ===== Validación cliente para "Cerrar (aplicar inventario)"
+        // Requiere: Precio compra > 0, Precio venta > 0 y Fecha de vencimiento en TODAS las líneas
+        (function () {
+            const btnCerrar = document.getElementById('btn-cerrar');
+            if (!btnCerrar) return;
+
+            btnCerrar.addEventListener('click', function (ev) {
+                const filas = document.querySelectorAll('#tblDetalle tbody tr');
+                let hayErrores = false;
+
+                filas.forEach((tr) => {
+                    const precioCompra = parseFloat(tr.querySelector('input[data-field="precio-pedido"]')?.value || '0');
+                    const precioVenta  = parseFloat(tr.querySelector('input[data-field="precio-venta"]')?.value  || '0');
+                    const vencimiento  = (tr.querySelector('input[data-field="vencimiento"]')?.value || '').trim();
+
+                    const invalida = !(precioCompra > 0) || !(precioVenta > 0) || !vencimiento;
+                    tr.classList.toggle('table-warning', invalida); // resalta fila con error
+                    if (invalida) hayErrores = true;
+                });
+
+                if (hayErrores) {
+                    ev.preventDefault(); // NO enviar el form
+
+                    const title = 'Campos obligatorios al cerrar';
+                    const text  = 'Complete Precio compra (> 0), Precio venta (> 0) y Fecha de vencimiento en todas las líneas.';
+
+                    if (window.KarySwal?.alert) {
+                        KarySwal.alert({ title, text, icon: 'warning' });
+                    } else if (window.Swal?.fire) {
+                        Swal.fire({ title, text, icon: 'warning', confirmButtonText: 'Aceptar' });
+                    } else {
+                        alert(title + '\n' + text);
+                    }
+                }
+            });
+        })();
+
+        // ===== PRG Modals (TempData → KarySwal/Swal) con prioridad y ocultando banners .alert
+        (function () {
+            const cfg         = window.PEDIDOS || {};
+            const updatedOk   = (cfg.updatedOk === true) || (cfg.updatedOk === 'true');
+            const noChanges   = (cfg.noChanges === true) || (cfg.noChanges === 'true');
+            const updatedName = (typeof cfg.updatedName === 'string' && cfg.updatedName.trim().length > 0)
+                                ? cfg.updatedName.trim()
+                                : '@Model.PedidoId';
+
+            const cerradoOk        = @(((TempData["CerradoOk"] as bool?) ?? false).ToString().ToLowerInvariant());
+            const cerrarErroresRaw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((TempData["CerrarErrores"] as string) ?? ""));
+            const cerrarErrores    = (cerrarErroresRaw || '').toString().trim();
+
+            function hideBootstrapAlerts() {
+                document.querySelectorAll('.alert').forEach(el => el.style.display = 'none');
+            }
+            function showModal(title, text, icon) {
+                if (window.KarySwal?.alert) {
+                    KarySwal.alert({ title, text, icon });
+                } else if (window.Swal?.fire) {
+                    Swal.fire({ title, text, icon, confirmButtonText: 'Aceptar' });
+                } else {
+                    alert((title ? title + '\n' : '') + (text || ''));
+                }
+            }
+
+            // Prioridad: 1) errores cierre  2) actualizado  3) cerrado ok  4) sin cambios
+            if (cerrarErrores.length > 0) {
+                hideBootstrapAlerts();
+                showModal('Campos obligatorios al cerrar',
+                          'Complete Precio compra (> 0), Precio venta (> 0) y Fecha de vencimiento en todas las líneas.',
+                          'warning');
+            } else if (updatedOk) {
+                hideBootstrapAlerts();
+                showModal('¡Actualizado exitosamente!', `Los cambios de "${updatedName}" se guardaron correctamente.`, 'success');
+            } else if (cerradoOk) {
+                hideBootstrapAlerts();
+                showModal('Pedido cerrado', `El pedido "${updatedName}" se cerró correctamente.`, 'success');
+            } else if (noChanges) {
+                hideBootstrapAlerts();
+                showModal('Sin cambios', 'No se realizó ninguna modificación.', 'info');
+            }
+        })();
+
+        // ===== Bloquear toda la UI si el pedido está CERRADO/FINALIZADO
+        (function () {
+            const ES_CERRADO = @(
+                (
+                    ((ViewBag.EsCerrado as bool?) ?? false)
+                    || string.Equals((Model.EstadoPedidoNombre ?? "").Trim().ToUpper(), "CERRADO")
+                    || string.Equals((Model.EstadoPedidoNombre ?? "").Trim().ToUpper(), "FINALIZADO")
+                ).ToString().ToLowerInvariant()
+            );
+
+            if (!ES_CERRADO) return;
+
+            const form = document.getElementById('frmPedidoEdit');
+            if (!form) return;
+
+            form.querySelectorAll('input, select, textarea, button').forEach(el => {
+                const isCancelar = el.id === 'btn-volver';
+                const isHidden   = el.type === 'hidden';
+                if (!isCancelar && !isHidden) el.disabled = true;
+            });
+        })();
+    </script>
+
+    <script src="~/js/pedidos.js" asp-append-version="true" defer></script>
+}
+ *@

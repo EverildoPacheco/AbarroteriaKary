@@ -1,0 +1,93 @@
+﻿@model AbarroteriaKary.ModelsPartial.ReporteHubFiltroVM
+@{
+    ViewData["Title"] = "Reportes de Pedidos";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link rel="stylesheet" href="~/css/Pedidos.css" asp-append-version="true" />
+
+<h2 class="mb-3">@ViewData["Title"]</h2>
+
+<!-- ====== Filtros globales del HUB (opcionales) ====== -->
+@await Html.PartialAsync("_HubFiltros", Model)
+
+<div class="row g-3 mt-2">
+    <!-- Tarjeta: General de pedidos -->
+    <div class="col-md-4">
+        <div class="card ak-card h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">General de pedidos</h5>
+                <p class="card-text flex-grow-1">
+                    Lista general con filtros, igual a tu Index. Puedes exportar con los filtros activos.
+                </p>
+                <div class="d-flex gap-2">
+                    <!-- Navega a Pedidos/Index arrastrando los filtros básicos -->
+                    <a class="btn btn-ak btn-ak-primary"
+                       href="@Url.Action("Index", "Pedidos", new {
+                            q = Model.Q,
+                            fDesde = Model.Desde?.ToString("yyyy-MM-dd"),
+                            fHasta = Model.Hasta?.ToString("yyyy-MM-dd")
+                       })">
+                        Abrir lista
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta: Compras por Proveedor -->
+    <div class="col-md-4">
+        <div class="card ak-card h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Compras por proveedor</h5>
+                <p class="card-text flex-grow-1">
+                    Resumen acumulado por proveedor en un periodo (pedidos cerrados).
+                </p>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-ak btn-ak-primary"
+                       href="@Url.Action("ComprasProveedor", "PedidosReportes", new {
+                            baseFecha = Model.BaseFecha,
+                            desde = Model.Desde?.ToString("yyyy-MM-dd"),
+                            hasta = Model.Hasta?.ToString("yyyy-MM-dd"),
+                            q = Model.Q
+                       })">
+                        Abrir resumen
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjeta: Pedido puntual (cerrado / cotización) -->
+    <div class="col-md-4">
+        <div class="card ak-card h-100">
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title">Pedido puntual</h5>
+                <div class="input-group mb-2">
+                    <span class="input-group-text">No. Pedido</span>
+                    <input type="text" class="form-control" id="txtPedidoId" placeholder="PED0000001" />
+                </div>
+                <div class="d-flex gap-2 mt-auto">
+                    <a class="btn btn-ak btn-ak-primary" id="btnCerrado" href="#" target="_blank" rel="noopener">Orden cerrada (PDF)</a>
+                    <a class="btn btn-ak btn-ak-secondary" id="btnCotizacion" href="#" target="_blank" rel="noopener">Cotización</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+ (function(){
+   const txt = document.getElementById('txtPedidoId');
+   const btnC = document.getElementById('btnCerrado');
+   const btnQ = document.getElementById('btnCotizacion');
+   function up() {
+     const id = (txt.value || '').trim();
+     btnC.href = id ? '@Url.Action("Cerrado","PedidosReportes")/' + encodeURIComponent(id) : '#';
+     btnQ.href = id ? '@Url.Action("Cotizacion","PedidosReportes")/' + encodeURIComponent(id) : '#';
+   }
+   if (txt) { txt.addEventListener('input', up); up(); }
+ })();
+</script>
+}

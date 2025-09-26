@@ -312,24 +312,6 @@ namespace AbarroteriaKary.Controllers
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         public async Task<IActionResult> Details(string id)
         {
             // 1) Validación de parámetro

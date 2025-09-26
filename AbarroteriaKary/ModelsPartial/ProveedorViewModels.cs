@@ -21,7 +21,8 @@ namespace AbarroteriaKary.ModelsPartial
         [StringLength(250)]
         public string? ProveedorObservacion { get; set; }
 
-        [Display(Name = "Empresa")]
+        [Required(ErrorMessage = "Nombre de la empresa es requerido")]
+        [Display(Name = "Empresa*")]
         [StringLength(100)]
         public string? Empresa
         {
