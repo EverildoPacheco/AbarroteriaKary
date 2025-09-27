@@ -16,24 +16,7 @@
 
 <link rel="stylesheet" href="~/css/Pedidos.css" asp-append-version="true" />
 
-@* <h2 class="mb-3">@ViewData["Title"]</h2>
 
-  @if (!esCerrado)
-            {
-              
-                if (string.Equals(estadoActual, "RECIBIDO", StringComparison.OrdinalIgnoreCase))
-                {
-                    <button type="submit"
-                            id="btn-cerrar"
-                            class="btn btn-success"
-                            formaction="@Url.Action("Cerrar", "Pedidos", new { id = Model.PedidoId })"
-                            formmethod="post">
-                        @Html.AntiForgeryToken()
-                        <i class="fa fa-check-circle"></i> Cerrar (aplicar inventario)
-                    </button>
-                }
-            }
- *@
 
 <!-- Header con botón Cerrar a la derecha -->
 <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
@@ -165,7 +148,9 @@
                         <th style="width:110px">Cantidad</th>
                         <th style="width:130px">Precio compra</th>
                         <th style="width:130px">Precio venta</th>
+                        <th style="width:150px">Lote</th>
                         <th style="width:150px">Vencimiento</th>
+
                         <th style="width:80px">Acción</th>
                     </tr>
                 </thead>
@@ -189,6 +174,16 @@
                             <td>
                                 <input type="number" class="form-control form-control-sm" value="@((decimal)(l.PrecioVenta ?? 0))" min="0" step="0.01" data-field="precio-venta">
                             </td>
+
+                            <td>
+                                <input type="text"
+                                       class="form-control form-control-sm"
+                                       maxlength="50"
+                                       value="@(l.LoteCodigo ?? "")"
+                                       data-field="lote">
+                            </td>
+
+
                             <td>
                                 <input type="date" class="form-control form-control-sm" value="@(l.FechaVencimiento.HasValue ? $"{l.FechaVencimiento:yyyy-MM-dd}" : "")" data-field="vencimiento">
                             </td>
@@ -360,7 +355,8 @@
 
         // ===== Validación + Confirmación para "Cerrar (aplicar inventario)"
         // Requiere: Precio compra > 0, Precio venta > 0 y Fecha de vencimiento en TODAS las líneas
-        (function () {
+
+                (function () {
             const btnCerrar = document.getElementById('btn-cerrar');
             if (!btnCerrar) return;
 
@@ -368,21 +364,18 @@
                 const form = document.getElementById('frmPedidoEdit');
                 if (!form) return;
 
-                // --- Validación de detalle ---
+                // --- Validación rápida en cliente ---
                 const filas = document.querySelectorAll('#tblDetalle tbody tr');
                 let hayErrores = false;
-
                 filas.forEach((tr) => {
                     const precioCompra = parseFloat(tr.querySelector('input[data-field="precio-pedido"]')?.value || '0');
                     const precioVenta  = parseFloat(tr.querySelector('input[data-field="precio-venta"]')?.value  || '0');
                     const vencimiento  = (tr.querySelector('input[data-field="vencimiento"]')?.value || '').trim();
-
                     const invalida = !(precioCompra > 0) || !(precioVenta > 0) || !vencimiento;
                     tr.classList.toggle('table-warning', invalida);
                     if (invalida) hayErrores = true;
                 });
 
-                // Si hay errores → aviso compacto y NO enviar
                 if (hayErrores) {
                     ev.preventDefault();
                     await swalAlertAsync(
@@ -393,8 +386,8 @@
                     return;
                 }
 
-                // Confirmación antes de aplicar inventario
-                ev.preventDefault(); // detenemos envío por defecto
+                // Confirmación
+                ev.preventDefault();
                 const ok = await swalConfirmAsync(
                     '¿Actualizar inventario?',
                     'Esta acción aplicará las entradas al inventario de este pedido.',
@@ -404,15 +397,22 @@
                 );
                 if (!ok) return;
 
-                // Enviar al endpoint del botón (formaction) usando el mismo form
-                const fa = btnCerrar.getAttribute('formaction') || form.getAttribute('action') || form.action;
-                const fm = btnCerrar.getAttribute('formmethod')  || form.getAttribute('method') || form.method || 'post';
+                         // Asegurar que los hidden están reinyectados
+                    if (typeof reindexHiddenInputsEdit === 'function') reindexHiddenInputsEdit();
 
-                form.action = fa;
-                form.method = fm;
-                form.submit();
+
+                // IMPORTANTE: disparar el submit "real" (respeta formaction/formmethod del botón)
+                if (form.requestSubmit) {
+                    form.requestSubmit(btnCerrar);   // 🔹 dispara el evento submit -> reindexHiddenInputsEdit()
+                } else {
+                    // fallback para navegadores viejos
+                    const tmp = document.createElement('button');
+                    tmp.type = 'submit'; tmp.style.display = 'none';
+                    form.appendChild(tmp); tmp.click(); tmp.remove();
+                }
             });
         })();
+
 
         // ===== PRG Modals (TempData → KarySwal/Swal) con prioridad y ocultando banners .alert
         (function () {
@@ -431,28 +431,23 @@
                 document.querySelectorAll('.alert').forEach(el => el.style.display = 'none');
             }
 
-            (async function runPRGModals() {
-                // Prioridad: 1) errores cierre  2) actualizado  3) cerrado ok  4) sin cambios
-                if (cerrarErrores.length > 0) {
-                    hideBootstrapAlerts();
-                    await swalAlertAsync(
-                        'Campos obligatorios al cerrar',
-                        'Complete Precio compra (> 0), Precio venta (> 0) y Fecha de vencimiento en todas las líneas.',
-                        'warning'
-                    );
-                } else if (updatedOk) {
-                    hideBootstrapAlerts();
-                    await swalAlertAsync('¡Actualizado exitosamente!', `Los cambios de "${updatedName}" se guardaron correctamente.`, 'success');
-                } else if (cerradoOk) {
-                    hideBootstrapAlerts();
-                    await swalAlertAsync('Inventario actualizado', 'El pedido se cerró y el inventario fue aplicado correctamente.', 'success');
-                    // Redirigir a Index al aceptar
-                    window.location.href = (window.PEDIDOS?.urls?.index) || '@Url.Action("Index", "Pedidos")';
-                } else if (noChanges) {
-                    hideBootstrapAlerts();
-                    await swalAlertAsync('Sin cambios', 'No se realizó ninguna modificación.', 'info');
-                }
-            })();
+           (async function runPRGModals() {
+          if (cerrarErrores.length > 0) {
+            hideBootstrapAlerts();
+            await swalAlertAsync('No se pudo actualizar inventario', cerrarErrores, 'warning');
+          } else if (updatedOk) {
+            hideBootstrapAlerts();
+            await swalAlertAsync('¡Actualizado exitosamente!', `Los cambios de "${updatedName}" se guardaron correctamente.`, 'success');
+          } else if (cerradoOk) {
+            hideBootstrapAlerts();
+            await swalAlertAsync('Inventario actualizado', 'El pedido se cerró y el inventario fue aplicado correctamente.', 'success');
+            window.location.href = (window.PEDIDOS?.urls?.index) || '@Url.Action("Index", "Pedidos")';
+          } else if (noChanges) {
+            hideBootstrapAlerts();
+            await swalAlertAsync('Sin cambios', 'No se realizó ninguna modificación.', 'info');
+          }
+        })();
+
         })();
 
         // ===== Bloquear toda la UI si el pedido está CERRADO/FINALIZADO
@@ -481,230 +476,3 @@
     <script src="~/js/pedidos.js" asp-append-version="true" defer></script>
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-@* @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
-
-    <script>
-        // Identificador de página (lo usa tu JS global/pedidos.js)
-        window.PAGE = { module: 'Pedidos', view: 'Edit' };
-
-        // PRG flags para esta vista (provienen de TempData en el controlador)
-        window.PEDIDOS = {
-            pedidoId: '@Model.PedidoId',
-            urls: {
-                buscar: '@Url.Action("BuscarProductos", "Pedidos")',
-                index:  '@Url.Action("Index", "Pedidos")'
-            },
-            updatedOk:  @(((TempData["UpdatedOk"]  as bool?) ?? false).ToString().ToLowerInvariant()),
-            noChanges:  @(((TempData["NoChanges"]  as bool?) ?? false).ToString().ToLowerInvariant()),
-            updatedName: '@(TempData["UpdatedName"] as string ?? Model.PedidoId)'
-        };
-    </script>
-
-    <script>
-        // ===== Nota dinámica para RECIBIDO (muestra/oculta según selección de estado)
-        (function () {
-            const ddlEstado = document.getElementById('EstadoPedidoId');
-            const nota = document.getElementById('nota-recibido');
-            function toggleNota() {
-                if (!ddlEstado || !nota) return;
-                const texto = (ddlEstado.options[ddlEstado.selectedIndex]?.text || '').trim().toUpperCase();
-                nota.style.display = (texto === 'RECIBIDO') ? 'block' : 'none';
-            }
-            toggleNota();
-            if (ddlEstado) ddlEstado.addEventListener('change', toggleNota);
-        })();
-
-        // ===== Confirmación al seleccionar ANULADO (KarySwal / SweetAlert2 / fallback)
-        (function () {
-            const ddl = document.getElementById('EstadoPedidoId');
-            if (!ddl) return;
-
-            let prevValue = ddl.value;
-            let prevText  = (ddl.options[ddl.selectedIndex]?.text || '').trim().toUpperCase();
-
-            ddl.addEventListener('change', function (ev) {
-                const value = ddl.value;
-                const text  = (ddl.options[ddl.selectedIndex]?.text || '').trim().toUpperCase();
-
-                if (text === 'ANULADO' && prevText !== 'ANULADO') {
-                    ev.preventDefault();
-
-                    const runConfirm = (onOk, onCancel) => {
-                        if (window.KarySwal?.confirm) {
-                            KarySwal.confirm({
-                                title: '¿Anular pedido?',
-                                text:  'El pedido quedará INACTIVO y no podrá editarse. ¿Desea continuar?',
-                                icon:  'warning',
-                                confirmButtonText: 'Sí, anular',
-                                cancelButtonText:  'No, cancelar'
-                            }).then(ok => ok ? onOk() : onCancel());
-                        } else if (window.Swal?.fire) {
-                            Swal.fire({
-                                title: '¿Anular pedido?',
-                                text:  'El pedido quedará INACTIVO y no podrá editarse. ¿Desea continuar?',
-                                icon:  'warning',
-                                showCancelButton: true,
-                                confirmButtonText: 'Sí, anular',
-                                cancelButtonText:  'No, cancelar'
-                            }).then(r => r.isConfirmed ? onOk() : onCancel());
-                        } else {
-                            confirm('¿Anular pedido?') ? onOk() : onCancel();
-                        }
-                    };
-
-                    runConfirm(
-                        () => { prevValue = value; prevText = text; ddl.value = value; },
-                        () => { ddl.value = prevValue; }
-                    );
-                } else {
-                    prevValue = value;
-                    prevText  = text;
-                }
-            });
-        })();
-
-        // ===== Si marcan "Activo" estando en ANULADO, regresar a BORRADOR automáticamente
-        (function () {
-            const chk = document.getElementById('EstadoActivo');
-            const ddl = document.getElementById('EstadoPedidoId');
-            if (!chk || !ddl) return;
-
-            chk.addEventListener('change', function () {
-                const text = (ddl.options[ddl.selectedIndex]?.text || '').trim().toUpperCase();
-                if (chk.checked && text === 'ANULADO') {
-                    const optBorr = Array.from(ddl.options).find(o => (o.text || '').trim().toUpperCase() === 'BORRADOR');
-                    if (optBorr) {
-                        ddl.value = optBorr.value;
-                        if (window.KarySwal?.toast) KarySwal.toast('Se reactivó el pedido como BORRADOR.', 'success');
-                    }
-                }
-            });
-        })();
-
-        // ===== Validación cliente para "Cerrar (aplicar inventario)"
-        // Requiere: Precio compra > 0, Precio venta > 0 y Fecha de vencimiento en TODAS las líneas
-        (function () {
-            const btnCerrar = document.getElementById('btn-cerrar');
-            if (!btnCerrar) return;
-
-            btnCerrar.addEventListener('click', function (ev) {
-                const filas = document.querySelectorAll('#tblDetalle tbody tr');
-                let hayErrores = false;
-
-                filas.forEach((tr) => {
-                    const precioCompra = parseFloat(tr.querySelector('input[data-field="precio-pedido"]')?.value || '0');
-                    const precioVenta  = parseFloat(tr.querySelector('input[data-field="precio-venta"]')?.value  || '0');
-                    const vencimiento  = (tr.querySelector('input[data-field="vencimiento"]')?.value || '').trim();
-
-                    const invalida = !(precioCompra > 0) || !(precioVenta > 0) || !vencimiento;
-                    tr.classList.toggle('table-warning', invalida); // resalta fila con error
-                    if (invalida) hayErrores = true;
-                });
-
-                if (hayErrores) {
-                    ev.preventDefault(); // NO enviar el form
-
-                    const title = 'Campos obligatorios al cerrar';
-                    const text  = 'Complete Precio compra (> 0), Precio venta (> 0) y Fecha de vencimiento en todas las líneas.';
-
-                    if (window.KarySwal?.alert) {
-                        KarySwal.alert({ title, text, icon: 'warning' });
-                    } else if (window.Swal?.fire) {
-                        Swal.fire({ title, text, icon: 'warning', confirmButtonText: 'Aceptar' });
-                    } else {
-                        alert(title + '\n' + text);
-                    }
-                }
-            });
-        })();
-
-        // ===== PRG Modals (TempData → KarySwal/Swal) con prioridad y ocultando banners .alert
-        (function () {
-            const cfg         = window.PEDIDOS || {};
-            const updatedOk   = (cfg.updatedOk === true) || (cfg.updatedOk === 'true');
-            const noChanges   = (cfg.noChanges === true) || (cfg.noChanges === 'true');
-            const updatedName = (typeof cfg.updatedName === 'string' && cfg.updatedName.trim().length > 0)
-                                ? cfg.updatedName.trim()
-                                : '@Model.PedidoId';
-
-            const cerradoOk        = @(((TempData["CerradoOk"] as bool?) ?? false).ToString().ToLowerInvariant());
-            const cerrarErroresRaw = @Html.Raw(System.Text.Json.JsonSerializer.Serialize((TempData["CerrarErrores"] as string) ?? ""));
-            const cerrarErrores    = (cerrarErroresRaw || '').toString().trim();
-
-            function hideBootstrapAlerts() {
-                document.querySelectorAll('.alert').forEach(el => el.style.display = 'none');
-            }
-            function showModal(title, text, icon) {
-                if (window.KarySwal?.alert) {
-                    KarySwal.alert({ title, text, icon });
-                } else if (window.Swal?.fire) {
-                    Swal.fire({ title, text, icon, confirmButtonText: 'Aceptar' });
-                } else {
-                    alert((title ? title + '\n' : '') + (text || ''));
-                }
-            }
-
-            // Prioridad: 1) errores cierre  2) actualizado  3) cerrado ok  4) sin cambios
-            if (cerrarErrores.length > 0) {
-                hideBootstrapAlerts();
-                showModal('Campos obligatorios al cerrar',
-                          'Complete Precio compra (> 0), Precio venta (> 0) y Fecha de vencimiento en todas las líneas.',
-                          'warning');
-            } else if (updatedOk) {
-                hideBootstrapAlerts();
-                showModal('¡Actualizado exitosamente!', `Los cambios de "${updatedName}" se guardaron correctamente.`, 'success');
-            } else if (cerradoOk) {
-                hideBootstrapAlerts();
-                showModal('Pedido cerrado', `El pedido "${updatedName}" se cerró correctamente.`, 'success');
-            } else if (noChanges) {
-                hideBootstrapAlerts();
-                showModal('Sin cambios', 'No se realizó ninguna modificación.', 'info');
-            }
-        })();
-
-        // ===== Bloquear toda la UI si el pedido está CERRADO/FINALIZADO
-        (function () {
-            const ES_CERRADO = @(
-                (
-                    ((ViewBag.EsCerrado as bool?) ?? false)
-                    || string.Equals((Model.EstadoPedidoNombre ?? "").Trim().ToUpper(), "CERRADO")
-                    || string.Equals((Model.EstadoPedidoNombre ?? "").Trim().ToUpper(), "FINALIZADO")
-                ).ToString().ToLowerInvariant()
-            );
-
-            if (!ES_CERRADO) return;
-
-            const form = document.getElementById('frmPedidoEdit');
-            if (!form) return;
-
-            form.querySelectorAll('input, select, textarea, button').forEach(el => {
-                const isCancelar = el.id === 'btn-volver';
-                const isHidden   = el.type === 'hidden';
-                if (!isCancelar && !isHidden) el.disabled = true;
-            });
-        })();
-    </script>
-
-    <script src="~/js/pedidos.js" asp-append-version="true" defer></script>
-}
- *@

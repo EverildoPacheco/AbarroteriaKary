@@ -106,7 +106,17 @@ namespace AbarroteriaKary.Services.Correlativos
         // (Opcional) ID único para un solo detalle desde SEQUENCE (si lo quisieras usar suelto)
         Task<string> NextDetallePedidoFromSequenceAsync(CancellationToken ct = default);
 
+        // --- NUEVOS: INVENTARIO ---
 
+        Task<string> PeekNextInventarioIdAsync(CancellationToken ct = default);
+        Task<string> NextInventarioIdAsync(CancellationToken ct = default);
 
+        // --- NUEVOS: KARDEX ---
+        Task<string> PeekNextKardexIdAsync(CancellationToken ct = default);
+        Task<string> NextKardexIdAsync(CancellationToken ct = default);
+
+        // --- NUEVOS: PRECIO_HISTORICO (columna PK = PRECIO_ID) ---
+        Task<string> PeekNextPrecioHistoricoIdAsync(CancellationToken ct = default);
+        Task<string> NextPrecioHistoricoIdAsync(CancellationToken ct = default);
     }
 }

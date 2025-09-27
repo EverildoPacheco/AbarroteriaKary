@@ -61,6 +61,9 @@ public partial class KARDEX
     [Unicode(false)]
     public string ESTADO { get; set; } = null!;
 
+    [StringLength(50)]
+    public string? LOTE_CODIGO { get; set; }
+
     [ForeignKey("PRODUCTO_ID")]
     [InverseProperty("KARDEX")]
     public virtual PRODUCTO PRODUCTO { get; set; } = null!;

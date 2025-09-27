@@ -330,6 +330,8 @@ document.addEventListener('DOMContentLoaded', () => {
       <td><input type="number" class="form-control form-control-sm" value="1" min="1" step="1" data-field="cantidad"></td>
       <td><input type="number" class="form-control form-control-sm" value="0" min="0" step="0.01" data-field="precio-pedido"></td>
       <td><input type="number" class="form-control form-control-sm" value="0" min="0" step="0.01" data-field="precio-venta"></td>
+       <!-- NUEVA COLUMNA: Lote -->
+        <td><input type="text"   class="form-control form-control-sm" maxlength="50" data-field="lote"></td>
       <td><input type="date"   class="form-control form-control-sm" data-field="vencimiento"></td>
       <td class="text-center"><button type="button" class="k-del" title="Quitar">&times;</button></td>
     `;
@@ -403,6 +405,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const cant = parseInt(r.querySelector('input[data-field="cantidad"]').value || '0', 10);
             const pPed = r.querySelector('input[data-field="precio-pedido"]').value || '0';
             const pVen = r.querySelector('input[data-field="precio-venta"]').value || '0';
+
+            let lote = (r.querySelector('input[data-field="lote"]')?.value || '').trim().toUpperCase();
+            if (lote.length > 50) lote = lote.substring(0, 50);
+
             const fv = r.querySelector('input[data-field="vencimiento"]').value || '';
 
             const h = (name, val) => {
@@ -417,6 +423,8 @@ document.addEventListener('DOMContentLoaded', () => {
             h(`Lineas[${i}].Cantidad`, String(cant));
             h(`Lineas[${i}].PrecioPedido`, pPed);
             h(`Lineas[${i}].PrecioVenta`, pVen);
+            // NUEVO: enviar a servidor
+            h(`Lineas[${i}].LoteCodigo`, lote);
             h(`Lineas[${i}].FechaVencimiento`, fv);
         });
     }

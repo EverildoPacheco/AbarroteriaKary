@@ -13,10 +13,6 @@ public partial class PROVEEDOR
     [Unicode(false)]
     public string PROVEEDOR_ID { get; set; } = null!;
 
-    //public PERSONA PERSONA { get; set; } = default!;  // navegación (uno a uno, PK compartida)
-
-
-
     [StringLength(250)]
     [Unicode(false)]
     public string? PROVEEDOR_OBSERVACION { get; set; }

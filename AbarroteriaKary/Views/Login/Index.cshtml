@@ -66,14 +66,7 @@
                     <form asp-action="Index" asp-controller="Login" method="post" novalidate class="vstack gap-4">
                         @Html.AntiForgeryToken()
 
-                        <!-- Errores globales (ValidationSummary) -->
-@*                         <div asp-validation-summary="All" class="alert alert-danger d-none" data-valmsg-summary="true"></div>
- *@
 
-                       @*  @if (ViewData.ModelState.ErrorCount > 0 && ViewData.ModelState["Usuario"]?.Errors.Count == 0 && ViewData.ModelState["Password"]?.Errors.Count == 0)
-                        {
-                            @Html.ValidationSummary(false, "", new { @class = "alert alert-danger" })
-                        } *@
 
                         <div asp-validation-summary="All" class="alert alert-danger mb-3 validation-summary" role="alert"></div>
 

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AbarroteriaKary.Models;
 
 [Index("FECHA_VENCIMIENTO", Name = "IX_INVENTARIO_FECHA_VENC")]
+[Index("PRODUCTO_ID", "FECHA_VENCIMIENTO", Name = "IX_INV_PROD_FECHA")]
 [Index("INVENTARIO_ID", "PRODUCTO_ID", Name = "UQ_INVENTARIO_ID_PROD", IsUnique = true)]
 public partial class INVENTARIO
 {
@@ -54,6 +55,9 @@ public partial class INVENTARIO
     [StringLength(10)]
     [Unicode(false)]
     public string ESTADO { get; set; } = null!;
+
+    [StringLength(50)]
+    public string? LOTE_CODIGO { get; set; }
 
     [InverseProperty("INVENTARIO")]
     public virtual ICollection<DETALLE_VENTA> DETALLE_VENTA { get; set; } = new List<DETALLE_VENTA>();

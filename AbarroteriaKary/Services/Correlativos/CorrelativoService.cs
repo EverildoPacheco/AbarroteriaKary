@@ -158,59 +158,11 @@ namespace AbarroteriaKary.Services.Correlativos
 
 
 
-        //// ----------------- Núcleo reutilizable -----------------
-        ///// <summary>
-        ///// Obtiene un “siguiente” tentativo (solo mostrar), sin bloquear.
-        ///// </summary>
-        //private static async Task<string> PeekAsync(
-        //    string prefix, int digits, IQueryable<string> idSource, CancellationToken ct)
-        //{
-        //    var last = await idSource
-        //        .Where(id => id.StartsWith(prefix))
-        //        .OrderByDescending(id => id)
-        //        .FirstOrDefaultAsync(ct);
-
-        //    return FormatNext(prefix, digits, last);
-        //}
-
-        ///// <summary>
-        ///// Obtiene el “siguiente” para insertar (llamar dentro de la transacción del POST).
-        ///// </summary>
-        //private static async Task<string> NextAsync(
-        //    string prefix, int digits, IQueryable<string> idSource, CancellationToken ct)
-        //{
-        //    var last = await idSource
-        //        .Where(id => id.StartsWith(prefix))
-        //        .OrderByDescending(id => id)
-        //        .FirstOrDefaultAsync(ct);
-
-        //    return FormatNext(prefix, digits, last);
-        //}
-
-        ///// <summary>
-        ///// Formatea: PREFIJO + número con ceros a la izquierda.
-        ///// </summary>
-        //private static string FormatNext(string prefix, int digits, string lastId)
-        //{
-        //    var totalLen = prefix.Length + digits;
-        //    var next = 1;
-
-        //    if (!string.IsNullOrWhiteSpace(lastId) && lastId.Length == totalLen)
-        //    {
-        //        var numPart = lastId.Substring(prefix.Length);
-        //        if (int.TryParse(numPart, out var n))
-        //            next = n + 1;
-        //    }
-
-        //    return $"{prefix}{next.ToString($"D{digits}")}";
-        //}
 
 
 
 
-        // =========================================================
-        // Opción B: SEQUENCE por rangos para DETALLE_PEDIDO
-        // =========================================================
+        //  SEQUENCE por rangos para DETALLE_PEDIDO
 
         /// <summary>
         /// Reserva un rango de IDs "DET0000001" .. "DET00000N" desde el SEQUENCE dbo.SEQ_DETALLE_PEDIDO.
@@ -309,6 +261,131 @@ namespace AbarroteriaKary.Services.Correlativos
                     await conn.CloseAsync();
             }
         }
+
+
+
+
+
+
+
+        // INVENTARIO
+        public async Task<string> PeekNextInventarioIdAsync(CancellationToken ct = default)
+            => await PeekAsync("INV", 7, _context.INVENTARIO.Select(x => x.INVENTARIO_ID), ct);
+
+        //public async Task<string> NextInventarioIdAsync(CancellationToken ct = default)
+        //    => await NextAsync("INV", 7, _context.INVENTARIO.Select(x => x.INVENTARIO_ID), ct);
+
+
+        public async Task<string> NextInventarioIdAsync(CancellationToken ct = default)
+        {
+            const string prefix = "INV";
+            const int width = 7;
+
+            // 1) último ID en BD (orden lexicográfico sirve por el zero-padding)
+            var lastId = await _context.INVENTARIO.AsNoTracking()
+                .Where(x => x.INVENTARIO_ID.StartsWith(prefix)
+                         && x.INVENTARIO_ID.Length == prefix.Length + width)
+                .OrderByDescending(x => x.INVENTARIO_ID)
+                .Select(x => x.INVENTARIO_ID)
+                .FirstOrDefaultAsync(ct);
+
+            var maxDb = lastId is null ? 0 : int.Parse(lastId.Substring(prefix.Length, width));
+
+            // 2) máximo reservado en el ChangeTracker dentro de la misma transacción
+            var maxLocal = _context.ChangeTracker.Entries<INVENTARIO>()
+                .Where(e => e.State == EntityState.Added
+                         && e.Entity.INVENTARIO_ID != null
+                         && e.Entity.INVENTARIO_ID.StartsWith(prefix)
+                         && e.Entity.INVENTARIO_ID.Length == prefix.Length + width)
+                .Select(e => int.Parse(e.Entity.INVENTARIO_ID.Substring(prefix.Length, width)))
+                .DefaultIfEmpty(0)
+                .Max();
+
+            var next = Math.Max(maxDb, maxLocal) + 1;
+            return prefix + next.ToString().PadLeft(width, '0');
+        }
+
+
+
+
+
+
+
+
+
+        // KARDEX
+        public async Task<string> PeekNextKardexIdAsync(CancellationToken ct = default)
+            => await PeekAsync("KAR", 7, _context.KARDEX.Select(x => x.KARDEX_ID), ct);
+
+        public async Task<string> NextKardexIdAsync(CancellationToken ct = default)
+        {
+            const string prefix = "KAR";
+            const int width = 7;
+
+            var lastId = await _context.KARDEX.AsNoTracking()
+                .Where(x => x.KARDEX_ID.StartsWith(prefix)
+                         && x.KARDEX_ID.Length == prefix.Length + width)
+                .OrderByDescending(x => x.KARDEX_ID)
+                .Select(x => x.KARDEX_ID)
+                .FirstOrDefaultAsync(ct);
+
+            var maxDb = lastId is null ? 0 : int.Parse(lastId.Substring(prefix.Length, width));
+
+            var maxLocal = _context.ChangeTracker.Entries<KARDEX>()
+                .Where(e => e.State == EntityState.Added
+                         && e.Entity.KARDEX_ID != null
+                         && e.Entity.KARDEX_ID.StartsWith(prefix)
+                         && e.Entity.KARDEX_ID.Length == prefix.Length + width)
+                .Select(e => int.Parse(e.Entity.KARDEX_ID.Substring(prefix.Length, width)))
+                .DefaultIfEmpty(0)
+                .Max();
+
+            var next = Math.Max(maxDb, maxLocal) + 1;
+            return prefix + next.ToString().PadLeft(width, '0');
+        }
+
+
+
+
+
+
+        // PRECIO_HISTORICO (PK = PRECIO_ID)
+        public async Task<string> PeekNextPrecioHistoricoIdAsync(CancellationToken ct = default)
+            => await PeekAsync("PCH", 7, _context.PRECIO_HISTORICO.Select(x => x.PRECIO_ID), ct);
+        public async Task<string> NextPrecioHistoricoIdAsync(CancellationToken ct = default)
+        {
+            const string prefix = "PCH";
+            const int width = 7;
+
+            var lastId = await _context.PRECIO_HISTORICO.AsNoTracking()
+                .Where(x => x.PRECIO_ID.StartsWith(prefix)
+                         && x.PRECIO_ID.Length == prefix.Length + width)
+                .OrderByDescending(x => x.PRECIO_ID)
+                .Select(x => x.PRECIO_ID)
+                .FirstOrDefaultAsync(ct);
+
+            var maxDb = lastId is null ? 0 : int.Parse(lastId.Substring(prefix.Length, width));
+
+            var maxLocal = _context.ChangeTracker.Entries<PRECIO_HISTORICO>()
+                .Where(e => e.State == EntityState.Added
+                         && e.Entity.PRECIO_ID != null
+                         && e.Entity.PRECIO_ID.StartsWith(prefix)
+                         && e.Entity.PRECIO_ID.Length == prefix.Length + width)
+                .Select(e => int.Parse(e.Entity.PRECIO_ID.Substring(prefix.Length, width)))
+                .DefaultIfEmpty(0)
+                .Max();
+
+            var next = Math.Max(maxDb, maxLocal) + 1;
+            return prefix + next.ToString().PadLeft(width, '0');
+        }
+
+
+
+
+
+
+
+
 
 
 

@@ -239,6 +239,10 @@ public partial class KaryDbContext : DbContext
         {
             entity.HasKey(e => e.INVENTARIO_ID).HasName("PK_INVENTARIO_ID");
 
+            entity.HasIndex(e => new { e.PRODUCTO_ID, e.FECHA_VENCIMIENTO, e.LOTE_CODIGO }, "UQ_INV_PROD_FECHA_LOTE")
+                .IsUnique()
+                .HasFilter("([LOTE_CODIGO] IS NOT NULL)");
+
             entity.Property(e => e.ESTADO).HasDefaultValue("ACTIVO");
             entity.Property(e => e.FECHA_CREACION).HasDefaultValueSql("(getdate())");
 
@@ -535,6 +539,7 @@ public partial class KaryDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_VENTA_USUARIO");
         });
+        modelBuilder.HasSequence("SEQ_DETALLE_PEDIDO");
 
         OnModelCreatingPartial(modelBuilder);
     }

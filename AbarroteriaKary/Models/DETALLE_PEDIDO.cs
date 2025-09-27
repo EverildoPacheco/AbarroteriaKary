@@ -63,6 +63,16 @@ public partial class DETALLE_PEDIDO
     [Unicode(false)]
     public string ESTADO { get; set; } = null!;
 
+    [StringLength(50)]
+    public string? LOTE_CODIGO { get; set; }
+
+    public bool POSTEADO { get; set; }
+
+    public DateTime? POSTEADO_EN { get; set; }
+
+    [Column(TypeName = "decimal(18, 2)")]
+    public decimal? CANTIDAD_RECIBIDA { get; set; }
+
     [ForeignKey("PEDIDO_ID")]
     [InverseProperty("DETALLE_PEDIDO")]
     public virtual PEDIDO PEDIDO { get; set; } = null!;

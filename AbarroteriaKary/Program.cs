@@ -40,6 +40,9 @@ builder.Services.AddScoped<AbarroteriaKary.Services.Mail.IEmailSender,
 //REportes
 builder.Services.AddScoped<IReporteExportService, ReporteExportService>(); // <-- AGREGAR
 
+// Servicios de dominio
+builder.Services.AddScoped<AbarroteriaKary.Services.Inventario.IInventarioPostingService,
+                           AbarroteriaKary.Services.Inventario.InventarioPostingService>();
 
 
 //Autenticacion

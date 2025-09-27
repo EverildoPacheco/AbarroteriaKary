@@ -230,7 +230,9 @@ namespace AbarroteriaKary.ModelsPartial
         public string? ESTADO { get; set; }
 
 
-
+        [Display(Name = "Lote")]
+        [StringLength(50, ErrorMessage = "Lote: máximo 50 caracteres.")]
+        public string? LoteCodigo { get; set; }
 
         // NUEVOS para Edit:
         public string? DetallePedidoId { get; set; }       // null -> línea nueva

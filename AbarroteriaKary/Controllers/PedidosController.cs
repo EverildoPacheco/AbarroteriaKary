@@ -5,6 +5,8 @@ using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T
 using AbarroteriaKary.Services.Auditoria;
 using AbarroteriaKary.Services.Correlativos;
 using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
+using AbarroteriaKary.Services.Inventario;
+using AbarroteriaKary.Services.Pedidos;
 using AbarroteriaKary.Services.Reportes;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.InkML;
@@ -24,7 +26,6 @@ using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
-using AbarroteriaKary.Services.Pedidos;
 
 
 namespace AbarroteriaKary.Controllers
@@ -35,13 +36,15 @@ namespace AbarroteriaKary.Controllers
         private readonly ICorrelativoService _correlativos;
         private readonly IAuditoriaService _auditoria;
         private readonly IReporteExportService _exportSvc;
-        public PedidosController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria, IReporteExportService exportSvc)
+        private readonly IInventarioPostingService _posteo;
+
+        public PedidosController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria, IReporteExportService exportSvc, IInventarioPostingService posteo)
         {
             _context = context;
             _correlativos = correlativos;
             _auditoria = auditoria;
             _exportSvc = exportSvc;
-
+            _posteo = posteo;
         }
 
 
@@ -513,12 +516,6 @@ namespace AbarroteriaKary.Controllers
 
 
             //--------------------------------------
-
-
-
-
-
-
 
 
             // ===== 3) Hardening del detalle: limpiar, consolidar, validar =====
@@ -1004,6 +1001,7 @@ namespace AbarroteriaKary.Controllers
                     PrecioVenta = d.PRECIO_VENTA,
                     FechaVencimiento = d.FECHA_VENCIMIENTO,   // DateOnly?
 
+
                     // >>> estos 4 son los que la vista muestra en las columnas:
 
                     CodigoProducto = pr != null ? pr.PRODUCTO_CODIGO : "",
@@ -1011,24 +1009,14 @@ namespace AbarroteriaKary.Controllers
 
                     NombreProducto = pr != null ? pr.PRODUCTO_NOMBRE : "",
                     DescripcionProducto = pr != null ? pr.PRODUCTO_DESCRIPCION : "",
-                    ImagenUrl = pr != null ? pr.PRODUCTO_IMG : ""
+                    ImagenUrl = pr != null ? pr.PRODUCTO_IMG : "",
+                     LoteCodigo = d.LOTE_CODIGO  // ← NUEVO: mapea el lote del detalle de pedido
+
                 }
             ).ToListAsync(ct);
 
 
-            //var vm = new PedidoViewModel
-            //{
-            //    PedidoId = ped.PEDIDO_ID,
-            //    ProveedorId = ped.PROVEEDOR_ID,
-            //    FechaPedido = ped.FECHA_PEDIDO, // DB: DateTime NOT NULL
-            //    FechaPosibleEntrega = ped.FECHA_ENTREGA_ESTIMADA.HasValue
-            //        ? new DateTime(ped.FECHA_ENTREGA_ESTIMADA.Value.Year, ped.FECHA_ENTREGA_ESTIMADA.Value.Month, ped.FECHA_ENTREGA_ESTIMADA.Value.Day)
-            //        : (DateTime?)null,
-            //    EstadoPedidoId = ped.ESTADO_PEDIDO_ID,
-            //    Observacion = ped.OBSERVACIONES,
-            //    EstadoActivo = (ped.ESTADO ?? "ACTIVO").Trim().ToUpper() == "ACTIVO",
-            //    Lineas = lineas
-            //};
+       
 
 
 
@@ -1091,6 +1079,19 @@ namespace AbarroteriaKary.Controllers
                 .ToListAsync(ct);
 
             // === Normalizaciones/validaciones de líneas (igual a su lógica existente) ===
+            //vm.Lineas = (vm.Lineas ?? new List<PedidoDetalleItemVM>())
+            //    .Where(l => l != null && !string.IsNullOrWhiteSpace(l.ProductoId))
+            //    .Select(l => new PedidoDetalleItemVM
+            //    {
+            //        DetallePedidoId = string.IsNullOrWhiteSpace(l.DetallePedidoId) ? null : l.DetallePedidoId!.Trim(),
+            //        ProductoId = (l.ProductoId ?? "").Trim().ToUpper(),
+            //        Cantidad = l.Cantidad,
+            //        PrecioPedido = l.PrecioPedido ?? 0m,
+            //        PrecioVenta = l.PrecioVenta ?? 0m,
+            //        FechaVencimiento = l.FechaVencimiento
+            //    })
+            //    .ToList();
+
             vm.Lineas = (vm.Lineas ?? new List<PedidoDetalleItemVM>())
                 .Where(l => l != null && !string.IsNullOrWhiteSpace(l.ProductoId))
                 .Select(l => new PedidoDetalleItemVM
@@ -1100,9 +1101,18 @@ namespace AbarroteriaKary.Controllers
                     Cantidad = l.Cantidad,
                     PrecioPedido = l.PrecioPedido ?? 0m,
                     PrecioVenta = l.PrecioVenta ?? 0m,
-                    FechaVencimiento = l.FechaVencimiento
+                    FechaVencimiento = l.FechaVencimiento,
+
+                    // NUEVO: normalizar lote (opcional, uppercase)
+                    LoteCodigo = string.IsNullOrWhiteSpace(l.LoteCodigo)
+                                       ? null
+                                       : (l.LoteCodigo!.Trim().ToUpper().Length > 50
+                                           ? l.LoteCodigo!.Trim().ToUpper().Substring(0, 50)
+                                           : l.LoteCodigo!.Trim().ToUpper())
                 })
                 .ToList();
+
+
 
             if (vm.Lineas.Count == 0)
                 ModelState.AddModelError(nameof(vm.Lineas), "Debe agregar al menos un producto.");
@@ -1287,6 +1297,24 @@ namespace AbarroteriaKary.Controllers
                 var idsVmPresentes = new HashSet<string>();
 
                 // 2.a) Editar existentes
+                //foreach (var l in vm.Lineas.Where(x => !string.IsNullOrWhiteSpace(x.DetallePedidoId)))
+                //{
+                //    var key = l.DetallePedidoId!.Trim();
+                //    if (!dbMap.TryGetValue(key, out var d)) continue;
+
+                //    d.PRODUCTO_ID = l.ProductoId;
+                //    d.CANTIDAD = ToPositiveInt(l.Cantidad, nameof(PedidoDetalleItemVM.Cantidad), ModelState);
+                //    d.PRECIO_PEDIDO = l.PrecioPedido ?? 0m;
+                //    d.PRECIO_VENTA = l.PrecioVenta ?? 0m;
+                //    d.SUBTOTAL = d.CANTIDAD * (d.PRECIO_PEDIDO ?? 0m);
+                //    d.FECHA_VENCIMIENTO = l.FechaVencimiento.HasValue ? l.FechaVencimiento.Value : (DateOnly?)null;
+
+                //    d.MODIFICADO_POR = usuario;
+                //    d.FECHA_MODIFICACION = ahora;
+                //    idsVmPresentes.Add(d.DETALLE_PEDIDO_ID);
+                //}
+
+                // 2.a) Editar existentes
                 foreach (var l in vm.Lineas.Where(x => !string.IsNullOrWhiteSpace(x.DetallePedidoId)))
                 {
                     var key = l.DetallePedidoId!.Trim();
@@ -1299,10 +1327,14 @@ namespace AbarroteriaKary.Controllers
                     d.SUBTOTAL = d.CANTIDAD * (d.PRECIO_PEDIDO ?? 0m);
                     d.FECHA_VENCIMIENTO = l.FechaVencimiento.HasValue ? l.FechaVencimiento.Value : (DateOnly?)null;
 
+                    // NUEVO: guardar lote (NULL si viene vacío)
+                    d.LOTE_CODIGO = string.IsNullOrWhiteSpace(l.LoteCodigo) ? null : l.LoteCodigo;
+
                     d.MODIFICADO_POR = usuario;
                     d.FECHA_MODIFICACION = ahora;
                     idsVmPresentes.Add(d.DETALLE_PEDIDO_ID);
                 }
+
 
                 // 2.b) Insertar nuevas
                 var nuevas = vm.Lineas.Where(x => string.IsNullOrWhiteSpace(x.DetallePedidoId)).ToList();
@@ -1332,6 +1364,7 @@ namespace AbarroteriaKary.Controllers
                             PRECIO_VENTA = n.PrecioVenta ?? 0m,
                             SUBTOTAL = cant * (n.PrecioPedido ?? 0m),
                             FECHA_VENCIMIENTO = n.FechaVencimiento.HasValue ? n.FechaVencimiento.Value : (DateOnly?)null,
+                            LOTE_CODIGO = string.IsNullOrWhiteSpace(n.LoteCodigo) ? null : n.LoteCodigo,
                             ESTADO = "ACTIVO",
                             ELIMINADO = false,
                             CREADO_POR = usuario,
@@ -1384,404 +1417,246 @@ namespace AbarroteriaKary.Controllers
 
 
 
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Cerrar(string id, CancellationToken ct)
-        {
-            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Falta id.");
-            id = id.Trim().ToUpper();
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Cerrar(string id, CancellationToken ct)
+        //{
+        //    if (string.IsNullOrWhiteSpace(id)) return BadRequest("Falta id.");
+        //    id = id.Trim().ToUpper();
 
-            var ped = await _context.PEDIDO
-                .FirstOrDefaultAsync(p => !p.ELIMINADO && p.PEDIDO_ID == id, ct);
-            if (ped is null) return NotFound("Pedido no encontrado.");
+        //    var ped = await _context.PEDIDO
+        //        .FirstOrDefaultAsync(p => !p.ELIMINADO && p.PEDIDO_ID == id, ct);
+        //    if (ped is null) return NotFound("Pedido no encontrado.");
 
-            var nombreActual = EstadosPedido.Normalizar(
-                await GetNombreEstadoByIdAsync(ped.ESTADO_PEDIDO_ID, ct));
+        //    var nombreActual = EstadosPedido.Normalizar(
+        //        await GetNombreEstadoByIdAsync(ped.ESTADO_PEDIDO_ID, ct));
 
-            if (nombreActual != EstadosPedido.RECIBIDO)
-                return BadRequest("Solo se puede cerrar un pedido en estado RECIBIDO.");
+        //    if (nombreActual != EstadosPedido.RECIBIDO)
+        //        return BadRequest("Solo se puede cerrar un pedido en estado RECIBIDO.");
 
-            // Traer detalle + (opcional) info de producto para mensajes
-            var detalles = await (
-                from d in _context.DETALLE_PEDIDO
-                join pr0 in _context.PRODUCTO on d.PRODUCTO_ID equals pr0.PRODUCTO_ID into gpr
-                from pr in gpr.DefaultIfEmpty()
-                where !d.ELIMINADO && d.PEDIDO_ID == id
-                orderby d.DETALLE_PEDIDO_ID
-                select new
-                {
-                    d.DETALLE_PEDIDO_ID,
-                    d.PRODUCTO_ID,
-                    d.PRECIO_PEDIDO,
-                    d.PRECIO_VENTA,
-                    d.FECHA_VENCIMIENTO,
-                    ProductoCodigo = pr != null ? pr.PRODUCTO_CODIGO : d.PRODUCTO_ID,
-                    ProductoNombre = pr != null ? pr.PRODUCTO_NOMBRE : null
-                }
-            ).ToListAsync(ct);
+        //    // Traer detalle + (opcional) info de producto para mensajes
+        //    var detalles = await (
+        //        from d in _context.DETALLE_PEDIDO
+        //        join pr0 in _context.PRODUCTO on d.PRODUCTO_ID equals pr0.PRODUCTO_ID into gpr
+        //        from pr in gpr.DefaultIfEmpty()
+        //        where !d.ELIMINADO && d.PEDIDO_ID == id
+        //        orderby d.DETALLE_PEDIDO_ID
+        //        select new
+        //        {
+        //            d.DETALLE_PEDIDO_ID,
+        //            d.PRODUCTO_ID,
+        //            d.PRECIO_PEDIDO,
+        //            d.PRECIO_VENTA,
+        //            d.FECHA_VENCIMIENTO,
+        //            ProductoCodigo = pr != null ? pr.PRODUCTO_CODIGO : d.PRODUCTO_ID,
+        //            ProductoNombre = pr != null ? pr.PRODUCTO_NOMBRE : null
+        //        }
+        //    ).ToListAsync(ct);
 
-            // ===== Validaciones: precios > 0 y vencimiento obligatorio =====
-            var errores = new List<string>();
-            foreach (var d in detalles)
-            {
-                var faltas = new List<string>();
-                if (!(d.PRECIO_PEDIDO.HasValue) || d.PRECIO_PEDIDO <= 0) faltas.Add("Precio compra (> 0)");
-                if (!(d.PRECIO_VENTA.HasValue) || d.PRECIO_VENTA <= 0) faltas.Add("Precio venta (> 0)");
-                if (!d.FECHA_VENCIMIENTO.HasValue) faltas.Add("Fecha vencimiento");
+        //    // ===== Validaciones: precios > 0 y vencimiento obligatorio =====
+        //    var errores = new List<string>();
+        //    foreach (var d in detalles)
+        //    {
+        //        var faltas = new List<string>();
+        //        if (!(d.PRECIO_PEDIDO.HasValue) || d.PRECIO_PEDIDO <= 0) faltas.Add("Precio compra (> 0)");
+        //        if (!(d.PRECIO_VENTA.HasValue) || d.PRECIO_VENTA <= 0) faltas.Add("Precio venta (> 0)");
+        //        if (!d.FECHA_VENCIMIENTO.HasValue) faltas.Add("Fecha vencimiento");
 
-                if (faltas.Count > 0)
-                {
-                    var etiqueta = !string.IsNullOrWhiteSpace(d.ProductoNombre)
-                        ? $"{d.ProductoCodigo} - {d.ProductoNombre}"
-                        : d.ProductoCodigo;
+        //        if (faltas.Count > 0)
+        //        {
+        //            var etiqueta = !string.IsNullOrWhiteSpace(d.ProductoNombre)
+        //                ? $"{d.ProductoCodigo} - {d.ProductoNombre}"
+        //                : d.ProductoCodigo;
 
-                    errores.Add($"• {etiqueta}: {string.Join(", ", faltas)}");
-                }
-            }
+        //            errores.Add($"• {etiqueta}: {string.Join(", ", faltas)}");
+        //        }
+        //    }
 
-            if (errores.Count > 0)
-            {
-                // Enviamos errores para mostrarlos en modal (JS en la vista)
-                TempData["CerrarErrores"] = string.Join("\n", errores);
-                return RedirectToAction(nameof(Edit), new { id });
-            }
+        //    if (errores.Count > 0)
+        //    {
+        //        // Enviamos errores para mostrarlos en modal (JS en la vista)
+        //        TempData["CerrarErrores"] = string.Join("\n", errores);
+        //        return RedirectToAction(nameof(Edit), new { id });
+        //    }
 
-            // TODO: inventario real (entradas/costeo). Aquí simulamos OK.
-            var okAplicacionInventario = true;
+        //    // TODO: inventario real (entradas/costeo). Aquí simulamos OK.
+        //    var okAplicacionInventario = true;
 
-            if (!okAplicacionInventario)
-            {
-                TempData["CerrarErrores"] = "No se pudo aplicar inventario. Revise lotes/stock/costos.";
-                return RedirectToAction(nameof(Edit), new { id });
-            }
+        //    if (!okAplicacionInventario)
+        //    {
+        //        TempData["CerrarErrores"] = "No se pudo aplicar inventario. Revise lotes/stock/costos.";
+        //        return RedirectToAction(nameof(Edit), new { id });
+        //    }
 
-            // Transición a CERRADO (o FINALIZADO en tu catálogo)
-            var idCerrado = await GetIdEstadoByNombreAsync(EstadosPedido.CERRADO, ct);
-            ped.ESTADO_PEDIDO_ID = idCerrado ?? ped.ESTADO_PEDIDO_ID;
-            ped.MODIFICADO_POR = await _auditoria.GetUsuarioNombreAsync();
-            ped.FECHA_MODIFICACION = DateTime.Now;
+        //    // Transición a CERRADO (o FINALIZADO en tu catálogo)
+        //    var idCerrado = await GetIdEstadoByNombreAsync(EstadosPedido.CERRADO, ct);
+        //    ped.ESTADO_PEDIDO_ID = idCerrado ?? ped.ESTADO_PEDIDO_ID;
+        //    ped.MODIFICADO_POR = await _auditoria.GetUsuarioNombreAsync();
+        //    ped.FECHA_MODIFICACION = DateTime.Now;
 
-            await _context.SaveChangesAsync(ct);
-            TempData["CerradoOk"] = true;
+        //    await _context.SaveChangesAsync(ct);
+        //    TempData["CerradoOk"] = true;
 
-            return RedirectToAction(nameof(Edit), new { id });
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        //    return RedirectToAction(nameof(Edit), new { id });
+        //}
 
 
 
         //[HttpPost]
         //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(string id, PedidoViewModel vm, CancellationToken ct)
+        //public async Task<IActionResult> Cerrar(string id, CancellationToken ct)
         //{
         //    if (string.IsNullOrWhiteSpace(id)) return BadRequest("Falta id.");
-        //    id = id.Trim().ToUpper();
-        //    if (id != vm.PedidoId?.Trim().ToUpper()) return BadRequest("Inconsistencia de id.");
 
-        //    // ===== Validaciones de DataAnnotations =====
-        //    if (!ModelState.IsValid)
-        //    {
-        //        await CargarCombosAsync(vm, ct);
-        //        return View(vm);
-        //    }
-
-        //    // ===== Carga actual de BD =====
-        //    var ped = await _context.PEDIDO
-        //        .FirstOrDefaultAsync(p => !p.ELIMINADO && p.PEDIDO_ID == id, ct);
-        //    if (ped == null) return NotFound("Pedido no encontrado.");
-
-        //    var detalleDb = await _context.DETALLE_PEDIDO
-        //        .Where(d => !d.ELIMINADO && d.PEDIDO_ID == id)
-        //        .OrderBy(d => d.DETALLE_PEDIDO_ID)
-        //        .ToListAsync(ct);
-
-        //    // ===== Normaliza/hardening del detalle entrante =====
-        //    vm.Lineas = (vm.Lineas ?? new List<PedidoDetalleItemVM>())
-        //        .Where(l => l != null && !string.IsNullOrWhiteSpace(l.ProductoId))
-        //        .Select(l => new PedidoDetalleItemVM
-        //        {
-        //            DetallePedidoId = string.IsNullOrWhiteSpace(l.DetallePedidoId) ? null : l.DetallePedidoId!.Trim(),
-        //            ProductoId = (l.ProductoId ?? "").Trim().ToUpper(),
-        //            Cantidad = l.Cantidad,                 // (decimal en VM; se normaliza abajo con ToPositiveInt)
-        //            PrecioPedido = l.PrecioPedido ?? 0m,
-        //            PrecioVenta = l.PrecioVenta ?? 0m,
-        //            FechaVencimiento = l.FechaVencimiento          // DateOnly?
-        //        })
-        //        .ToList();
-
-        //    if (vm.Lineas.Count == 0)
-        //        ModelState.AddModelError(nameof(vm.Lineas), "Debe agregar al menos un producto.");
-
-        //    // Cantidades enteras positivas
-        //    for (int i = 0; i < vm.Lineas.Count; i++)
-        //        _ = ToPositiveInt(vm.Lineas[i].Cantidad, nameof(PedidoDetalleItemVM.Cantidad), ModelState, $"Lineas[{i}].");
-
-        //    // Precios no-negativos
-        //    for (int i = 0; i < vm.Lineas.Count; i++)
-        //    {
-        //        if (vm.Lineas[i].PrecioPedido < 0)
-        //            ModelState.AddModelError($"Lineas[{i}].PrecioPedido", "Precio compra no puede ser negativo.");
-        //        if (vm.Lineas[i].PrecioVenta < 0)
-        //            ModelState.AddModelError($"Lineas[{i}].PrecioVenta", "Precio venta no puede ser negativo.");
-        //    }
-
-        //    // Fechas coherentes en cabecera
-        //    if (vm.FechaPedido.HasValue && vm.FechaPosibleEntrega.HasValue &&
-        //        vm.FechaPosibleEntrega.Value.Date < vm.FechaPedido.Value.Date)
-        //    {
-        //        ModelState.AddModelError(nameof(vm.FechaPosibleEntrega),
-        //            "La fecha posible de entrega no puede ser anterior a la fecha del pedido.");
-        //    }
-
-        //    // Valida proveedor/estado activos (igual que Create)
-        //    bool proveedorOk = await _context.PROVEEDOR
-        //        .AsNoTracking()
-        //        .AnyAsync(p => !p.ELIMINADO && p.ESTADO == "ACTIVO" && p.PROVEEDOR_ID == vm.ProveedorId, ct);
-        //    if (!proveedorOk)
-        //        ModelState.AddModelError(nameof(vm.ProveedorId), "El proveedor no existe o está inactivo.");
-
-        //    bool estadoOk = await _context.ESTADO_PEDIDO
-        //        .AsNoTracking()
-        //        .AnyAsync(e => !e.ELIMINADO && e.ESTADO == "ACTIVO" && e.ESTADO_PEDIDO_ID == vm.EstadoPedidoId, ct);
-        //    if (!estadoOk)
-        //        ModelState.AddModelError(nameof(vm.EstadoPedidoId), "El estado de pedido no existe o está inactivo.");
-
-        //    // (Opcional) existencia de producto ACTIVO
-        //    for (int i = 0; i < vm.Lineas.Count; i++)
-        //    {
-        //        var prodId = vm.Lineas[i].ProductoId;
-        //        bool productoOk = await _context.PRODUCTO.AsNoTracking()
-        //            .AnyAsync(p => !p.ELIMINADO && p.ESTADO == "ACTIVO" && p.PRODUCTO_ID == prodId, ct);
-        //        if (!productoOk)
-        //            ModelState.AddModelError($"Lineas[{i}].ProductoId", $"El producto {prodId} no existe o está inactivo.");
-        //    }
-
-        //    if (!ModelState.IsValid)
-        //    {
-        //        await CargarCombosAsync(vm, ct);
-        //        return View(vm);
-        //    }
-
-        //    // ===== Detectar "sin cambios" (cabecera + detalle) =====
-        //    bool headerChanged =
-        //        ped.PROVEEDOR_ID != vm.ProveedorId ||
-        //        ped.ESTADO_PEDIDO_ID != vm.EstadoPedidoId ||
-        //        ped.OBSERVACIONES != (string.IsNullOrWhiteSpace(vm.Observacion) ? null : vm.Observacion.Trim()) ||
-        //        (ped.ESTADO ?? "ACTIVO") != (vm.EstadoActivo ? "ACTIVO" : "INACTIVO") ||
-        //        ped.FECHA_PEDIDO != (vm.FechaPedido ?? ped.FECHA_PEDIDO) ||
-        //        (ped.FECHA_ENTREGA_ESTIMADA?.ToString("yyyy-MM-dd") ?? "") !=
-        //        (vm.FechaPosibleEntrega?.ToString("yyyy-MM-dd") ?? "");
-
-        //    bool detailChanged = false;
-        //    {
-        //        // Diccionario por id string
-        //        var byId = detalleDb.ToDictionary(d => d.DETALLE_PEDIDO_ID);
-
-        //        // IDs presentes en el VM (string, sin HasValue en string)
-        //        var idsVm = new HashSet<string>(
-        //            vm.Lineas
-        //              .Where(l => !string.IsNullOrWhiteSpace(l.DetallePedidoId))
-        //              .Select(l => l.DetallePedidoId!.Trim())
-        //        );
-
-        //        // 1) Cambios/ediciones en filas existentes
-        //        foreach (var l in vm.Lineas.Where(x => !string.IsNullOrWhiteSpace(x.DetallePedidoId)))
-        //        {
-        //            var key = l.DetallePedidoId!.Trim();
-        //            if (!byId.TryGetValue(key, out var d))
-        //            {
-        //                // id enviado que no existe -> lo tratamos como cambio
-        //                detailChanged = true; break;
-        //            }
-
-        //            // compara campos relevantes
-        //            bool same =
-        //                string.Equals(d.PRODUCTO_ID, l.ProductoId, StringComparison.OrdinalIgnoreCase) &&
-        //                d.CANTIDAD == (int)l.Cantidad &&
-        //                (d.PRECIO_PEDIDO ?? 0m) == (l.PrecioPedido ?? 0m) &&
-        //                (d.PRECIO_VENTA ?? 0m) == (l.PrecioVenta ?? 0m) &&
-        //                (d.FECHA_VENCIMIENTO?.ToString("yyyy-MM-dd") ?? "") ==
-        //                (l.FechaVencimiento?.ToString("yyyy-MM-dd") ?? "");
-
-        //            if (!same) { detailChanged = true; break; }
-        //        }
-
-        //        // 2) Nuevas líneas (sin id)
-        //        if (!detailChanged && vm.Lineas.Any(x => string.IsNullOrWhiteSpace(x.DetallePedidoId)))
-        //            detailChanged = true;
-
-        //        // 3) Eliminadas (set equality)
-        //        if (!detailChanged)
-        //        {
-        //            var idsDb = new HashSet<string>(detalleDb.Select(d => d.DETALLE_PEDIDO_ID));
-        //            if (!idsVm.SetEquals(idsDb)) detailChanged = true;
-        //        }
-        //    }
-
-        //    if (!headerChanged && !detailChanged)
-        //    {
-        //        TempData["NoChanges"] = true;
-        //        return RedirectToAction(nameof(Edit), new { id });
-        //    }
-
-        //    // ===== Persistencia (transacción) =====
-        //    var ahora = DateTime.Now;
         //    var usuario = await _auditoria.GetUsuarioNombreAsync();
 
-        //    await using var tx = await _context.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         //    try
         //    {
-        //        // 1) Cabecera
-        //        ped.PROVEEDOR_ID = vm.ProveedorId!;
-        //        ped.ESTADO_PEDIDO_ID = vm.EstadoPedidoId!;
+        //        var resultado = await _posteo.PostearPedidoAsync(id.Trim().ToUpper(), usuario, ct);
 
-        //        ped.OBSERVACIONES = string.IsNullOrWhiteSpace(vm.Observacion)
-        //        ? null
-        //        : vm.Observacion.Trim();
+        //        if (resultado.PedidoCerrado)
+        //            TempData["CerradoOk"] = true;
 
-        //        ped.ESTADO = vm.EstadoActivo ? "ACTIVO" : "INACTIVO";
-        //        ped.FECHA_PEDIDO = vm.FechaPedido ?? ped.FECHA_PEDIDO;
-
-        //        ped.FECHA_ENTREGA_ESTIMADA = vm.FechaPosibleEntrega.HasValue
-        //            ? DateOnly.FromDateTime(vm.FechaPosibleEntrega.Value)
-        //            : (DateOnly?)null;
-
-        //        ped.MODIFICADO_POR = usuario;
-        //        ped.FECHA_MODIFICACION = ahora;
-
-        //        // 2) Detalle (upsert)
-        //        var dbMap = detalleDb.ToDictionary(d => d.DETALLE_PEDIDO_ID);
-        //        var idsVmPresentes = new HashSet<string>();
-
-        //        // 2.a) Editar existentes (id string, sin .HasValue)
-        //        foreach (var l in vm.Lineas.Where(x => !string.IsNullOrWhiteSpace(x.DetallePedidoId)))
-        //        {
-        //            var key = l.DetallePedidoId!.Trim();
-        //            if (!dbMap.TryGetValue(key, out var d)) continue; // seguridad
-
-        //            d.PRODUCTO_ID = l.ProductoId;
-        //            d.CANTIDAD = ToPositiveInt(l.Cantidad, nameof(PedidoDetalleItemVM.Cantidad), ModelState);
-        //            d.PRECIO_PEDIDO = l.PrecioPedido ?? 0m;
-        //            d.PRECIO_VENTA = l.PrecioVenta ?? 0m;
-        //            d.SUBTOTAL = d.CANTIDAD * (d.PRECIO_PEDIDO ?? 0m);
-
-        //            d.FECHA_VENCIMIENTO = l.FechaVencimiento.HasValue
-        //                ? l.FechaVencimiento.Value                    // VM usa DateOnly?
-        //                : (DateOnly?)null;
-
-        //            d.MODIFICADO_POR = usuario;
-        //            d.FECHA_MODIFICACION = ahora;
-
-        //            idsVmPresentes.Add(d.DETALLE_PEDIDO_ID);
-        //        }
-
-        //        // 2.b) Insertar nuevas (sin id)
-        //        var nuevas = vm.Lineas.Where(x => string.IsNullOrWhiteSpace(x.DetallePedidoId)).ToList();
-        //        if (nuevas.Count > 0)
-        //        {
-        //            var idsRango = await _correlativos.NextDetallePedidosRangeAsync(nuevas.Count, ct); // List<string>
-        //            if (idsRango.Count != nuevas.Count)
-        //            {
-        //                await tx.RollbackAsync(ct);
-        //                ModelState.AddModelError(string.Empty, "No se pudo reservar el bloque de IDs para detalle.");
-        //                await CargarCombosAsync(vm, ct);
-        //                return View(vm);
-        //            }
-
-        //            for (int i = 0; i < nuevas.Count; i++)
-        //            {
-        //                var n = nuevas[i];
-        //                int cant = ToPositiveInt(n.Cantidad, nameof(PedidoDetalleItemVM.Cantidad), ModelState);
-        //                //int cant = ToPositiveInt(n.Cantidad, nameof(PedidoViewModel.PedidoDetalleItemVM.Cantidad), ModelState);
-
-
-        //                var det = new DETALLE_PEDIDO
-        //                {
-        //                    DETALLE_PEDIDO_ID = idsRango[i],             // string
-        //                    PEDIDO_ID = ped.PEDIDO_ID,
-        //                    PRODUCTO_ID = n.ProductoId,
-        //                    CANTIDAD = cant,
-        //                    PRECIO_PEDIDO = n.PrecioPedido ?? 0m,
-        //                    PRECIO_VENTA = n.PrecioVenta ?? 0m,
-        //                    SUBTOTAL = cant * (n.PrecioPedido ?? 0m),
-        //                    FECHA_VENCIMIENTO = n.FechaVencimiento.HasValue ? n.FechaVencimiento.Value : (DateOnly?)null,
-        //                    ESTADO = "ACTIVO",
-        //                    ELIMINADO = false,
-        //                    CREADO_POR = usuario,
-        //                    FECHA_CREACION = ahora
-        //                };
-        //                _context.Add(det);
-        //                idsVmPresentes.Add(det.DETALLE_PEDIDO_ID);
-        //            }
-        //        }
-
-        //        // 2.c) Soft-delete (los que estaban en BD y no vinieron ahora)
-        //        foreach (var d in detalleDb)
-        //        {
-        //            if (!idsVmPresentes.Contains(d.DETALLE_PEDIDO_ID))
-        //            {
-        //                d.ELIMINADO = true;
-        //                d.ESTADO = "INACTIVO";
-        //                d.ELIMINADO_POR = usuario;
-        //                d.FECHA_ELIMINACION = ahora;
-        //                d.MODIFICADO_POR = usuario;
-        //                d.FECHA_MODIFICACION = ahora;
-        //            }
-        //        }
-
-        //        await _context.SaveChangesAsync(ct);
-        //        await tx.CommitAsync(ct);
-
-        //        TempData["UpdatedOk"] = true;
-        //        TempData["UpdatedName"] = ped.PEDIDO_ID;
-
-        //        return RedirectToAction(nameof(Edit));
+        //        // Redirige a Edit para refrescar estado/alertas
+        //        return RedirectToAction(nameof(Edit), new { id = id.Trim().ToUpper() });
         //    }
-        //    catch (DbUpdateException ex)
+        //    catch (InvalidOperationException exVal) // errores de validación de negocio (precios, fechas, estado)
         //    {
-        //        await tx.RollbackAsync(ct);
-        //        ModelState.AddModelError(string.Empty, $"Error BD: {ex.GetBaseException().Message}");
-        //        await CargarCombosAsync(vm, ct);
-        //        return View(vm);
+        //        TempData["CerrarErrores"] = exVal.Message;
+        //        return RedirectToAction(nameof(Edit), new { id = id.Trim().ToUpper() });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        TempData["CerrarErrores"] = ex.GetBaseException().Message;
+        //        return RedirectToAction(nameof(Edit), new { id = id.Trim().ToUpper() });
         //    }
         //}
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Cerrar(string id, AbarroteriaKary.ModelsPartial.PedidoViewModel vm, CancellationToken ct)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return BadRequest("Falta id.");
+            id = id.Trim().ToUpper();
+
+            var ped = await _context.PEDIDO.FirstOrDefaultAsync(p => !p.ELIMINADO && p.PEDIDO_ID == id, ct);
+            if (ped is null) return NotFound("Pedido no encontrado.");
+
+            // Debe estar en RECIBIDO
+            var estadoActual = (await _context.ESTADO_PEDIDO
+                .Where(e => e.ESTADO_PEDIDO_ID == ped.ESTADO_PEDIDO_ID && !e.ELIMINADO)
+                .Select(e => e.ESTADO_PEDIDO_NOMBRE)
+                .FirstOrDefaultAsync(ct) ?? "").Trim().ToUpper();
+
+            if (estadoActual != "RECIBIDO")
+                return BadRequest("Solo se puede cerrar un pedido en estado RECIBIDO.");
+
+            // === 1) SINCRONIZAR DETALLE DESDE EL FORM ===
+            // Reinyectaste hidden inputs (JS reindexHiddenInputsEdit), así que aquí recibimos vm.Lineas[*]
+            // Normalizamos lo necesario (igual que en tu Edit POST)
+            vm.Lineas = (vm.Lineas ?? new List<AbarroteriaKary.ModelsPartial.PedidoDetalleItemVM>())
+                .Where(l => l != null && !string.IsNullOrWhiteSpace(l.ProductoId))
+                .Select(l => new AbarroteriaKary.ModelsPartial.PedidoDetalleItemVM
+                {
+                    DetallePedidoId = string.IsNullOrWhiteSpace(l.DetallePedidoId) ? null : l.DetallePedidoId!.Trim(),
+                    ProductoId = (l.ProductoId ?? "").Trim().ToUpper(),
+                    Cantidad = l.Cantidad,
+                    PrecioPedido = l.PrecioPedido ?? 0m,
+                    PrecioVenta = l.PrecioVenta ?? 0m,
+                    FechaVencimiento = l.FechaVencimiento,
+                    LoteCodigo = string.IsNullOrWhiteSpace(l.LoteCodigo)
+                                       ? null
+                                       : (l.LoteCodigo!.Trim().ToUpper().Length > 50
+                                           ? l.LoteCodigo!.Trim().ToUpper().Substring(0, 50)
+                                           : l.LoteCodigo!.Trim().ToUpper())
+                })
+                .ToList();
+
+            // Traemos solo líneas NO POSTEADAS del pedido
+            var detalleDb = await _context.DETALLE_PEDIDO
+                .Where(d => !d.ELIMINADO && d.PEDIDO_ID == id && d.POSTEADO == false)
+                .OrderBy(d => d.DETALLE_PEDIDO_ID)
+                .ToListAsync(ct);
+
+            // Si el usuario agregó líneas NUEVAS que aún no existen en BD (DetallePedidoId vacío),
+            // por simplicidad NO las creamos aquí: que primero guarde el pedido.
+            // Validamos que todas las líneas que vinieron para cerrar existan en BD.
+            var faltanIds = vm.Lineas.Where(x => !string.IsNullOrWhiteSpace(x.DetallePedidoId))
+                                     .Select(x => x.DetallePedidoId!.Trim())
+                                     .Where(idVm => !detalleDb.Any(d => d.DETALLE_PEDIDO_ID == idVm))
+                                     .ToList();
+            if (faltanIds.Count > 0)
+            {
+                TempData["CerrarErrores"] = "Hay líneas sin guardar. Guarde el pedido antes de actualizar inventario.";
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+
+
+            // ids que vinieron en el form (solo los que tienen DetallePedidoId)
+            var idsVm = new HashSet<string>(
+                vm.Lineas.Where(x => !string.IsNullOrWhiteSpace(x.DetallePedidoId))
+                         .Select(x => x.DetallePedidoId!.Trim())
+            );
+
+            // líneas NO posteadas que existen en BD pero NO vinieron en el form
+            var pendientesNoEnForm = detalleDb.Where(d => !idsVm.Contains(d.DETALLE_PEDIDO_ID)).ToList();
+            if (pendientesNoEnForm.Count > 0)
+            {
+                TempData["CerrarErrores"] =
+                    "Hay líneas en la BD que no aparecen en el formulario (probablemente las quitaste y no guardaste). " +
+                    "Pulsa Guardar y luego intenta Actualizar inventario.";
+                return RedirectToAction(nameof(Edit), new { id });
+            }
 
 
 
+            var ahora = DateTime.Now;
+            var usuario = await _auditoria.GetUsuarioNombreAsync();
 
+            // Actualizamos en BD los campos editados en UI (solo en NO POSTEADAS)
+            foreach (var l in vm.Lineas.Where(x => !string.IsNullOrWhiteSpace(x.DetallePedidoId)))
+            {
+                var d = detalleDb.FirstOrDefault(x => x.DETALLE_PEDIDO_ID == l.DetallePedidoId);
+                if (d == null) continue;
 
+                // Cantidad (entero positivo)
+                int cant = (int)Math.Max(1, l.Cantidad);
 
+                d.CANTIDAD = cant;
+                d.PRECIO_PEDIDO = l.PrecioPedido ?? 0m;
+                d.PRECIO_VENTA = l.PrecioVenta ?? 0m;
+                d.FECHA_VENCIMIENTO = l.FechaVencimiento;         // DATE (mapea a DateOnly?)
+                d.LOTE_CODIGO = string.IsNullOrWhiteSpace(l.LoteCodigo) ? null : l.LoteCodigo; // ALTER aplicado
 
+                d.SUBTOTAL = cant * (d.PRECIO_PEDIDO ?? 0m);
+                d.MODIFICADO_POR = usuario;
+                d.FECHA_MODIFICACION = ahora;
+            }
 
+            await _context.SaveChangesAsync(ct);
 
+            // === 2) POSTEAR (INVENTARIO + KARDEX + PRECIO_HISTORICO + POSTEADO) ===
+            try
+            {
+                var r = await _posteo.PostearPedidoAsync(id, usuario, ct);
 
+                if (r.PedidoCerrado)
+                    TempData["CerradoOk"] = true;
 
-
-
-
-
-
-
-
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+            catch (InvalidOperationException exVal)
+            {
+                // Mensaje de validación del servicio (p. ej., alguna línea quedó con precio 0 o sin vencimiento)
+                TempData["CerrarErrores"] = exVal.Message;
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+            catch (Exception ex)
+            {
+                TempData["CerrarErrores"] = ex.GetBaseException().Message;
+                return RedirectToAction(nameof(Edit), new { id });
+            }
+        }
 
 
 
