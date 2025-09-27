@@ -59,6 +59,9 @@ public partial class INVENTARIO
     [StringLength(50)]
     public string? LOTE_CODIGO { get; set; }
 
+    [StringLength(300)]
+    public string? MOTIVO { get; set; }
+
     [InverseProperty("INVENTARIO")]
     public virtual ICollection<DETALLE_VENTA> DETALLE_VENTA { get; set; } = new List<DETALLE_VENTA>();
 

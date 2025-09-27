@@ -1,0 +1,155 @@
+﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<
+AbarroteriaKary.ModelsPartial.InventarioViewModel.InventarioIndexItemVM >
+
+@using System.Globalization
+@{
+    ViewData["Title"] = "Inventario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string viewMode = (ViewBag.ViewMode as string ?? "detallado").ToLowerInvariant();
+    string stockSubfilter = (ViewBag.StockSubfilter as string ?? "todos").ToLowerInvariant(); // todos|bajo|alto
+    string q = ViewBag.Q as string;
+
+    // UI helpers
+    bool BtnOn(string val, string cur) => string.Equals(val, cur, StringComparison.OrdinalIgnoreCase);
+}
+
+<!-- TOOLBAR -->
+<div class="ak-toolbar mb-4 mt-4">
+    <div class="ak-toolbar__row">
+        <h1 class="ak-toolbar__title m-0">Inventario</h1>
+
+        <div class="ak-toolbar__right">
+
+            <!-- Cambiar vista -->
+            <a asp-action="Index"
+               asp-route-viewMode="detallado"
+               asp-route-stockSubfilter="@stockSubfilter"
+               asp-route-q="@q"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(BtnOn("detallado", viewMode) ? "active" : "")">
+                <i class="fa-solid fa-table-list me-1"></i>Detallado
+            </a>
+
+            <a asp-action="Index"
+               asp-route-viewMode="consolidado"
+               asp-route-stockSubfilter="@stockSubfilter"
+               asp-route-q="@q"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(BtnOn("consolidado", viewMode) ? "active" : "")">
+                <i class="fa-solid fa-layer-group me-1"></i>Consolidado
+            </a>
+
+            <!-- Subfiltros por stock -->
+            <a asp-action="Index"
+               asp-route-viewMode="@viewMode"
+               asp-route-stockSubfilter="todos"
+               asp-route-q="@q"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(BtnOn("todos", stockSubfilter) ? "active" : "")">
+                <i class="fa-solid fa-list-ul me-1"></i>Todos
+            </a>
+
+            <a asp-action="Index"
+               asp-route-viewMode="@viewMode"
+               asp-route-stockSubfilter="bajo"
+               asp-route-q="@q"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(BtnOn("bajo", stockSubfilter) ? "active" : "")">
+                <i class="fa-solid fa-temperature-low me-1"></i>Stock bajo
+            </a>
+
+            <a asp-action="Index"
+               asp-route-viewMode="@viewMode"
+               asp-route-stockSubfilter="alto"
+               asp-route-q="@q"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(BtnOn("alto", stockSubfilter) ? "active" : "")">
+                <i class="fa-solid fa-arrow-trend-up me-1"></i>Stock alto
+            </a>
+
+            <!-- Buscador -->
+            <form method="get" asp-action="Index" class="d-inline-flex align-items-center gap-2">
+                <input type="hidden" name="viewMode" value="@viewMode" />
+                <input type="hidden" name="stockSubfilter" value="@stockSubfilter" />
+                <input type="hidden" name="page" value="1" />
+                <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+                <div class="input-group ak-search" style="width:clamp(260px, 24vw, 320px);">
+                    <button type="submit" class="input-group-text bg-white border-end-0" title="Buscar">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <input name="q" value="@q" class="form-control border-start-0"
+                           placeholder="Buscar por código, nombre o lote" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- TABLA DETALLADO -->
+<div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra">
+        <thead class="text-center thead-kary">
+            <tr>
+                <th>Código</th>
+                <th>Producto</th>
+                <th>Lote</th>
+                <th>Vencimiento</th>
+                <th class="text-end">Stock</th>
+                <!-- 
+                <th class="text-end">Umbral</th>-->
+                <th class="text-end">Costo</th>
+                <th class="text-center">Estado</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">
+                        <i class="fa-regular fa-face-frown me-1"></i> No hay resultados.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var r in Model.Items)
+                {
+                    var umbral = r.StockMinimo > 0 ? r.StockMinimo : 10;
+                    bool esBajo = r.StockActual <= umbral;
+                    bool activo = r.Activo;
+
+                    <tr class="@(esBajo ? "table-warning" : "")">
+                        <td class="text-monospace">@r.CodigoProducto</td>
+                        <td>@r.NombreProducto</td>
+                        <td>@(string.IsNullOrWhiteSpace(r.LoteCodigo) ? "-" : r.LoteCodigo)</td>
+                        <td>@(r.FechaVencimiento.HasValue? r.FechaVencimiento.Value.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT")) : "-")</td>
+                        <td class="text-end fw-semibold">@r.StockActual</td>
+                        <!-- TABLA DETALLADO
+                        <td class="text-end">@umbral</td> -->
+                        <td class="text-end">@r.CostoUnitario.ToString("Q #,##0.00", CultureInfo.GetCultureInfo("es-GT"))</td>
+                        <td class="text-center">
+                            <span class="badge text-white @(activo ? "bg-success" : "bg-danger")">
+                                @(activo ? "Activo" : "Inactivo")
+                            </span>
+                        </td>
+                        <td class="text-center acciones">
+                            <a href="@Url.Action("Edit", "Inventarios", new { id = r.InventarioId })"
+                               class="btn btn-sm me-2" title="Ajustar stock">
+                                <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion" />
+                            </a>
+                            <a href="@Url.Action("Details", "Inventarios", new { id = r.InventarioId })"
+                               class="btn btn-sm me-2" title="Ver">
+                                <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion" />
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    @await Html.PartialAsync("_Pager", Model)
+</div>

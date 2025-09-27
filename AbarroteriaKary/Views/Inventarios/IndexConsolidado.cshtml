@@ -1,0 +1,168 @@
+﻿@using System.Globalization
+@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<
+          AbarroteriaKary.ModelsPartial.InventarioViewModel.InventarioIndexConsolidadoVM >
+
+@{
+    ViewData["Title"] = "Inventario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string modo = (ViewBag.Modo as string) ?? "CONSOLIDADO";
+    string stock = (ViewBag.Stock as string) ?? "TODOS";
+    string q = ViewBag.Q as string;
+    string fvDesde = ViewBag.FVDesde as string;
+    string fvHasta = ViewBag.FVHasta as string;
+
+    string rangoTexto = "";
+    if (DateTime.TryParse(fvDesde, out var d1) && DateTime.TryParse(fvHasta, out var d2))
+        rangoTexto = $"{d1:dd/MM/yyyy} - {d2:dd/MM/yyyy}";
+}
+
+<style>
+    .inv-low {
+        background-color: rgba(220,53,69,.12) !important;
+    }</style>
+
+<div class="ak-toolbar mb-4 mt-4">
+    <div class="ak-toolbar__row">
+        <h1 class="ak-toolbar__title m-0">Inventario (Consolidado)</h1>
+
+        <div class="ak-toolbar__right">
+            <!-- Cambiar modo -->
+            <a asp-action="Index" asp-route-modo="DETALLADO"
+               asp-route-stock="@stock" asp-route-q="@q"
+               asp-route-fvDesde="@fvDesde" asp-route-fvHasta="@fvHasta"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(modo == "DETALLADO" ? "active" : "")">
+                <i class="fa-solid fa-table-list me-1"></i> Detallado
+            </a>
+            <a asp-action="Index" asp-route-modo="CONSOLIDADO"
+               asp-route-stock="@stock" asp-route-q="@q"
+               asp-route-fvDesde="@fvDesde" asp-route-fvHasta="@fvHasta"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(modo == "CONSOLIDADO" ? "active" : "")">
+                <i class="fa-solid fa-layer-group me-1"></i> Consolidado
+            </a>
+
+            <!-- Subfiltros stock -->
+            <a asp-action="Index" asp-route-modo="@modo" asp-route-stock="TODOS"
+               asp-route-q="@q" asp-route-fvDesde="@fvDesde" asp-route-fvHasta="@fvHasta"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(stock == "TODOS" ? "active" : "")">
+                <i class="fa-solid fa-list-ul me-1"></i> Todos
+            </a>
+            <a asp-action="Index" asp-route-modo="@modo" asp-route-stock="BAJO"
+               asp-route-q="@q" asp-route-fvDesde="@fvDesde" asp-route-fvHasta="@fvHasta"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(stock == "BAJO" ? "active" : "")">
+                <i class="fa-solid fa-temperature-low me-1"></i> Bajo
+            </a>
+            <a asp-action="Index" asp-route-modo="@modo" asp-route-stock="ALTO"
+               asp-route-q="@q" asp-route-fvDesde="@fvDesde" asp-route-fvHasta="@fvHasta"
+               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+               class="btn btn-ak-filter btn-ak-square @(stock == "ALTO" ? "active" : "")">
+                <i class="fa-solid fa-arrow-trend-up me-1"></i> Alto
+            </a>
+
+            <!-- Rango + buscador -->
+            <form id="frmFiltros" method="get" asp-action="Index" class="d-inline-flex align-items-center gap-2">
+                <input type="hidden" name="modo" value="@modo" />
+                <input type="hidden" name="stock" value="@stock" />
+                <input type="hidden" name="page" value="1" />
+                <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+                <div class="input-group ak-daterange-group" style="width:clamp(220px,22vw,260px);">
+                    <span class="input-group-text bg-white border-end-0" title="Rango de vencimiento">
+                        <i class="fa-regular fa-calendar"></i>
+                    </span>
+                    <input id="rangoFechas" class="form-control border-start-0 border-end-0"
+                           placeholder="Vencimiento" value="@rangoTexto" autocomplete="off" />
+                    <button type="button" id="btnClearRange" class="input-group-text bg-white border-start-0" title="Limpiar">
+                        <i class="fa-solid fa-eraser"></i>
+                    </button>
+                </div>
+
+                <input type="hidden" name="fvDesde" id="fvDesde" value="@fvDesde" />
+                <input type="hidden" name="fvHasta" id="fvHasta" value="@fvHasta" />
+
+                <div class="input-group ak-search" style="width:clamp(260px,24vw,320px);">
+                    <button type="submit" class="input-group-text bg-white border-end-0" title="Buscar">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <input name="q" value="@q" class="form-control border-start-0"
+                           placeholder="Buscar por código o nombre" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-hover align-middle table-kary-zebra">
+        <thead class="text-center thead-kary">
+            <tr>
+                <th>Código</th>
+                <th>Producto</th>
+                <th class="text-end">Stock total</th>
+                <th style="width:90px">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr>
+                    <td colspan="4" class="text-center py-4 text-muted">
+                        <i class="fa-regular fa-face-frown me-1"></i> No hay resultados.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var r in Model.Items)
+                {
+                    <tr class="@(r.EsBajo ? "inv-low" : "")">
+                        <td class="text-monospace">@r.ProductoId</td>
+                        <td>@r.NombreProducto</td>
+                        <td class="text-end fw-semibold">@r.StockTotal</td>
+                        <td class="text-center acciones">
+                            <!-- Ver lotes de este producto (lleva a Detallado filtrado por ProductoId) -->
+                            <a asp-action="Index"
+                               asp-route-modo="DETALLADO"
+                               asp-route-stock="@stock"
+                               asp-route-q="@r.ProductoId"
+                               asp-route-fvDesde="@fvDesde" asp-route-fvHasta="@fvHasta"
+                               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
+                               class="btn btn-sm" title="Ver lotes">
+                                <img src="~/img/Botones/vision1.png" class="icono-accion" alt="Ver" />
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    @await Html.PartialAsync("_Pager", Model)
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+          const form = document.getElementById('frmFiltros');
+          const input = document.getElementById('rangoFechas');
+          const f1 = document.getElementById('fvDesde');
+          const f2 = document.getElementById('fvHasta');
+          const btnClr = document.getElementById('btnClearRange');
+          if(!form||!input) return;
+
+          if (input._litepicker && typeof input._litepicker.destroy==='function') input._litepicker.destroy();
+          const picker = new Litepicker({
+            element: input, singleMode:false, autoApply:true, allowRepick:true,
+            numberOfMonths:2, numberOfColumns:2, splitView:true,
+            format:'DD/MM/YYYY', lang:'es-ES',
+            startDate:'@(fvDesde ?? "")'||null, endDate:'@(fvHasta ?? "")'||null
+          });
+          picker.on('selected',(s,e)=>{ if(s&&e){ f1.value=s.format('YYYY-MM-DD'); f2.value=e.format('YYYY-MM-DD'); form.submit(); }});
+          btnClr?.addEventListener('click', ()=>{ input.value=''; f1.value=''; f2.value=''; try{picker.clearSelection();}catch{} form.submit(); });
+        })();
+    </script>
+}

@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AbarroteriaKary.Models;
 
 [Index("PRODUCTO_ID", "FECHA", Name = "IX_KARDEX_PROD_FEC")]
+[Index("PRODUCTO_ID", "TIPO_MOVIMIENTO", "FECHA", Name = "IX_KARDEX_PROD_TIPO_FECHA", IsDescending = new[] { false, false, true })]
 public partial class KARDEX
 {
     [Key]
@@ -63,6 +64,9 @@ public partial class KARDEX
 
     [StringLength(50)]
     public string? LOTE_CODIGO { get; set; }
+
+    [StringLength(300)]
+    public string? MOTIVO { get; set; }
 
     [ForeignKey("PRODUCTO_ID")]
     [InverseProperty("KARDEX")]

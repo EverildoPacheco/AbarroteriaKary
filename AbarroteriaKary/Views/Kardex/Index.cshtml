@@ -1,0 +1,206 @@
+﻿@using System.Globalization
+@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<
+           AbarroteriaKary.ModelsPartial.KardexViewModel>
+
+@{
+    ViewData["Title"] = "Kardex";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    string estado = (ViewBag.Estado as string) ?? "ACTIVO";   // ACTIVO | INACTIVO | TODOS
+    string q = ViewBag.Q as string;
+    string fDesde = ViewBag.FDesde as string;
+    string fHasta = ViewBag.FHasta as string;
+
+    string rangoTexto = "";
+    if (DateTime.TryParse(fDesde, out var d1) && DateTime.TryParse(fHasta, out var d2))
+        rangoTexto = $"{d1:dd/MM/yyyy} - {d2:dd/MM/yyyy}";
+
+    var gt = CultureInfo.GetCultureInfo("es-GT");
+
+
+}
+
+<!-- TOOLBAR -->
+<div class="ak-toolbar mb-4 mt-4">
+    <div class="ak-toolbar__row">
+        <h1 class="ak-toolbar__title m-0">Kardex</h1>
+
+        <div class="ak-toolbar__right">
+            <!-- Filtros de estado -->
+
+
+            <!-- Buscador + rango -->
+            <form id="frmFiltros" method="get" asp-action="Index" class="d-inline-flex align-items-center gap-2">
+                <input type="hidden" name="estado" value="@estado" />
+                <input type="hidden" name="page" value="1" />
+                <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+                <!-- RANGO FECHAS (FECHA en KARDEX) -->
+                <div class="input-group ak-daterange-group" style="width:clamp(220px, 20vw, 260px);">
+                    <span class="input-group-text bg-white border-end-0" title="Rango de fechas">
+                        <i class="fa-regular fa-calendar"></i>
+                    </span>
+                    <input id="rangoFechas" class="form-control border-start-0 border-end-0"
+                           placeholder="Rango de fechas" value="@rangoTexto" autocomplete="off" />
+                    <button type="button" id="btnClearRange"
+                            class="input-group-text bg-white border-start-0" title="Limpiar rango">
+                        <i class="fa-solid fa-eraser"></i>
+                    </button>
+                </div>
+
+                <input type="hidden" name="fDesde" id="fDesde" value="@fDesde" />
+                <input type="hidden" name="fHasta" id="fHasta" value="@fHasta" />
+
+                <!-- BUSCADOR -->
+                <div class="input-group ak-search" style="width:clamp(260px, 24vw, 320px);">
+                    <button type="submit" class="input-group-text bg-white border-end-0" title="Buscar">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <input name="q" value="@q" class="form-control border-start-0"
+                           placeholder="Buscar por código/nombre producto, lote o referencia" />
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- TABLA -->
+<div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra">
+        <thead class="text-center thead-kary">
+            <tr>
+                <th>Referencia</th>
+                <th>Producto</th>
+                <th style="width:110px">Movimiento</th>
+                <th style="width:120px">Lote</th>
+                <th class="text-end" style="width:110px">Cantidad</th>
+                <th class="text-end" style="width:130px">Costo</th>            
+                <th>Motivo</th>
+                <th style="width:140px">Fecha</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr>
+                    <td colspan="9" class="text-center py-4 text-muted">
+                        <i class="fa-regular fa-face-frown me-1"></i> No hay resultados.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var r in Model.Items)
+                {
+                    var tipo = (r.TipoMovimiento ?? "").Trim().ToUpperInvariant();
+                    var badge = tipo switch
+                    {
+                        "ENTRADA" => "bg-success",
+                        "SALIDA" => "bg-danger",
+                        "AJUSTE" => "bg-warning text-dark",
+                        _ => "bg-secondary"
+                    };
+
+                    // 👉 Signo tomado del valor guardado
+                    int qty = r.Cantidad;                 // viene con signo
+                    string sign = qty < 0 ? "-" : qty > 0 ? "+" : "";
+                    string qtyClass = qty < 0 ? "text-danger" : qty > 0 ? "text-success" : "";
+                    int qtyAbs = Math.Abs(qty);
+
+                    <tr>
+                        <td>@(string.IsNullOrWhiteSpace(r.Referencia) ? "-" : r.Referencia)</td>
+
+                        <td>
+                            <div class="fw-semibold">@r.NombreProducto</div>
+                            <div class="text-muted small">
+                                @(string.IsNullOrWhiteSpace(r.CodigoProducto) ? r.ProductoId : r.CodigoProducto)
+                            </div>
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge @badge">@r.TipoMovimiento</span>
+                        </td>
+
+                        <td class="text-monospace">@((string.IsNullOrWhiteSpace(r.LoteCodigo) ? "-" : r.LoteCodigo))</td>
+
+                        <td class="text-end fw-semibold @qtyClass">
+                            @($"{sign}{qtyAbs.ToString("#,##0", gt)}")
+                        </td>
+
+                        <td class="text-end">
+                            @(r.CostoUnitario.HasValue
+                                                ? r.CostoUnitario.Value.ToString("Q #,##0.00", gt)
+                                                : "-")
+                        </td>
+
+
+                        <td class="small text-muted">@((r.Motivo ?? "-"))</td>
+                        <td class="text-nowrap">@r.Fecha.ToString("dd/MM/yyyy HH:mm", gt)</td>
+                    </tr>
+                        }
+            }
+        </tbody>
+    </table>
+
+    @await Html.PartialAsync("_Pager", Model)
+</div>
+
+@section Scripts {
+    <script>
+        (function () {
+          'use strict';
+          const form   = document.getElementById('frmFiltros');
+          if (!form) return;
+
+          const input  = document.getElementById('rangoFechas');
+          const fDesde = document.getElementById('fDesde');
+          const fHasta = document.getElementById('fHasta');
+          const btnClr = document.getElementById('btnClearRange');
+
+          // Evitar doble init
+          if (input && input._litepicker && typeof input._litepicker.destroy === 'function') {
+            input._litepicker.destroy();
+          }
+
+          const start = '@(ViewBag.FDesde as string ?? "")';
+          const end   = '@(ViewBag.FHasta as string ?? "")';
+
+          const picker = new Litepicker({
+            element: input,
+            singleMode: false,
+            autoApply: true,
+            allowRepick: true,
+            numberOfMonths: 2,
+            numberOfColumns: 2,
+            splitView: true,
+            format: 'DD/MM/YYYY',
+            lang: 'es-ES',
+            startDate: start || null,
+            endDate: end || null
+          });
+
+          picker.on('selected', (s, e) => {
+            if (s && e) {
+              fDesde.value = s.format('YYYY-MM-DD');
+              fHasta.value = e.format('YYYY-MM-DD');
+              form.submit();
+            }
+          });
+
+          btnClr?.addEventListener('click', () => {
+            input.value = '';
+            fDesde.value = '';
+            fHasta.value = '';
+            try { picker.clearSelection(); } catch {}
+            form.submit();
+          });
+
+          // Estética: cursor "click" en header del picker
+          picker.on('render', () => {
+            document.querySelectorAll(
+              '.litepicker .month-item-header .month-name, .litepicker .month-item-header .year-number'
+            ).forEach(el => el.style.cursor = 'pointer');
+          });
+        })();
+    </script>
+}

@@ -1,0 +1,220 @@
+﻿@model AbarroteriaKary.ModelsPartial.InventarioViewModel.InventarioEditVM
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Ajuste de inventario";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var updatedOk = TempData["UpdatedOk"] as bool?;
+    var updatedName = TempData["UpdatedName"] as string ?? "";
+    var noChanges = TempData["NoChanges"] as bool?;
+}
+
+<!-- TOOLBAR -->
+<div class="ak-toolbar mb-4 mt-4">
+    <div class="ak-toolbar__row">
+        <h1 class="ak-toolbar__title m-0">Ajuste de inventario</h1>
+
+    </div>
+</div>
+
+@* @if ((TempData["UpdatedOk"] as bool?) == true)
+{
+    <div class="alert alert-success">
+        Se guardó el ajuste para <strong>@(TempData["UpdatedName"] as string ?? Model.InventarioId)</strong>.
+    </div>
+}
+@if ((TempData["NoChanges"] as bool?) == true)
+{
+    <div class="alert alert-info">No hubo cambios para guardar.</div>
+} *@
+
+<form asp-action="Edit" asp-route-id="@Model.InventarioId" method="post" id="frmInvEdit" autocomplete="off">
+    @Html.AntiForgeryToken()
+
+    <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+    <input type="hidden" asp-for="InventarioId" />
+
+    <input type="hidden" asp-for="ProductoId" />
+    <input type="hidden" asp-for="CodigoProducto" />
+    <input type="hidden" asp-for="NombreProducto" />
+    <input type="hidden" asp-for="LoteCodigo" />
+    <input type="hidden" asp-for="FechaVencimiento" />
+    <input type="hidden" asp-for="StockActual" />
+
+
+    <div class="card ak-card translucent shadow-sm w-100">
+        <div class="card-body ak-form">
+
+            <div class="alert alert-info d-flex align-items-start gap-2">
+                <i class="fa-solid fa-circle-info mt-1"></i>
+                <div>
+                    Solo se puede actualizar el campo <strong>Nuevo stock</strong>
+                </div>
+            </div>
+
+
+            <div class="row g-3">
+                <!-- Identificación -->
+                <div class="col-md-3">
+                    <label class="form-label">No. Inventario</label>
+                    <input class="form-control" value="@Model.InventarioId" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Producto ID</label>
+                    <input class="form-control" value="@Model.ProductoId" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Código producto</label>
+                    <input class="form-control" value="@(Model.CodigoProducto ?? "-")" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Nombre</label>
+                    <input class="form-control" value="@(Model.NombreProducto ?? "-")" readonly />
+                </div>
+
+                <!-- Lote / Vencimiento -->
+                <div class="col-md-3">
+                    <label class="form-label">Lote</label>
+                    <input class="form-control" value="@(string.IsNullOrWhiteSpace(Model.LoteCodigo) ? "-" : Model.LoteCodigo)" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label">Fecha vencimiento</label>
+                    <input class="form-control"
+                           value="@(Model.FechaVencimiento.HasValue? Model.FechaVencimiento.Value.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT")) : "-")"
+                           readonly />
+                </div>
+
+                <!-- Stock -->
+                <div class="col-md-3">
+                    <label class="form-label">Stock actual (sistema)</label>
+                    <input class="form-control" value="@Model.StockActual" readonly />
+                </div>
+                <div class="col-md-3">
+                    <label asp-for="NuevoStock" class="form-label">Nuevo stock</label>
+                    <input asp-for="NuevoStock" type="number" min="0" step="1" class="form-control" />
+                    <span asp-validation-for="NuevoStock" class="text-danger"></span>
+                </div>
+
+                <!-- Motivo -->
+                <div class="col-12">
+                    <label asp-for="Motivo" class="form-label">Motivo del ajuste</label>
+                    <textarea asp-for="Motivo" rows="3" class="form-control"
+                              placeholder="Ej.: Diferencia en conteo físico, producto dañado, merma, etc."></textarea>
+                    <span asp-validation-for="Motivo" class="text-danger"></span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+  @*   <!-- Acciones secundarias (duplicadas abajo por UX móvil) -->
+    <div class="card ak-card ak-actions-card w-100 mt-3">
+        <div class="card-body d-flex justify-content-center gap-3 flex-wrap">
+            <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">
+                <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+            </a>
+            <button type="submit" class="btn btn-ak btn-ak-primary">
+                <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar
+            </button>
+        </div>
+    </div> *@
+
+
+    <div class="card ak-card ak-actions-card w-100 mt-3">
+        <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+            <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">
+                <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+            </a>
+            <button type="reset" class="btn btn-ak btn-ak-success">
+                <i class="fa-solid fa-eraser ak-icon"></i> Restablecer
+            </button>
+            <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar
+            </button>
+        </div>
+    </div>
+
+
+
+
+
+
+
+
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        (function () {
+          const FORM_SEL = '#frmInvEdit';
+          const form = document.querySelector(FORM_SEL);
+          const btn  = document.getElementById('btn-guardar');
+
+          // Guardado seguro (anti doble-submit)
+          if (window.KaryForms?.bindSafeSubmit) {
+            KaryForms.bindSafeSubmit(FORM_SEL, '#btn-guardar', {
+              spinnerHtml: '<i class="fa-solid fa-spinner fa-spin ak-icon"></i> Guardando...'
+            });
+          } else if (form) {
+            form.addEventListener('submit', function () {
+              if (!form.checkValidity()) return;
+              if (btn) btn.disabled = true;
+            });
+          }
+
+          // Confirmación al salir con cambios sin guardar
+          if (window.KarySwal?.guardUnsaved && form) {
+            KarySwal.guardUnsaved(FORM_SEL, '.js-leave');
+          }
+
+          // Oculta banners .alert cuando vamos a mostrar modal PRG
+          function hideBootstrapAlerts() {
+            document.querySelectorAll('.alert').forEach(el => el.style.display = 'none');
+          }
+
+          // ===== PRG Modals =====
+          @if ((TempData["UpdatedOk"] as bool?) == true)
+          {
+                <text>
+                  hideBootstrapAlerts();
+                  if (window.KarySwal?.saveSuccess) {
+                    KarySwal.saveSuccess({
+                      icon: 'success',
+                      title: '¡Ajuste guardado!',
+                      text: 'Se actualizó el stock y se registró el KARDEX.',
+                      confirmText: 'Aceptar',
+                      showDenyButton: false,
+                      indexUrl: '@Url.Action("Index", "Inventarios")'
+                    });
+                  } else {
+                    alert('¡Ajuste guardado!');
+                    window.location.href = '@Url.Action("Index", "Inventarios")';
+                  }
+                </text>
+          }
+
+          @if ((TempData["NoChanges"] as bool?) == true)
+          {
+                <text>
+                  hideBootstrapAlerts();
+                  if (window.KarySwal?.info) {
+                    KarySwal.info({
+                      title: 'Sin cambios',
+                      text: 'El nuevo stock es igual al actual.',
+                      confirmText: 'Aceptar',
+                      redirectUrl: '@Url.Action("Index", "Inventarios")'
+                    });
+                  } else {
+                    alert('Sin cambios.');
+                    window.location.href = '@Url.Action("Index", "Inventarios")';
+                  }
+                </text>
+          }
+        })();
+    </script>
+}
+
