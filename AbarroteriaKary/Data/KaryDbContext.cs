@@ -311,7 +311,7 @@ public partial class KaryDbContext : DbContext
         {
             entity.HasKey(e => e.NOTIFICACION_ID).HasName("PK__NOTIFICA__5318F8DA66D2F232");
 
-            entity.HasIndex(e => new { e.INVENTARIO_ID, e.TIPO }, "UX_NOTIF_ACTIVA")
+            entity.HasIndex(e => new { e.INVENTARIO_ID, e.PRODUCTO_ID, e.TIPO }, "UX_NOTIF_ACTIVA")
                 .IsUnique()
                 .HasFilter("([RESUELTA]=(0) AND [ELIMINADO]=(0))");
 
