@@ -2,6 +2,7 @@
 using AbarroteriaKary.Models;
 using AbarroteriaKary.ModelsPartial;
 using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T>
+using AbarroteriaKary.Services;
 using AbarroteriaKary.Services.Auditoria;
 using AbarroteriaKary.Services.Correlativos;
 using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
@@ -32,13 +33,17 @@ namespace AbarroteriaKary.Controllers
         private readonly ICorrelativoService _correlativos;
         private readonly IAuditoriaService _auditoria;
         private readonly IReporteExportService _exportSvc;
+        private readonly INotificacionService _notif;
 
-        public InventariosController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria, IReporteExportService exportSvc)
+
+        public InventariosController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria, IReporteExportService exportSvc, INotificacionService notif)
         {
             _context = context;
             _correlativos = correlativos;
             _auditoria = auditoria;
             _exportSvc = exportSvc;
+            _notif = notif;
+
         }
 
         // GET: Inventarios
@@ -377,6 +382,12 @@ namespace AbarroteriaKary.Controllers
                 });
 
                 await _context.SaveChangesAsync(ct);
+
+
+                await _notif.UpsertStockBajoAsync(inv.PRODUCTO_ID, ct);
+                await _notif.UpsertVencimientosAsync(inv.PRODUCTO_ID, 6, ct); // 
+
+
                 await tx.CommitAsync(ct);
 
                 TempData["UpdatedOk"] = true;

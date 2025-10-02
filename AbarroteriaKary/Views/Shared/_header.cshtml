@@ -14,52 +14,59 @@
                 aria-controls="karySidebar">
             <i class="fa-solid fa-bars"></i>
         </button>
-
     </div>
-
-
-
 
     <!-- Zona centro: Logo centrado -->
     <div class="hdr__center">
-        @* Reemplace el src por su logo *@
-        <img src="~/img/LOGO LOGO - copia.png"
-             alt="Abarrotería Kary"
-             class="hdr__logo" />
+        <img src="~/img/LOGO LOGO - copia.png" alt="Abarrotería Kary" class="hdr__logo" />
     </div>
 
+    <!-- Zona izquierda: Notificaciones + Usuario (alineados en fila) -->
+    <div class="hdr__left d-flex align-items-center gap-2">
 
-    <div class="hdr__left hdr__user">
-        <!-- Botón avatar que abre/cierra el menú -->
-        <button id="btnUserMenu"
-                type="button"
-                class="hdr__userbtn"
-                aria-haspopup="true"
-                aria-expanded="false"
-                aria-controls="userMenu">
-            <img src="~/img/Useruser.png" alt="Usuario" class="hdr__avatar" />
-        </button>
+        <!-- ===== Notificaciones ===== -->
+        <div class="hdr__notif position-relative">
+            <!-- Botón campanita -->
+            <button id="btnNotif"
+                    class="hdr__notifbtn"
+                    type="button"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-controls="notifDropdown">
+                <i class="fa-regular fa-bell"></i>
+                <span id="notifBadge" class="hdr__notifbadge" hidden>0</span>
+            </button>
 
-        <!-- Menú flotante -->
-        <div id="userMenu" class="hdr__menu" hidden>
-            <!-- Fila informativa: nombre -->
-            <div class="hdr__menu-header">
-                <img src="~/img/header/usuario.png" class="hdr__menu-ico" alt="" />
-                <span>@nombreSesion</span>
+            <!-- Dropdown de notificaciones (solo UNO con este id) -->
+            <div id="notifDropdown" class="hdr__notifdropdown" hidden></div>
+        </div> <!-- ← CIERRE hdr__notif -->
+        <!-- ===== Usuario ===== -->
+        <div class="hdr__user position-relative">
+            <button id="btnUserMenu"
+                    type="button"
+                    class="hdr__userbtn"
+                    aria-haspopup="true"
+                    aria-expanded="false"
+                    aria-controls="userMenu">
+                <img src="~/img/Useruser.png" alt="Usuario" class="hdr__avatar" />
+            </button>
+
+            <!-- Menú flotante usuario -->
+            <div id="userMenu" class="hdr__menu" hidden>
+                <div class="hdr__menu-header">
+                    <img src="~/img/header/usuario.png" class="hdr__menu-ico" alt="" />
+                    <span>@nombreSesion</span>
+                </div>
+
+                <form action="@Url.Action("Logout","Login")" method="post" class="hdr__menu-item">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="hdr__menu-btn">
+                        <img src="~/img/header/Salir.png" class="hdr__menu-ico" alt="" />
+                        <span>Cerrar Sesión</span>
+                    </button>
+                </form>
             </div>
-
-            <!-- Fila acción: Cerrar sesión (POST seguro a Login/Logout) -->
-            <form action="@Url.Action("Logout","Login")" method="post" class="hdr__menu-item">
-                @Html.AntiForgeryToken()
-                <button type="submit" class="hdr__menu-btn">
-                    <img src="~/img/header/Salir.png" class="hdr__menu-ico" alt="" />
-                    <span>Cerrar Sesión</span>
-                </button>
-            </form>
         </div>
+
     </div>
-
-
-  
-    
 </header>

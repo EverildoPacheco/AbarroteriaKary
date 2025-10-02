@@ -1,0 +1,187 @@
+﻿@model IEnumerable<AbarroteriaKary.Models.NOTIFICACION>
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Index</title>
+</head>
+<body>
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.TIPO)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MENSAJE)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.NIVEL)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FECHA_DETECCION)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RESUELTA)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RESUELTA_EN)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RESUELTA_POR)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.CREADO_POR)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FECHA_CREACION)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.MODIFICADO_POR)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FECHA_MODIFICACION)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ELIMINADO)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ELIMINADO_POR)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FECHA_ELIMINACION)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ESTADO)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.USUARIO_DESTINO)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FECHA_PROGRAMADA)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FECHA_ENVIO)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.FECHA_LECTURA)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.SNOOZE_HASTA)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.TITULO)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.URL)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RELACION_TIPO)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.RELACION_ID)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.INVENTARIO)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.TIPO)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MENSAJE)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.NIVEL)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FECHA_DETECCION)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RESUELTA)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RESUELTA_EN)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RESUELTA_POR)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.CREADO_POR)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FECHA_CREACION)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.MODIFICADO_POR)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FECHA_MODIFICACION)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ELIMINADO)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ELIMINADO_POR)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FECHA_ELIMINACION)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ESTADO)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.USUARIO_DESTINO)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FECHA_PROGRAMADA)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FECHA_ENVIO)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.FECHA_LECTURA)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.SNOOZE_HASTA)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.TITULO)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.URL)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RELACION_TIPO)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.RELACION_ID)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.INVENTARIO.INVENTARIO_ID)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.NOTIFICACION_ID">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.NOTIFICACION_ID">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.NOTIFICACION_ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
+</body>
+</html>

@@ -2,6 +2,7 @@
 using AbarroteriaKary.Models;
 using AbarroteriaKary.ModelsPartial;
 using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T>
+using AbarroteriaKary.Services;
 using AbarroteriaKary.Services.Auditoria;
 using AbarroteriaKary.Services.Correlativos;
 using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
@@ -37,14 +38,16 @@ namespace AbarroteriaKary.Controllers
         private readonly IAuditoriaService _auditoria;
         private readonly IReporteExportService _exportSvc;
         private readonly IInventarioPostingService _posteo;
+        private readonly INotificacionService _notif;
 
-        public PedidosController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria, IReporteExportService exportSvc, IInventarioPostingService posteo)
+        public PedidosController(KaryDbContext context, ICorrelativoService correlativos, IAuditoriaService auditoria, IReporteExportService exportSvc, IInventarioPostingService posteo, INotificacionService notif)
         {
             _context = context;
             _correlativos = correlativos;
             _auditoria = auditoria;
             _exportSvc = exportSvc;
             _posteo = posteo;
+            _notif = notif;
         }
 
 
@@ -672,33 +675,7 @@ namespace AbarroteriaKary.Controllers
         // Helpers
         // =========================================================
 
-        /// <summary>
-        /// Carga combos de Proveedores y Estados (ESTADO_PEDIDO).
-        /// </summary>
-        //private async Task CargarCombosAsync(PedidoViewModel vm, CancellationToken ct)
-        //{
-        //    vm.Proveedores = await _context.PROVEEDOR
-        //        .AsNoTracking()
-        //        .Where(p => !p.ELIMINADO && p.ESTADO == "ACTIVO")
-        //        .OrderBy(p => p.EMPRESA)                  // ← usar EMPRESA
-        //        .Select(p => new SelectListItem
-        //        {
-        //            Value = p.PROVEEDOR_ID,
-        //            Text = p.EMPRESA                      // ← mostrar EMPRESA
-        //        })
-        //        .ToListAsync(ct);
-
-        //    vm.Estados = await _context.ESTADO_PEDIDO
-        //        .AsNoTracking()
-        //        .Where(e => !e.ELIMINADO && e.ESTADO == "ACTIVO")
-        //        .OrderBy(e => e.ESTADO_PEDIDO_NOMBRE)
-        //        .Select(e => new SelectListItem
-        //        {
-        //            Value = e.ESTADO_PEDIDO_ID,
-        //            Text = e.ESTADO_PEDIDO_NOMBRE
-        //        })
-        //        .ToListAsync(ct);
-        //}
+ 
 
 
 
@@ -1078,19 +1055,7 @@ namespace AbarroteriaKary.Controllers
                 .OrderBy(d => d.DETALLE_PEDIDO_ID)
                 .ToListAsync(ct);
 
-            // === Normalizaciones/validaciones de líneas (igual a su lógica existente) ===
-            //vm.Lineas = (vm.Lineas ?? new List<PedidoDetalleItemVM>())
-            //    .Where(l => l != null && !string.IsNullOrWhiteSpace(l.ProductoId))
-            //    .Select(l => new PedidoDetalleItemVM
-            //    {
-            //        DetallePedidoId = string.IsNullOrWhiteSpace(l.DetallePedidoId) ? null : l.DetallePedidoId!.Trim(),
-            //        ProductoId = (l.ProductoId ?? "").Trim().ToUpper(),
-            //        Cantidad = l.Cantidad,
-            //        PrecioPedido = l.PrecioPedido ?? 0m,
-            //        PrecioVenta = l.PrecioVenta ?? 0m,
-            //        FechaVencimiento = l.FechaVencimiento
-            //    })
-            //    .ToList();
+           
 
             vm.Lineas = (vm.Lineas ?? new List<PedidoDetalleItemVM>())
                 .Where(l => l != null && !string.IsNullOrWhiteSpace(l.ProductoId))
@@ -1296,23 +1261,7 @@ namespace AbarroteriaKary.Controllers
                 var dbMap = detalleDb.ToDictionary(d => d.DETALLE_PEDIDO_ID);
                 var idsVmPresentes = new HashSet<string>();
 
-                // 2.a) Editar existentes
-                //foreach (var l in vm.Lineas.Where(x => !string.IsNullOrWhiteSpace(x.DetallePedidoId)))
-                //{
-                //    var key = l.DetallePedidoId!.Trim();
-                //    if (!dbMap.TryGetValue(key, out var d)) continue;
-
-                //    d.PRODUCTO_ID = l.ProductoId;
-                //    d.CANTIDAD = ToPositiveInt(l.Cantidad, nameof(PedidoDetalleItemVM.Cantidad), ModelState);
-                //    d.PRECIO_PEDIDO = l.PrecioPedido ?? 0m;
-                //    d.PRECIO_VENTA = l.PrecioVenta ?? 0m;
-                //    d.SUBTOTAL = d.CANTIDAD * (d.PRECIO_PEDIDO ?? 0m);
-                //    d.FECHA_VENCIMIENTO = l.FechaVencimiento.HasValue ? l.FechaVencimiento.Value : (DateOnly?)null;
-
-                //    d.MODIFICADO_POR = usuario;
-                //    d.FECHA_MODIFICACION = ahora;
-                //    idsVmPresentes.Add(d.DETALLE_PEDIDO_ID);
-                //}
+             
 
                 // 2.a) Editar existentes
                 foreach (var l in vm.Lineas.Where(x => !string.IsNullOrWhiteSpace(x.DetallePedidoId)))
@@ -1399,6 +1348,7 @@ namespace AbarroteriaKary.Controllers
                 ped.ESTADO_PEDIDO_ID = vm.EstadoPedidoId!;
 
                 await _context.SaveChangesAsync(ct);
+
                 await tx.CommitAsync(ct);
 
                 TempData["UpdatedOk"] = true;
@@ -1416,121 +1366,6 @@ namespace AbarroteriaKary.Controllers
 
 
 
-
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Cerrar(string id, CancellationToken ct)
-        //{
-        //    if (string.IsNullOrWhiteSpace(id)) return BadRequest("Falta id.");
-        //    id = id.Trim().ToUpper();
-
-        //    var ped = await _context.PEDIDO
-        //        .FirstOrDefaultAsync(p => !p.ELIMINADO && p.PEDIDO_ID == id, ct);
-        //    if (ped is null) return NotFound("Pedido no encontrado.");
-
-        //    var nombreActual = EstadosPedido.Normalizar(
-        //        await GetNombreEstadoByIdAsync(ped.ESTADO_PEDIDO_ID, ct));
-
-        //    if (nombreActual != EstadosPedido.RECIBIDO)
-        //        return BadRequest("Solo se puede cerrar un pedido en estado RECIBIDO.");
-
-        //    // Traer detalle + (opcional) info de producto para mensajes
-        //    var detalles = await (
-        //        from d in _context.DETALLE_PEDIDO
-        //        join pr0 in _context.PRODUCTO on d.PRODUCTO_ID equals pr0.PRODUCTO_ID into gpr
-        //        from pr in gpr.DefaultIfEmpty()
-        //        where !d.ELIMINADO && d.PEDIDO_ID == id
-        //        orderby d.DETALLE_PEDIDO_ID
-        //        select new
-        //        {
-        //            d.DETALLE_PEDIDO_ID,
-        //            d.PRODUCTO_ID,
-        //            d.PRECIO_PEDIDO,
-        //            d.PRECIO_VENTA,
-        //            d.FECHA_VENCIMIENTO,
-        //            ProductoCodigo = pr != null ? pr.PRODUCTO_CODIGO : d.PRODUCTO_ID,
-        //            ProductoNombre = pr != null ? pr.PRODUCTO_NOMBRE : null
-        //        }
-        //    ).ToListAsync(ct);
-
-        //    // ===== Validaciones: precios > 0 y vencimiento obligatorio =====
-        //    var errores = new List<string>();
-        //    foreach (var d in detalles)
-        //    {
-        //        var faltas = new List<string>();
-        //        if (!(d.PRECIO_PEDIDO.HasValue) || d.PRECIO_PEDIDO <= 0) faltas.Add("Precio compra (> 0)");
-        //        if (!(d.PRECIO_VENTA.HasValue) || d.PRECIO_VENTA <= 0) faltas.Add("Precio venta (> 0)");
-        //        if (!d.FECHA_VENCIMIENTO.HasValue) faltas.Add("Fecha vencimiento");
-
-        //        if (faltas.Count > 0)
-        //        {
-        //            var etiqueta = !string.IsNullOrWhiteSpace(d.ProductoNombre)
-        //                ? $"{d.ProductoCodigo} - {d.ProductoNombre}"
-        //                : d.ProductoCodigo;
-
-        //            errores.Add($"• {etiqueta}: {string.Join(", ", faltas)}");
-        //        }
-        //    }
-
-        //    if (errores.Count > 0)
-        //    {
-        //        // Enviamos errores para mostrarlos en modal (JS en la vista)
-        //        TempData["CerrarErrores"] = string.Join("\n", errores);
-        //        return RedirectToAction(nameof(Edit), new { id });
-        //    }
-
-        //    // TODO: inventario real (entradas/costeo). Aquí simulamos OK.
-        //    var okAplicacionInventario = true;
-
-        //    if (!okAplicacionInventario)
-        //    {
-        //        TempData["CerrarErrores"] = "No se pudo aplicar inventario. Revise lotes/stock/costos.";
-        //        return RedirectToAction(nameof(Edit), new { id });
-        //    }
-
-        //    // Transición a CERRADO (o FINALIZADO en tu catálogo)
-        //    var idCerrado = await GetIdEstadoByNombreAsync(EstadosPedido.CERRADO, ct);
-        //    ped.ESTADO_PEDIDO_ID = idCerrado ?? ped.ESTADO_PEDIDO_ID;
-        //    ped.MODIFICADO_POR = await _auditoria.GetUsuarioNombreAsync();
-        //    ped.FECHA_MODIFICACION = DateTime.Now;
-
-        //    await _context.SaveChangesAsync(ct);
-        //    TempData["CerradoOk"] = true;
-
-        //    return RedirectToAction(nameof(Edit), new { id });
-        //}
-
-
-
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Cerrar(string id, CancellationToken ct)
-        //{
-        //    if (string.IsNullOrWhiteSpace(id)) return BadRequest("Falta id.");
-
-        //    var usuario = await _auditoria.GetUsuarioNombreAsync();
-
-        //    try
-        //    {
-        //        var resultado = await _posteo.PostearPedidoAsync(id.Trim().ToUpper(), usuario, ct);
-
-        //        if (resultado.PedidoCerrado)
-        //            TempData["CerradoOk"] = true;
-
-        //        // Redirige a Edit para refrescar estado/alertas
-        //        return RedirectToAction(nameof(Edit), new { id = id.Trim().ToUpper() });
-        //    }
-        //    catch (InvalidOperationException exVal) // errores de validación de negocio (precios, fechas, estado)
-        //    {
-        //        TempData["CerrarErrores"] = exVal.Message;
-        //        return RedirectToAction(nameof(Edit), new { id = id.Trim().ToUpper() });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        TempData["CerrarErrores"] = ex.GetBaseException().Message;
-        //        return RedirectToAction(nameof(Edit), new { id = id.Trim().ToUpper() });
-        //    }
-        //}
 
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -1638,12 +1473,43 @@ namespace AbarroteriaKary.Controllers
             // === 2) POSTEAR (INVENTARIO + KARDEX + PRECIO_HISTORICO + POSTEADO) ===
             try
             {
+
+
+
                 var r = await _posteo.PostearPedidoAsync(id, usuario, ct);
+
+
+
+
+
+                // ===== NOTIFICACIONES: usar los productos de las líneas que estamos cerrando =====
+                // (tomamos de vm.Lineas; aquí solo permitiste líneas existentes => DetallePedidoId no es null)
+                var productosAfectados = (vm.Lineas ?? Enumerable.Empty<PedidoDetalleItemVM>())
+                 .Where(x => !string.IsNullOrWhiteSpace(x.DetallePedidoId))
+                 .Select(x => x.ProductoId?.Trim().ToUpper())
+                 .Where(pid => !string.IsNullOrWhiteSpace(pid))
+                 .Distinct(StringComparer.OrdinalIgnoreCase)
+                 .ToList(); ;
+
+                foreach (var pid in productosAfectados)
+                {
+                    await _notif.UpsertStockBajoAsync(pid!, ct);
+                    await _notif.UpsertVencimientosAsync(pid!, 15, ct);
+                }
+
+
+
+
+
 
                 if (r.PedidoCerrado)
                     TempData["CerradoOk"] = true;
 
                 return RedirectToAction(nameof(Edit), new { id });
+
+
+
+
             }
             catch (InvalidOperationException exVal)
             {

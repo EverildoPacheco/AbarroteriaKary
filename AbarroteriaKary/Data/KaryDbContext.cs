@@ -323,7 +323,6 @@ public partial class KaryDbContext : DbContext
             entity.HasOne(d => d.INVENTARIO).WithMany(p => p.NOTIFICACION)
                 .HasPrincipalKey(p => new { p.INVENTARIO_ID, p.PRODUCTO_ID })
                 .HasForeignKey(d => new { d.INVENTARIO_ID, d.PRODUCTO_ID })
-                .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_NOTIF_INV");
         });
 

@@ -14,82 +14,83 @@
     <div class="kary-sidebar__card">
         <nav class="kary-menu">
 
-
-        <a class="kary-menu__item @active("Home", "Inicio")"
-           asp-controller="Home" asp-action="Inicio">
-            @* <i class="fa-solid fa-house"></i> *@
+            <!-- INICIO (no se toca el icono principal) -->
+            <a class="kary-menu__item @active("Home", "Inicio")"
+               asp-controller="Home" asp-action="Inicio">
                 <img src="~/img/sidebar/homee.png" class="kary-icon" alt="" asp-append-version="true" />
                 <span><strong>INICIO</strong></span>
-        </a>
+            </a>
 
-
-                                     @* VENTAS *@
+            <!-- VENTAS (solo submenús con iconos) -->
             <div class="kary-menu__group" data-group="ventas">
                 <button type="button"
                         class="kary-menu__item js-submenu-toggle"
                         aria-expanded="false"
                         aria-controls="sm-ventas">
                     <img src="~/img/sidebar/VENTAS.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>VENTAS </strong></span>
+                    <span class="kary-menu__title"><strong>VENTAS</strong></span>
                 </button>
 
                 <div id="sm-ventas" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Venta", "Index")"
-                       asp-controller="ventas" asp-action="Index">Ventas</a>      
-
+                    <a class="kary-submenu__item @active("ventas", "Index")"
+                       asp-controller="ventas" asp-action="Index">
+                        <i class="fa-solid fa-receipt kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Ventas</span>
+                    </a>
                 </div>
             </div>
 
-
-
-
-                                     @* CAJA *@
+            <!-- CAJA (fix: aria-controls/id coinciden) -->
             <div class="kary-menu__group" data-group="caja">
                 <button type="button"
                         class="kary-menu__item js-submenu-toggle"
                         aria-expanded="false"
                         aria-controls="sm-caja">
                     <img src="~/img/sidebar/Caja.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>CAJA </strong></span>
+                    <span class="kary-menu__title"><strong>CAJA</strong></span>
                 </button>
 
-                <div id="sm-cajas" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Cajas", "Index")"
-                       asp-controller="cajas" asp-action="Index">Caja</a>
-
+                <div id="sm-caja" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("cajas", "Index")"
+                       asp-controller="cajas" asp-action="Index">
+                        <i class="fa-solid fa-cash-register kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Caja</span>
+                    </a>
                 </div>
             </div>
 
-
-
-
-
-
-
-                                    @* INVENTARIO *@
+            <!-- INVENTARIO -->
             <div class="kary-menu__group" data-group="inventario">
                 <button type="button"
                         class="kary-menu__item js-submenu-toggle"
                         aria-expanded="false"
                         aria-controls="sm-inventario">
                     <img src="~/img/sidebar/Inventario.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>INVENTARIO </strong></span>
+                    <span class="kary-menu__title"><strong>INVENTARIO</strong></span>
                 </button>
 
                 <div id="sm-inventario" class="kary-submenu" hidden>
-
                     <a class="kary-submenu__item @active("Pedidos", "Index")"
-                       asp-controller="Pedidos" asp-action="Index">Compras</a>
+                       asp-controller="Pedidos" asp-action="Index">
+                        <i class="fa-solid fa-truck kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Compras</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("Inventarios", "Index")"
-                       asp-controller="Inventarios" asp-action="Index">Inventario</a>
+                       asp-controller="Inventarios" asp-action="Index">
+                        <i class="fa-solid fa-boxes-stacked kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Inventario</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("Kardex", "Index")"
-                       asp-controller="Kardex" asp-action="Index">Kardex</a>
+                       asp-controller="Kardex" asp-action="Index">
+                        <i class="fa-solid fa-arrows-rotate kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Kardex</span>
+                    </a>
                 </div>
             </div>
 
-                                        @* PRODUCTOS *@    
+            <!-- PRODUCTOS -->
             <div class="kary-menu__group" data-group="productos">
                 <button type="button"
                         class="kary-menu__item js-submenu-toggle"
@@ -101,33 +102,56 @@
 
                 <div id="sm-productos" class="kary-submenu" hidden>
                     <a class="kary-submenu__item @active("Productos", "Index")"
-                       asp-controller="Productos" asp-action="Index">Productos</a>
+                       asp-controller="Productos" asp-action="Index">
+                        <i class="fa-solid fa-box-open kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Productos</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("Categorias", "Index")"
-                       asp-controller="Categorias" asp-action="Index">Categorías</a>
+                       asp-controller="Categorias" asp-action="Index">
+                        <i class="fa-solid fa-tags kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Categorías</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("SubCategorias", "Index")"
-                       asp-controller="SubCategorias" asp-action="Index">Sub Categorías</a>
+                       asp-controller="SubCategorias" asp-action="Index">
+                        <i class="fa-solid fa-tag kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Sub Categorías</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("TipoProductos", "Index")"
-                       asp-controller="TipoProductos" asp-action="Index">Tipo Productos</a>
+                       asp-controller="TipoProductos" asp-action="Index">
+                        <i class="fa-solid fa-cubes kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Tipo Productos</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("MateriaEnvases", "Index")"
-                       asp-controller="MateriaEnvases" asp-action="Index">Material de Envases</a>
+                       asp-controller="MateriaEnvases" asp-action="Index">
+                        <i class="fa-solid fa-industry kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Material de Envases</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("TipoEmpaques", "Index")"
-                       asp-controller="TipoEmpaques" asp-action="Index">Tipo de Empaques</a>
+                       asp-controller="TipoEmpaques" asp-action="Index">
+                        <i class="fa-solid fa-box kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Tipo de Empaques</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("UnidadDeMedidas", "Index")"
-                       asp-controller="UnidadDeMedidas" asp-action="Index">Unidad de Medidas</a>
+                       asp-controller="UnidadDeMedidas" asp-action="Index">
+                        <i class="fa-solid fa-ruler-combined kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Unidad de Medidas</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("Marcas", "Index")"
-                       asp-controller="Marcas" asp-action="Index">Marcas</a>
-
+                       asp-controller="Marcas" asp-action="Index">
+                        <i class="fa-solid fa-registered kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Marcas</span>
+                    </a>
                 </div>
             </div>
 
-                                       @* PROVEEDORES *@  
+            <!-- PROVEEDOR -->
             <div class="kary-menu__group" data-group="Proveedor">
                 <button type="button"
                         class="kary-menu__item js-submenu-toggle"
@@ -137,127 +161,129 @@
                     <span class="kary-menu__title"><strong>PROVEEDOR</strong></span>
                 </button>
 
-                <div id="sm-Proveedor" class="kary-submenu" hidden>
+                <div id="sm-proveedor" class="kary-submenu" hidden>
                     <a class="kary-submenu__item @active("Proveedores", "Index")"
-                       asp-controller="Proveedores" asp-action="Index">Proveedores</a>
-
+                       asp-controller="Proveedores" asp-action="Index">
+                        <i class="fa-solid fa-handshake kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Proveedores</span>
+                    </a>
                 </div>
             </div>
 
-
-
-            @* CLIENTE *@  
+            <!-- CLIENTE (fix: id correcto) -->
             <div class="kary-menu__group" data-group="Cliente">
                 <button type="button"
                         class="kary-menu__item js-submenu-toggle"
                         aria-expanded="false"
-                        aria-controls="sm-Cliente">
+                        aria-controls="sm-cliente">
                     <img src="~/img/sidebar/cliente.png" class="kary-icon" alt="" asp-append-version="true" />
                     <span class="kary-menu__title"><strong>CLIENTE</strong></span>
                 </button>
 
-                <div id="sm-Empleado" class="kary-submenu" hidden>
+                <div id="sm-cliente" class="kary-submenu" hidden>
                     <a class="kary-submenu__item @active("Clientes", "Index")"
-                       asp-controller="Clientes" asp-action="Index">Clientes</a>
-
+                       asp-controller="Clientes" asp-action="Index">
+                        <i class="fa-solid fa-users kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Clientes</span>
+                    </a>
                 </div>
             </div>
 
-                                    @* EMPLEADOS *@  
+            <!-- EMPLEADO -->
             <div class="kary-menu__group" data-group="Empleado">
                 <button type="button"
                         class="kary-menu__item js-submenu-toggle"
                         aria-expanded="false"
-                        aria-controls="sm-Empleado">
+                        aria-controls="sm-empleado">
                     <img src="~/img/sidebar/trabajar.png" class="kary-icon" alt="" asp-append-version="true" />
                     <span class="kary-menu__title"><strong>EMPLEADO</strong></span>
                 </button>
 
-                <div id="sm-Empleado" class="kary-submenu" hidden>
+                <div id="sm-empleado" class="kary-submenu" hidden>
                     <a class="kary-submenu__item @active("Empleados", "Index")"
-                       asp-controller="Empleados" asp-action="Index">Empleados</a>
+                       asp-controller="Empleados" asp-action="Index">
+                        <i class="fa-solid fa-id-card kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Empleados</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("Puesto", "Index")"
-                       asp-controller="Puesto" asp-action="Index">Puesto</a>
+                       asp-controller="Puesto" asp-action="Index">
+                        <i class="fa-solid fa-user-tie kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Puesto</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("Areas", "Index")"
-                       asp-controller="Areas" asp-action="Index">Areas</a>
-
+                       asp-controller="Areas" asp-action="Index">
+                        <i class="fa-solid fa-diagram-project kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Áreas</span>
+                    </a>
                 </div>
             </div>
 
-
-
-
-
-
-
-                                        @* USUARIO *@  
-
+            <!-- USUARIO -->
             <div class="kary-menu__group" data-group="Usuario">
                 <button type="button"
                         class="kary-menu__item js-submenu-toggle"
                         aria-expanded="false"
-                        aria-controls="sm-Usuario">
+                        aria-controls="sm-usuario">
                     <img src="~/img/sidebar/usuario.png" class="kary-icon" alt="" asp-append-version="true" />
                     <span class="kary-menu__title"><strong>USUARIO</strong></span>
                 </button>
 
-                <div id="sm-Usuario" class="kary-submenu" hidden>
+                <div id="sm-usuario" class="kary-submenu" hidden>
                     <a class="kary-submenu__item @active("Usuarios", "Index")"
-                       asp-controller="Usuarios" asp-action="Index">Usuarios</a>
+                       asp-controller="Usuarios" asp-action="Index">
+                        <i class="fa-solid fa-user-shield kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Usuarios</span>
+                    </a>
 
                     <a class="kary-submenu__item @active("Roles", "Index")"
-                       asp-controller="Roles" asp-action="Index">Roles</a>
-
+                       asp-controller="Roles" asp-action="Index">
+                        <i class="fa-solid fa-user-gear kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Roles</span>
+                    </a>
                 </div>
             </div>
 
-
-
-
+            <!-- PERMISO -->
             <div class="kary-menu__group" data-group="Permisos">
                 <button type="button"
                         class="kary-menu__item js-submenu-toggle"
                         aria-expanded="false"
-                        aria-controls="sm-Permisos">
+                        aria-controls="sm-permisos">
                     <img src="~/img/sidebar/permiso.png" class="kary-icon" alt="" asp-append-version="true" />
                     <span class="kary-menu__title"><strong>PERMISO</strong></span>
                 </button>
 
-                <div id="sm-Permisos" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Permiso", "Index")"
-                       asp-controller="Permisos" asp-action="Index">Permiso</a>
-
-
+                <div id="sm-permisos" class="kary-submenu" hidden>
+                    <a class="kary-submenu__item @active("Permisos", "Index")"
+                       asp-controller="Permisos" asp-action="Index">
+                        <i class="fa-solid fa-key kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Permiso</span>
+                    </a>
                 </div>
             </div>
 
-
-
-
-
+            <!-- REPORTES -->
             <div class="kary-menu__group" data-group="Reportes">
                 <button type="button"
                         class="kary-menu__item js-submenu-toggle"
                         aria-expanded="false"
-                        aria-controls="sm-Reportes">
+                        aria-controls="sm-reportes">
                     <img src="~/img/sidebar/permiso.png" class="kary-icon" alt="" asp-append-version="true" />
                     <span class="kary-menu__title"><strong>REPORTES</strong></span>
                 </button>
 
-                <div id="sm-Reportes" class="kary-submenu" hidden>
+                <div id="sm-reportes" class="kary-submenu" hidden>
                     <a class="kary-submenu__item @active("Reportes", "Index")"
-                       asp-controller="Reportes" asp-action="Index">Reportes</a>
-
-
+                       asp-controller="Reportes" asp-action="Index">
+                        <i class="fa-solid fa-chart-column kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Reportes</span>
+                    </a>
                 </div>
             </div>
 
-
-
-
-    </nav>
+        </nav>
     </div>
 </aside>
 

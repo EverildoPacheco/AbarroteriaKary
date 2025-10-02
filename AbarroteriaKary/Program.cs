@@ -45,6 +45,11 @@ builder.Services.AddScoped<AbarroteriaKary.Services.Inventario.IInventarioPostin
                            AbarroteriaKary.Services.Inventario.InventarioPostingService>();
 
 
+// Servicios de Notificaiones
+
+builder.Services.AddScoped<AbarroteriaKary.Services.INotificacionService, AbarroteriaKary.Services.NotificacionService>();
+
+
 //Autenticacion
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>

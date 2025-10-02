@@ -306,3 +306,48 @@
         line-height: 1;
         color: var(--hdr-ink, #0b1f2a); /* usa el color de su header */
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+.hdr__notifbtn {
+    position: relative;
+}
+
+.hdr__notifbadge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: 9px;
+    font-size: 12px;
+    line-height: 18px;
+    background: #dc3545;
+    color: #fff;
+    text-align: center;
+}
+
+.hdr__notifdropdown {
+    position: absolute;
+    right: 12px;
+    top: 52px;
+    width: 360px;
+    max-height: 420px;
+    overflow: auto;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0,0,0,.15);
+    z-index: 2000;
+}

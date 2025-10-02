@@ -1,0 +1,158 @@
+﻿@model IEnumerable<AbarroteriaKary.ModelsPartial.NotificacionVM>
+@using System.Globalization
+@{
+    var gt = CultureInfo.GetCultureInfo("es-GT");
+    int DaysLeft(DateTime? fv) => fv.HasValue ? (fv.Value.Date - DateTime.Today).Days : int.MaxValue;
+}
+<div class="ak-notif-panel">
+    @if (!Model.Any())
+    {
+        <div class="text-center text-muted p-3 small">Sin notificaciones.</div>
+    }
+    else
+    {
+        foreach (var n in Model)
+        {
+            var tipo = (n.Tipo ?? "INFO").ToUpperInvariant();
+            var icon = tipo switch
+            {
+                "STOCK_BAJO" => "fa-box-open",
+                "POR_VENCER" => "fa-hourglass-half",
+                "VENCIDO" => "fa-triangle-exclamation",
+                _ => "fa-bell"
+            };
+
+            <div class="ak-notif-item d-flex gap-2 p-2 border-bottom">
+                <div class="pt-1"><i class="fa-solid @icon"></i></div>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">
+                        @tipo.Replace("_", " ")
+                    </div>
+
+                    @* Mensaje dinámico *@
+                    @if (tipo == "POR_VENCER" || tipo == "VENCIDO")
+                    {
+                        var dias = DaysLeft(n.FechaVencimiento);
+                        <div class="small">
+                            @(n.NombreProducto) (@n.ProductoId) del lote @(n.LoteCodigo ?? "-"),
+                            @if (tipo == "VENCIDO")
+                            {
+                                @:vencido el @(n.FechaVencimiento?.ToString("dd/MM/yyyy", gt)).
+                            }
+                            else
+                            {
+                                @:vence el @(n.FechaVencimiento?.ToString("dd/MM/yyyy", gt)) (en @dias días).
+                            }
+                        </div>
+                    }
+                    else if (tipo == "STOCK_BAJO")
+                    {
+                        <div class="small">
+                            @(n.NombreProducto) (@n.ProductoId). Ya solo cuenta con @(n.StockTotal) unidades.
+                        </div>
+                    }
+                    else if (!string.IsNullOrWhiteSpace(n.Mensaje))
+                    {
+                        <div class="small text-muted">@n.Mensaje</div>
+                    }
+
+                    <div class="small text-muted">@n.Fecha.ToString("dd/MM/yyyy HH:mm", gt)</div>
+                </div>
+
+                <div class="d-flex flex-column gap-1">
+                    <button class="btn btn-sm btn-outline-secondary js-notif-snooze" data-id="@n.NotificacionId" data-mins="720" title="Recordarme en 12 h">
+                        <i class="fa-regular fa-clock"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary js-notif-read" data-id="@n.NotificacionId" title="Marcar como leída (12 h)">
+                        <i class="fa-regular fa-circle-check"></i>
+                    </button>
+                    @if (!string.IsNullOrWhiteSpace(n.Url))
+                    {
+                        <a class="btn btn-sm btn-outline-primary" href="@n.Url" title="Abrir inventario">
+                            <i class="fa-solid fa-up-right-from-square"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+        <div class="p-2 text-center">
+            <button class="btn btn-sm btn-ak-primary js-notif-readall">
+                <i class="fa-regular fa-circle-check me-1"></i> Marcar todas como leídas (12 h)
+            </button>
+        </div>
+    }
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@* @model IEnumerable<AbarroteriaKary.ModelsPartial.NotificacionVM>
+@using System.Globalization
+@{
+    var gt = CultureInfo.GetCultureInfo("es-GT");
+}
+<div class="ak-notif-panel">
+    @if (!Model.Any())
+    {
+        <div class="text-center text-muted p-3 small">Sin notificaciones.</div>
+    }
+    else
+    {
+        foreach (var n in Model)
+        {
+            var icon = (n.Tipo ?? "INFO").ToUpperInvariant() switch
+            {
+                "STOCK_BAJO" => "fa-box-open",
+                "POR_VENCER" => "fa-hourglass-half",
+                "VENCIDO" => "fa-triangle-exclamation",
+                "AJUSTE" => "fa-sliders",
+                "ENTRADA" => "fa-arrow-down",
+                "SALIDA" => "fa-arrow-up",
+                _ => "fa-bell"
+            };
+            <div class="ak-notif-item d-flex gap-2 p-2 border-bottom">
+                <div class="pt-1"><i class="fa-solid @icon"></i></div>
+                <div class="flex-grow-1">
+                    <div class="fw-semibold">@(!string.IsNullOrWhiteSpace(n.Titulo) ? n.Titulo : n.Tipo)</div>
+                    @if (!string.IsNullOrWhiteSpace(n.Mensaje))
+                    {
+                        <div class="small text-muted">@n.Mensaje</div>
+                    }
+                    <div class="small text-muted">@n.Fecha.ToString("dd/MM/yyyy HH:mm", gt)</div>
+                </div>
+
+                <div class="d-flex flex-column gap-1">
+                    <button class="btn btn-sm btn-outline-secondary js-notif-read" data-id="@n.NotificacionId" title="Marcar como leída">
+                        <i class="fa-regular fa-circle-check"></i>
+                    </button>
+                    @if (!string.IsNullOrWhiteSpace(n.Url))
+                    {
+                        <a class="btn btn-sm btn-outline-primary" href="@n.Url" title="Abrir">
+                            <i class="fa-solid fa-up-right-from-square"></i>
+                        </a>
+                    }
+                </div>
+            </div>
+        }
+        <div class="p-2 text-center">
+            <button class="btn btn-sm btn-ak-primary js-notif-readall">
+                <i class="fa-regular fa-circle-check me-1"></i> Marcar todas como leídas
+            </button>
+        </div>
+    }
+</div>
+ *@

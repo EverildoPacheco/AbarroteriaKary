@@ -28,6 +28,11 @@
     --z-overlay: 1600;
     --sb-divider: rgba(0,0,0,.25); /* color de la línea */
     --sb-sep-w: 2px; /* <— grosor del separador (1px, 2px, 3px...) */
+    /*--------------------------------------------------------------------------------------*/
+    /* >>> NUEVO: Colores de énfasis/activo (puede cambiarlos a gusto) */
+    --ak-accent: #95b5c0; /* Celeste: resalte para item activo */
+    --ak-on-accent: #000000; /* Texto/ícono sobre el acento */
+    --ak-accent-soft: #c5a3cf33; /* Sombra/suavizado, 20% opacidad */
 }
 
 /* ===== Shell del layout (GRID) ===== */
@@ -286,4 +291,63 @@ body.--sidebar-collapsed .kary-submenu {
 
 .kary-menu__group.is-open + .kary-menu__item {
     border-top: var(--sb-sep-w) solid var(--sb-divider);
+}
+
+
+
+/* Icono alineado en los submenús */
+.kary-submenu__item {
+    display: flex;
+    align-items: center;
+    gap: .6rem; /* separación icono-texto */
+    line-height: 1.2;
+}
+
+.kary-submenu__icon {
+    width: 1.1rem; /* ancho fijo para alinear verticalmente el texto */
+    text-align: center;
+    flex: 0 0 1.1rem;
+    opacity: .9;
+}
+
+.kary-submenu__item.is-active .kary-submenu__icon {
+    opacity: 1;
+}
+
+
+
+
+/* === RESALTE DE SUBMENÚ ACTIVO === */
+.kary-submenu__item.is-active {
+    background: var(--ak-accent);
+    color: var(--ak-on-accent);
+    border-radius: 10px;          /* look “pill” */
+    margin: 6px 8px;              /* separa el pill del borde del panel */
+    border: 0;                    /* quita la línea del item activo */
+    position: relative;
+}
+.kary-submenu__item.is-active .kary-submenu__icon {
+    opacity: 1;
+    color: var(--ak-on-accent);
+}
+
+/* Ajuste: si quiere que el panel no dibuje línea donde hay pill activo */
+.kary-submenu__item.is-active + .kary-submenu__item {
+    border-top: 1px solid var(--sb-divider);
+}
+
+/* === RESALTE DEL GRUPO PADRE CUANDO TIENE UN HIJO ACTIVO === */
+.kary-menu__group.has-active > .kary-menu__item {
+    background: var(--ak-accent-soft); /* leve fondo en el padre */
+    box-shadow: inset 3px 0 0 var(--ak-accent); /* banda lateral */
+}
+
+
+
+
+
+
+/* Hover del hijo activo (no cambiar el color del pill) */
+.kary-submenu__item.is-active:hover {
+    background: var(--ak-accent);
 }

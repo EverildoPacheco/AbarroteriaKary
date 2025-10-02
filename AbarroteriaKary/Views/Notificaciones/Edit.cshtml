@@ -1,0 +1,165 @@
+﻿@model AbarroteriaKary.Models.NOTIFICACION
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Edit</title>
+</head>
+<body>
+
+<h4>NOTIFICACION</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="NOTIFICACION_ID" />
+            <div class="form-group">
+                <label asp-for="INVENTARIO_ID" class="control-label"></label>
+                <select asp-for="INVENTARIO_ID" class="form-control" asp-items="ViewBag.INVENTARIO_ID"></select>
+                <span asp-validation-for="INVENTARIO_ID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="PRODUCTO_ID" class="control-label"></label>
+                <select asp-for="PRODUCTO_ID" class="form-control" asp-items="ViewBag.PRODUCTO_ID"></select>
+                <span asp-validation-for="PRODUCTO_ID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TIPO" class="control-label"></label>
+                <input asp-for="TIPO" class="form-control" />
+                <span asp-validation-for="TIPO" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MENSAJE" class="control-label"></label>
+                <input asp-for="MENSAJE" class="form-control" />
+                <span asp-validation-for="MENSAJE" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="NIVEL" class="control-label"></label>
+                <input asp-for="NIVEL" class="form-control" />
+                <span asp-validation-for="NIVEL" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FECHA_DETECCION" class="control-label"></label>
+                <input asp-for="FECHA_DETECCION" class="form-control" />
+                <span asp-validation-for="FECHA_DETECCION" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="RESUELTA" /> @Html.DisplayNameFor(model => model.RESUELTA)
+                </label>
+            </div>
+            <div class="form-group">
+                <label asp-for="RESUELTA_EN" class="control-label"></label>
+                <input asp-for="RESUELTA_EN" class="form-control" />
+                <span asp-validation-for="RESUELTA_EN" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RESUELTA_POR" class="control-label"></label>
+                <input asp-for="RESUELTA_POR" class="form-control" />
+                <span asp-validation-for="RESUELTA_POR" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="CREADO_POR" class="control-label"></label>
+                <input asp-for="CREADO_POR" class="form-control" />
+                <span asp-validation-for="CREADO_POR" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FECHA_CREACION" class="control-label"></label>
+                <input asp-for="FECHA_CREACION" class="form-control" />
+                <span asp-validation-for="FECHA_CREACION" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MODIFICADO_POR" class="control-label"></label>
+                <input asp-for="MODIFICADO_POR" class="form-control" />
+                <span asp-validation-for="MODIFICADO_POR" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FECHA_MODIFICACION" class="control-label"></label>
+                <input asp-for="FECHA_MODIFICACION" class="form-control" />
+                <span asp-validation-for="FECHA_MODIFICACION" class="text-danger"></span>
+            </div>
+            <div class="form-group form-check">
+                <label class="form-check-label">
+                    <input class="form-check-input" asp-for="ELIMINADO" /> @Html.DisplayNameFor(model => model.ELIMINADO)
+                </label>
+            </div>
+            <div class="form-group">
+                <label asp-for="ELIMINADO_POR" class="control-label"></label>
+                <input asp-for="ELIMINADO_POR" class="form-control" />
+                <span asp-validation-for="ELIMINADO_POR" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FECHA_ELIMINACION" class="control-label"></label>
+                <input asp-for="FECHA_ELIMINACION" class="form-control" />
+                <span asp-validation-for="FECHA_ELIMINACION" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ESTADO" class="control-label"></label>
+                <input asp-for="ESTADO" class="form-control" />
+                <span asp-validation-for="ESTADO" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="USUARIO_DESTINO" class="control-label"></label>
+                <input asp-for="USUARIO_DESTINO" class="form-control" />
+                <span asp-validation-for="USUARIO_DESTINO" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FECHA_PROGRAMADA" class="control-label"></label>
+                <input asp-for="FECHA_PROGRAMADA" class="form-control" />
+                <span asp-validation-for="FECHA_PROGRAMADA" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FECHA_ENVIO" class="control-label"></label>
+                <input asp-for="FECHA_ENVIO" class="form-control" />
+                <span asp-validation-for="FECHA_ENVIO" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="FECHA_LECTURA" class="control-label"></label>
+                <input asp-for="FECHA_LECTURA" class="form-control" />
+                <span asp-validation-for="FECHA_LECTURA" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="SNOOZE_HASTA" class="control-label"></label>
+                <input asp-for="SNOOZE_HASTA" class="form-control" />
+                <span asp-validation-for="SNOOZE_HASTA" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="TITULO" class="control-label"></label>
+                <input asp-for="TITULO" class="form-control" />
+                <span asp-validation-for="TITULO" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="URL" class="control-label"></label>
+                <input asp-for="URL" class="form-control" />
+                <span asp-validation-for="URL" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RELACION_TIPO" class="control-label"></label>
+                <input asp-for="RELACION_TIPO" class="form-control" />
+                <span asp-validation-for="RELACION_TIPO" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="RELACION_ID" class="control-label"></label>
+                <input asp-for="RELACION_ID" class="form-control" />
+                <span asp-validation-for="RELACION_ID" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+</body>
+</html>

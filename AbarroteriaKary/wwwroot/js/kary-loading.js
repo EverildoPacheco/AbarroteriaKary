@@ -94,19 +94,63 @@ window.KaryLoading = (function () {
         $(document).ajaxError(() => hide());
     }
 
+    // Ignora overlay en AJAX jQuery de notificaciones
+    if (window.jQuery) {
+        $.ajaxPrefilter(function (options, originalOptions, jqXHR) {
+            const url = options.url || '';
+            if (url.includes('/Notificaciones/')) {
+                jqXHR.setRequestHeader('X-No-Loading', '1');
+            }
+        });
+    }
+
+
+
     // ---------- fetch() global ----------
+    //function patchFetch() {
+    //    if (!window.fetch || window.fetch.__karyPatched) return;
+    //    const _fetch = window.fetch.bind(window);
+
+    //    window.fetch = function (input, init) {
+    //        const noLoading =
+    //            (init && (init.headers?.['X-No-Loading'] || init['X-No-Loading'])) || false;
+
+    //        if (!noLoading) show('Procesando…');
+
+    //        const p = _fetch(input, init);
+    //        p.finally?.(() => hide()); // éxito o error
+    //        return p;
+    //    };
+
+    //    window.fetch.__karyPatched = true;
+    //}
     function patchFetch() {
         if (!window.fetch || window.fetch.__karyPatched) return;
+
         const _fetch = window.fetch.bind(window);
 
-        window.fetch = function (input, init) {
-            const noLoading =
-                (init && (init.headers?.['X-No-Loading'] || init['X-No-Loading'])) || false;
+        // Endpoints que NO deben mostrar overlay
+        const IGNORE = [
+            '/Notificaciones/Count',
+            '/Notificaciones/Dropdown',
+            '/Notificaciones/Poll',
+            '/Notificaciones/Read',
+            '/Notificaciones/ReadAll',
+            '/Notificaciones/Snooze',
+            '/Notificaciones/Archive'
+        ];
+
+        window.fetch = function (input, init = {}) {
+            const url = typeof input === 'string' ? input : input.url || '';
+            const noLoadingHeader = (init.headers && (init.headers['X-No-Loading'] || init.headers['x-no-loading'])) ? true : false;
+
+            const isNotif = IGNORE.some(x => url.includes(x));
+            const noLoading = noLoadingHeader || isNotif;
 
             if (!noLoading) show('Procesando…');
 
             const p = _fetch(input, init);
-            p.finally?.(() => hide()); // éxito o error
+            p.finally?.(() => hide());
             return p;
         };
 
