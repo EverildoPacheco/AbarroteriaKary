@@ -1,80 +1,139 @@
-﻿@model AbarroteriaKary.Models.CAJA
+﻿@model AbarroteriaKary.ModelsPartial.CajaViewModels
 
 @{
-    Layout = null;
+    ViewData["Title"] = "Editar Caja";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var updatedOk = TempData["UpdatedOk"] as bool?;
+    var updatedName = TempData["UpdatedName"] as string ?? "";
+    var noChanges = TempData["NoChanges"] as bool?;
 }
 
-<!DOCTYPE html>
+<div class="ak-page">
+    <!-- Título -->
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-4">Editar caja</h1>
+    </div>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Edit</title>
-</head>
-<body>
+    <!-- Formulario -->
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
 
-<h4>CAJA</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="CAJA_ID" />
-            <div class="form-group">
-                <label asp-for="CAJA_NOMBRE" class="control-label"></label>
-                <input asp-for="CAJA_NOMBRE" class="form-control" />
-                <span asp-validation-for="CAJA_NOMBRE" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CREADO_POR" class="control-label"></label>
-                <input asp-for="CREADO_POR" class="form-control" />
-                <span asp-validation-for="CREADO_POR" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FECHA_CREACION" class="control-label"></label>
-                <input asp-for="FECHA_CREACION" class="form-control" />
-                <span asp-validation-for="FECHA_CREACION" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="MODIFICADO_POR" class="control-label"></label>
-                <input asp-for="MODIFICADO_POR" class="form-control" />
-                <span asp-validation-for="MODIFICADO_POR" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FECHA_MODIFICACION" class="control-label"></label>
-                <input asp-for="FECHA_MODIFICACION" class="form-control" />
-                <span asp-validation-for="FECHA_MODIFICACION" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="ELIMINADO" /> @Html.DisplayNameFor(model => model.ELIMINADO)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="ELIMINADO_POR" class="control-label"></label>
-                <input asp-for="ELIMINADO_POR" class="form-control" />
-                <span asp-validation-for="ELIMINADO_POR" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="FECHA_ELIMINACION" class="control-label"></label>
-                <input asp-for="FECHA_ELIMINACION" class="form-control" />
-                <span asp-validation-for="FECHA_ELIMINACION" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="ESTADO" class="control-label"></label>
-                <input asp-for="ESTADO" class="form-control" />
-                <span asp-validation-for="ESTADO" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+            <form asp-action="Edit" asp-route-id="@Model.cajaID" method="post" id="form-edit-caja" novalidate>
+                @Html.AntiForgeryToken()
+
+                <!-- Resumen de validaciones -->
+                <div class="alert alert-danger mb-3" asp-validation-summary="All" role="alert"></div>
+
+                <div class="card ak-card translucent shadow-sm w-100">
+                    <div class="card-body ak-form">
+
+                        <!-- Código (readonly) -->
+                        <div class="mb-3">
+                            <label asp-for="cajaID" class="form-label">Código</label>
+                            <input asp-for="cajaID" class="form-control" readonly />
+                        </div>
+
+                        <!-- Nombre de caja -->
+                        <div class="mb-3">
+                            <label asp-for="NombreCaja" class="form-label">Nombre*</label>
+                            <input asp-for="NombreCaja" class="form-control" placeholder="Ej. Caja 1 / Mostrador principal" />
+                            <span asp-validation-for="NombreCaja" class="text-danger"></span>
+                        </div>
+
+                        <!-- Estado (checkbox cuadrado negro) -->
+                        <div class="form-check mb-3 d-flex align-items-center gap-2">
+                            <input class="form-check-input ak-checkbox" asp-for="EstadoActivo" />
+                            <label class="form-check-label fw-bold" asp-for="EstadoActivo"></label>
+                        </div>
+
+                        @* (Opcional) mostrar la fecha de creación solo lectura
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de creación</label>
+                            <input class="form-control" value="@(Model.FechaCreacion?.ToString("dd/MM/yyyy HH:mm"))" readonly />
+                        </div>
+                        *@
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="card ak-card ak-actions-card w-100 mt-3">
+                    <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+                        <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">
+                            <i class="fa-solid fa-xmark ak-icon"></i> Cancelar
+                        </a>
+                        <button type="reset" class="btn btn-ak btn-ak-success">
+                            <i class="fa-solid fa-eraser ak-icon"></i> Restablecer
+                        </button>
+                        <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-guardar">
+                            <i class="fa-solid fa-floppy-disk ak-icon"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
     </div>
 </div>
 
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            const form = document.getElementById('form-edit-caja');
+            const btn  = document.getElementById('btn-guardar');
 
-</body>
-</html>
+            // Botón con estado "Guardando..." y bloqueo de doble submit
+            if (window.KaryForms && typeof KaryForms.bindSafeSubmit === 'function') {
+                KaryForms.bindSafeSubmit('#form-edit-caja', '#btn-guardar', {
+                    spinnerHtml: '<i class="fa-solid fa-spinner fa-spin ak-icon"></i> Guardando...'
+                });
+            } else if (form) {
+                form.addEventListener('submit', function () {
+                    if (!form.checkValidity()) return;
+                    if (btn) btn.disabled = true;
+                });
+            }
+
+            // Proteger salida con cambios sin guardar
+            if (window.KarySwal && typeof KarySwal.guardUnsaved === 'function') {
+                KarySwal.guardUnsaved('#form-edit-caja', '.js-leave');
+            }
+
+            // Éxito: ACTUALIZADO -> un botón "Aceptar" y regresar al listado
+            @if ((TempData["UpdatedOk"] as bool?) == true)
+            {
+                    <text>
+                    if (window.KarySwal && typeof KarySwal.saveSuccess === 'function') {
+                        KarySwal.saveSuccess({
+                            icon: 'success',
+                            title: '¡Actualizado exitosamente!',
+                            text: 'Los cambios de "@(TempData["UpdatedName"] as string ?? "")" se guardaron correctamente.',
+                            confirmText: 'Aceptar',
+                            showDenyButton: false,
+                            indexUrl: '@Url.Action("Index", "Cajas")'
+                        });
+                    }
+                    </text>
+            }
+
+            // Info: NO SE MODIFICÓ NADA -> botón "Aceptar" que redirige al listado
+            @if ((TempData["NoChanges"] as bool?) == true)
+            {
+                    <text>
+                    if (window.KarySwal && typeof KarySwal.info === 'function') {
+                        KarySwal.info({
+                            title: 'Sin cambios',
+                            text: 'No se realizó ninguna modificación.',
+                            confirmText: 'Aceptar',
+                            redirectUrl: '@Url.Action("Index", "Cajas")'
+                        });
+                    } else {
+                        alert('No se realizó ninguna modificación.');
+                        window.location.href = '@Url.Action("Index", "Cajas")';
+                    }
+                    </text>
+            }
+        })();
+    </script>
+}

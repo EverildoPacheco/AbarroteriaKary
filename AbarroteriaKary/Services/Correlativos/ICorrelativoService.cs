@@ -118,5 +118,43 @@ namespace AbarroteriaKary.Services.Correlativos
         // --- NUEVOS: PRECIO_HISTORICO (columna PK = PRECIO_ID) ---
         Task<string> PeekNextPrecioHistoricoIdAsync(CancellationToken ct = default);
         Task<string> NextPrecioHistoricoIdAsync(CancellationToken ct = default);
+
+
+
+
+        // CAJA (PRO0000007)
+        Task<string> PeekNextCajaIdAsync(CancellationToken ct = default);
+        Task<string> NextCajaIdAsync(CancellationToken ct = default);
+
+        // CAJA SESCION (PRO0000007)
+
+        Task<string> PeekNextCajaSesionIdAsync(CancellationToken ct = default);
+        Task<string> NextCajaSesionIdAsync(CancellationToken ct = default);
+
+        // CAJA MOVIMIENTO CAJA (PRO0000007)
+
+        Task<string> PeekNextMovimientoCajaIdAsync(CancellationToken ct = default);
+        Task<string> NextMovimientoCajaIdAsync(CancellationToken ct = default);
+
+
+
+
+        Task<string> PeekNextVentaIdAsync(CancellationToken ct = default);
+        Task<string> NextVentaIdAsync(CancellationToken ct = default);
+
+
+
+        Task<string> PeekNextDetalleVentaIdAsync(CancellationToken ct = default);
+        Task<string> NextDetalleVentaIdAsync(CancellationToken ct = default);
+
+
+
+        Task<string> PeekNextReciboIdAsync(CancellationToken ct = default);
+        Task<string> NextReciboIdAsync(CancellationToken ct = default);
+
+
+
+
+
     }
 }

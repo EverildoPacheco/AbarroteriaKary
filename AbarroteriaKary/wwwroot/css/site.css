@@ -1,4 +1,4 @@
-html {
+﻿html {
   font-size: 14px;
 }
 
@@ -26,8 +26,8 @@ body {
 /* === Dropdown de Reporte (solo dentro de .ak-report-dd) === */
 .ak-report-dd .dropdown-menu{
   /* Variables de Bootstrap 5: cambian los estados del item */
-  --bs-dropdown-bg: #ffffff;                   /* fondo del men� */
-  --bs-dropdown-border-color: rgba(0,0,0,.12); /* borde del men� */
+  --bs-dropdown-bg: #ffffff;                   /* fondo del menú */
+  --bs-dropdown-border-color: rgba(0,0,0,.12); /* borde del menú */
   --bs-dropdown-link-color: #213547;           /* color normal */
   --bs-dropdown-link-hover-color: #0f5132;     /* hover texto */
   --bs-dropdown-link-hover-bg: #ecf5ef;        /* hover fondo (verde muy claro) */
@@ -47,3 +47,181 @@ body {
     color: #000000;
     background-color: #95b5c0;
 }
+
+
+
+/*------------------------VENTAS-----------------------------*/
+.ak-readonly[readonly] {
+    background-color: #f4f6f8;
+    color: #666;
+    cursor: not-allowed;
+}
+
+.ak-thumb {
+    height: 44px;
+    width: 44px;
+    object-fit: cover;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: #fff;
+}
+
+
+
+/* ===== Verde Kary ===== */
+/*:root {
+    --ak-g-50: #eef7f0;*/ /* fondo muy claro   */
+    /*--ak-g-100: #e2f0e6;*/ /* header de tarjeta */
+    /*--ak-g-300: #bfe0c7;*/ /* bordes            */
+    /*--ak-g-500: #7fb28e;*/ /* acentos           */
+    /*--ak-g-600: #5a8c6a;*/ /* encabezados tabla */
+    /*--ak-g-700: #3f6e50;*/ /* acento fuerte     */
+/*}*/
+
+/* ===== Paleta verde suave ===== */
+:root {
+    --k-g-50: #eef7f0; /* no usado, por si quieres zebra */
+    --k-g-200: #cfe3d3; /* borde suave */
+    --k-g-400: #b9d2be; /* tonos intermedios */
+    --k-g-600: #e2f0e6; /* thead */
+    --k-g-700: #9fc095; /* total */
+}
+
+/* Marco de la tarjeta con borde verde suave */
+.ak-outline-green {
+    border: 1px solid var(--k-g-200);
+    border-radius: 12px;
+}
+
+/* Marco de la tabla con esquinas redondeadas */
+.ak-table-frame {
+    border: 1px solid var(--k-g-200);
+    border-radius: 12px;
+    overflow: hidden; /* mantiene las esquinas del header */
+}
+
+/* Contenedor con scroll vertical cuando crece el detalle */
+.ak-table-scroll {
+    max-height: 360px; /* ≈ 5 filas; ajusta si prefieres */
+    overflow-y: auto;
+}
+
+/* Header verde y pegajoso (sticky) */
+.ak-thead-green th {
+    background: var(--k-g-600);
+    color: #000000;
+    border-color: var(--k-g-600) !important;
+    font-weight: 600;
+}
+
+.ak-table-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+/* Fila de total: verde más oscuro y sticky al fondo */
+.ak-table-scroll tfoot tr {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    background: var(--k-g-700);
+    color: #000000;
+}
+
+.ak-table-scroll tfoot th,
+.ak-table-scroll tfoot td {
+    border-color: var(--k-g-700) !important;
+    font-weight: 700;
+}
+
+/*ENCAVEZADO*/
+/* compacta controles dentro del encabezado */
+.ak-form-compact .form-label {
+    margin-bottom: .50rem;
+}
+
+.ak-form-compact .form-control {
+    padding: .35rem .5rem;
+    height: calc(1.6em + .75rem + 2px);
+    line-height: 1.2;
+}
+
+/* el bloque de sugerencias no empuja el layout */
+.ak-suggest {
+    position: absolute;
+    z-index: 1050;
+    inset: auto 0 auto 0;
+    max-height: 320px;
+    overflow: auto;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-top: 0;
+    border-radius: 0 0 .5rem .5rem;
+    display: none;
+}
+
+    .ak-suggest.show {
+        display: block;
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* grid flexible para el encabezado */
+.ak-form-grid {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: .75rem; /* espacio horizontal pequeño */
+    row-gap: .5rem; /* espacio vertical pequeño entre filas */
+}
+
+    /* cada campo: crece, reduce y hace wrap con un ancho mínimo razonable */
+    .ak-form-grid .ak-form-col {
+        flex: 1 1 220px; /* grow 1, shrink 1, min ~220px */
+        min-width: 220px;
+    }
+
+    /* el campo Cliente puede ocupar más (pero sigue siendo flexible) */
+    .ak-form-grid .ak-form-col--wide {
+        flex: 2 1 320px; /* un poco más ancho por el autocompletar */
+        min-width: 320px;
+    }
+
+/* compacción visual de inputs/labels */
+.ak-form-compact .form-label {
+    margin-bottom: .25rem;
+}
+
+.ak-form-compact .form-control {
+    padding: .35rem .5rem;
+    height: calc(1.6em + .75rem + 2px);
+    line-height: 1.2;
+}
+
+/* sugerencias */
+.ak-suggest {
+    position: absolute;
+    z-index: 1050;
+    inset: auto 0 auto 0;
+    max-height: 320px;
+    overflow: auto;
+    display: none;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-top: 0;
+    border-radius: 0 0 .5rem .5rem;
+}
+
+    .ak-suggest.show {
+        display: block;
+    }

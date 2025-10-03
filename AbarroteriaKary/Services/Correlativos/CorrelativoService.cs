@@ -382,6 +382,57 @@ namespace AbarroteriaKary.Services.Correlativos
 
 
 
+        // ----------------- CAJA -----------------
+
+
+        public async Task<string> PeekNextCajaIdAsync(CancellationToken ct = default)
+             => await PeekAsync("CAJ", 7, _context.CAJA.Select(x => x.CAJA_ID), ct);
+
+        public async Task<string> NextCajaIdAsync(CancellationToken ct = default)
+            => await NextAsync("CAJ", 7, _context.CAJA.Select(x => x.CAJA_ID), ct);
+
+
+
+
+        public async Task<string> PeekNextCajaSesionIdAsync(CancellationToken ct = default)
+    => await PeekAsync("SES", 7, _context.CAJA_SESION.Select(x => x.SESION_ID), ct);
+
+        public async Task<string> NextCajaSesionIdAsync(CancellationToken ct = default)
+            => await NextAsync("SES", 7, _context.CAJA_SESION.Select(x => x.SESION_ID), ct);
+
+        public async Task<string> PeekNextMovimientoCajaIdAsync(CancellationToken ct = default)
+            => await PeekAsync("MCA", 7, _context.MOVIMIENTO_CAJA.Select(x => x.MOVIMIENTO_ID), ct);
+
+        public async Task<string> NextMovimientoCajaIdAsync(CancellationToken ct = default)
+            => await NextAsync("MCA", 7, _context.MOVIMIENTO_CAJA.Select(x => x.MOVIMIENTO_ID), ct);
+
+
+
+
+
+
+        // VENTAS
+        public Task<string> PeekNextVentaIdAsync(CancellationToken ct = default)
+            => PeekAsync("V", 9, _context.VENTA.Select(v => v.VENTA_ID), ct);
+
+        public Task<string> NextVentaIdAsync(CancellationToken ct = default)
+            => NextAsync("V", 9, _context.VENTA.Select(v => v.VENTA_ID), ct);
+
+        // DETALLE_VENTA
+        public Task<string> PeekNextDetalleVentaIdAsync(CancellationToken ct = default)
+            => PeekAsync("D", 9, _context.DETALLE_VENTA.Select(d => d.DETALLE_VENTA_ID), ct);
+
+        public Task<string> NextDetalleVentaIdAsync(CancellationToken ct = default)
+            => NextAsync("D", 9, _context.DETALLE_VENTA.Select(d => d.DETALLE_VENTA_ID), ct);
+
+        // RECIBO
+        public Task<string> PeekNextReciboIdAsync(CancellationToken ct = default)
+            => PeekAsync("R", 9, _context.RECIBO.Select(r => r.RECIBO_ID), ct);
+
+        public Task<string> NextReciboIdAsync(CancellationToken ct = default)
+            => NextAsync("R", 9, _context.RECIBO.Select(r => r.RECIBO_ID), ct);
+
+
 
 
 

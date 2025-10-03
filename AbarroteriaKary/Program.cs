@@ -4,11 +4,13 @@ using AbarroteriaKary.Models;
 using AbarroteriaKary.Services;
 using AbarroteriaKary.Services.Auditoria;
 using AbarroteriaKary.Services.Correlativos;
+using AbarroteriaKary.Services.Reportes;   // <-- AGREGAR
+using AbarroteriaKary.Services.Ventas;
+
 using Microsoft.AspNetCore.Authentication.Cookies; // arriba
 using Microsoft.EntityFrameworkCore;
-using System;
 using Rotativa.AspNetCore;
-using AbarroteriaKary.Services.Reportes;   // <-- AGREGAR
+using System;
 
 
 
@@ -48,6 +50,13 @@ builder.Services.AddScoped<AbarroteriaKary.Services.Inventario.IInventarioPostin
 // Servicios de Notificaiones
 
 builder.Services.AddScoped<AbarroteriaKary.Services.INotificacionService, AbarroteriaKary.Services.NotificacionService>();
+
+// Servicios de Venta
+
+builder.Services.AddScoped<IVentaTxService, VentaTxService>();
+
+
+
 
 
 //Autenticacion

@@ -37,5 +37,7 @@ namespace AbarroteriaKary.ModelsPartial.Commons
 
         [Display(Name = "Eliminado")]
         public bool Eliminado { get; set; }
+
+
     }
 }

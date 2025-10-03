@@ -1,8 +1,17 @@
-﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.CajaViewModels>
+﻿@* ============================================
+   VENTAS / INDEX
+   - Estilo idéntico a tus Index (Áreas/Puestos/Empleados)
+   - Barra superior con: Nueva venta, menú "Caja", filtros de estado, búsqueda y rango de fechas (VENTA.FECHA)
+   - Tabla: Código venta, Fecha, Cliente, Vendedor, Total, Estado, Acciones
+   - Paginación con _Pager
+   - Incluye wiring para Caja (apertura/cierre) y habilitar "Nueva venta"
+   ============================================ *@
+
+@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.VentaViewModel>
 @using System.Globalization
 
 @{
-    ViewData["Title"] = "Caja";
+    ViewData["Title"] = "Ventas";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     string estado = (ViewBag.Estado as string) ?? "ACTIVO";
@@ -10,24 +19,53 @@
     string fDesde = ViewBag.FDesde as string;
     string fHasta = ViewBag.FHasta as string;
 
+    // Caja actual: el controlador debe setear ViewBag.CajaId
+    string cajaIdActual = ViewBag.CajaId as string ?? "";
+
     string rangoTexto = "";
     if (DateTime.TryParse(fDesde, out var d1) && DateTime.TryParse(fHasta, out var d2))
         rangoTexto = $"{d1:dd/MM/yyyy} - {d2:dd/MM/yyyy}";
 }
 
+<!-- Hidden con la caja actual (utilizado por caja-sesion.js para consultar estado y abrir/ cerrar) -->
+<input type="hidden" id="CajaIdActual" value="@cajaIdActual" />
+
 <!-- CARD / TOOLBAR -->
 <div class="ak-toolbar mb-4 mt-4">
     <div class="ak-toolbar__row">
-        <h1 class="ak-toolbar__title m-0">Caja</h1>
+        <h1 class="ak-toolbar__title m-0">Ventas</h1>
 
         <div class="ak-toolbar__right">
-            <!-- Agregar -->
-            <a asp-action="Create"
-               class="btn btn-ak-primary btn-ak-square d-inline-flex align-items-center gap-2">
-                <i class="fa-solid fa-circle-plus"></i><span>Agregar</span>
+
+            <!-- NUEVA VENTA: deshabilitado si no hay sesión abierta (se habilita por JS al cargar) -->
+            <a asp-action="Create" asp-controller="Ventas"
+               id="btnNuevaVenta"
+               class="btn btn-ak-primary btn-ak-square d-inline-flex align-items-center gap-2 disabled"
+               aria-disabled="true" title="Inicie una nueva venta">
+                <i class="fa-solid fa-cart-shopping"></i><span>Nueva venta</span>
             </a>
 
-            <!-- Filtros de estado (★ preserva pageSize y reinicia a página 1) -->
+            <!-- Menú CAJA: Aperturar / Cerrar -->
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-ak-primary btn-ak-square dropdown-toggle d-inline-flex align-items-center gap-2"
+                        type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="fa-solid fa-cash-register"></i><span>Caja</span>
+                </button>
+                <ul class="dropdown-menu">
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2" href="#" id="btnAperturarCaja">
+                            <i class="fa-regular fa-square-plus"></i> Aperturar caja
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item d-flex align-items-center gap-2" href="#" id="btnCerrarCaja">
+                            <i class="fa-regular fa-square-minus"></i> Cerrar caja
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Filtros de estado (preserva pageSize y reinicia a página 1) -->
             <a asp-action="Index" asp-route-estado="TODOS" asp-route-q="@q"
                asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
                asp-route-page="1" asp-route-pageSize="@Model.PageSize"
@@ -49,12 +87,12 @@
                 <i class="fa-solid fa-ban me-1"></i>Inactivo
             </a>
 
-            <!-- REPORTES (opcional, mismo parcial que otros módulos) -->
+            @* Dropdown de Reporte (si ya usas este parcial global) *@
             @{
                 var repVm = new AbarroteriaKary.ModelsPartial.ReporteDropdownVM
                 {
-                    Controller = "Caja",        // ← Este controlador
-                    ExportAction = "Exportar",  // ← Ajuste si su acción tiene otro nombre
+                    Controller = "Ventas",
+                    ExportAction = "Exportar",
                     Label = "Reporte",
                     SizeCss = "btn btn-ak-primary btn-ak-square",
                     Estado = ViewBag.Estado as string,
@@ -65,14 +103,14 @@
             }
             @await Html.PartialAsync("~/Views/Shared/Reportes/_ReporteDropdown.cshtml", repVm)
 
-            <!-- Buscador + Rango -->
+            <!-- Buscador + Rango de fechas -->
             <form id="frmFiltros" method="get" asp-action="Index"
                   class="d-inline-flex align-items-center gap-2">
                 <input type="hidden" name="estado" value="@estado" />
-                <input type="hidden" name="page" value="1" />                 @* ★ Reinicia página *@
-                <input type="hidden" name="pageSize" value="@Model.PageSize" />@* ★ Preserva pageSize *@
+                <input type="hidden" name="page" value="1" />                 @* Reinicia página *@
+                <input type="hidden" name="pageSize" value="@Model.PageSize" />@* Preserva pageSize *@
 
-                <!-- RANGO -->
+                <!-- RANGO FECHAS (VENTA.FECHA) -->
                 <div class="input-group ak-daterange-group" style="width:clamp(220px, 20vw, 260px);">
                     <span class="input-group-text bg-white border-end-0" title="Rango de fechas">
                         <i class="fa-regular fa-calendar"></i>
@@ -95,11 +133,12 @@
                 <input type="hidden" name="fHasta" id="fHasta" value="@fHasta" />
 
                 <!-- BUSCADOR -->
-                <div class="input-group ak-search" style="width:clamp(220px, 24vw, 260px);">
+                <div class="input-group ak-search" style="width:clamp(260px, 24vw, 320px);">
                     <button type="submit" class="input-group-text bg-white border-end-0" title="Buscar">
                         <i class="fas fa-search"></i>
                     </button>
-                    <input name="q" value="@q" class="form-control border-start-0" placeholder="Buscar por ID o nombre" />
+                    <input name="q" value="@q" class="form-control border-start-0"
+                           placeholder="Código, Cliente o Vendedor" />
                 </div>
             </form>
         </div>
@@ -111,20 +150,23 @@
     <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra js-sortable">
         <thead class="text-center thead-kary">
             <tr>
-                @* ★ Encabezados seguros cuando no hay Items *@
                 @if (Model.Items.Any())
                 {
-                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].cajaID)</th>
-                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].NombreCaja)</th>
-                    <th data-type="date:dd/MM/yyyy">@Html.DisplayNameFor(m => m.Items[0].FechaCreacion)</th>
-                    <th data-type="number">@Html.DisplayNameFor(m => m.Items[0].ESTADO)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].VentaId)</th>
+                    <th data-type="date:dd/MM/yyyy">@Html.DisplayNameFor(m => m.Items[0].FechaVenta)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].ClienteId)</th>
+                    <th data-type="text">@Html.DisplayNameFor(m => m.Items[0].UsuarioId)</th>
+                    <th data-type="number">@Html.DisplayNameFor(m => m.Items[0].Total)</th>
+                    // <th data-type="text">Estado</th>
                 }
                 else
                 {
-                    <th data-type="text">Código</th>
-                    <th data-type="text">Caja</th>
-                    <th data-type="date:dd/MM/yyyy">Fecha de creación</th>
-                    <th>Estado</th>
+                    <th>Código venta</th>
+                    <th>Fecha</th>
+                    <th>Cliente</th>
+                    <th>Vendedor</th>
+                    <th>Total</th>
+                    // <th>Estado</th>
                 }
                 <th>Acciones</th>
             </tr>
@@ -134,34 +176,30 @@
             @if (!Model.Items.Any())
             {
                 <tr>
-                    <td colspan="5" class="text-center py-4 text-muted">
+                    <td colspan="7" class="text-center py-4 text-muted">
                         <i class="fa-regular fa-face-frown me-1"></i> No hay resultados.
                     </td>
                 </tr>
             }
             else
             {
-                foreach (var c in Model.Items)
+                foreach (var v in Model.Items)
                 {
-                    bool esActivo = string.Equals(c.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
-                    <tr>
-                        <td class="text-monospace">@Html.DisplayFor(_ => c.cajaID)</td>
-                        <td>@Html.DisplayFor(_ => c.NombreCaja)</td>
-                        <td>@(c.FechaCreacion?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT")))</td>
+                    // bool esActivo = string.Equals(e.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase);
 
-                        <td class="text-center" data-sort-value="@(esActivo ? 1 : 0)">
-                            <span class="badge text-white @(esActivo ? "bg-success" : "bg-danger")">
-                                @(esActivo ? "Activo" : "Inactivo")
-                            </span>
-                        </td>
+                    <tr>
+                        <td class="text-monospace">@v.VentaId</td>
+                        <td>@v.FechaVenta.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT"))</td>
+                        <td>@(string.IsNullOrWhiteSpace(v.ClienteId) ? "-" : v.ClienteId)</td>
+                        <td>@(string.IsNullOrWhiteSpace(v.UsuarioId) ? "-" : v.UsuarioId)</td>
+                        <td class="text-end">@v.Total.ToString("C2", CultureInfo.GetCultureInfo("es-GT"))</td>
+                       
 
                         <td class="text-center acciones">
-                            <a href="@Url.Action("Edit", "Cajas", new { id = c.cajaID })" class="btn btn-sm me-2" title="Editar">
-                                <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">
-                            </a>
-                            <a href="@Url.Action("Details", "Cajas", new { id = c.cajaID })" class="btn btn-sm me-2" title="Ver">
+                            <a href="@Url.Action("Details", "Ventas", new { id = v.VentaId })" class="btn btn-sm me-2" title="Ver detalle">
                                 <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
                             </a>
+                            @* Si luego deseas edición, agrega aquí el botón Edit *@
                         </td>
                     </tr>
                 }
@@ -169,11 +207,16 @@
         </tbody>
     </table>
 
-    @* Paginador (mismo parcial que en otros módulos) *@
+    @* Paginador (mismo parcial global) *@
     @await Html.PartialAsync("_Pager", Model)
 </div>
 
+@* Host para inyectar los modales de CAJA (apertura/cierre) *@
+<div id="ak-modal-host"></div>
+
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
     <script>
         (function () {
           'use strict';
@@ -187,7 +230,6 @@
           const btnClr = document.getElementById('btnClearRange');
           const estadoH = form.querySelector('input[name="estado"]');
 
-          // Evita doble init
           if (input && input._litepicker && typeof input._litepicker.destroy === 'function') {
             input._litepicker.destroy();
           }
@@ -203,7 +245,6 @@
             numberOfMonths: 2,
             numberOfColumns: 2,
             splitView: true,
-            // IMPORTANTE: no incluir "dropdowns" para tener grids al click en header
             format: 'DD/MM/YYYY',
             lang: 'es-ES',
             startDate: start || null,
@@ -224,13 +265,11 @@
               fDesde.value = '';
               fHasta.value = '';
               try { picker.clearSelection(); } catch {}
-              // Si NO quiere forzar "ACTIVO" al limpiar, comente la siguiente línea:
               if (estadoH) estadoH.value = 'ACTIVO';
               form.submit();
             });
           }
 
-          // (Solo estética) cursor de “click” en el header
           picker.on('render', () => {
             document.querySelectorAll(
               '.litepicker .month-item-header .month-name, .litepicker .month-item-header .year-number'
@@ -238,4 +277,8 @@
           });
         })();
     </script>
+
+    <!-- Wiring Caja centralizado (apertura/cierre/estado) -->
+    <script src="~/js/caja-sesion.js"></script>
 }
+

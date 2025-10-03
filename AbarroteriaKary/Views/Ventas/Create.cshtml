@@ -1,0 +1,206 @@
+﻿@model AbarroteriaKary.ModelsPartial.VentaViewModel
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Nueva Venta";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    var savedOk = TempData["SavedOk"] as bool?;
+    var savedVentaId = TempData["SavedVentaId"] as string ?? "";
+    var savedTotal = TempData["SavedTotal"] as decimal?;
+}
+
+<style>
+    .ak-suggest {
+        position: absolute;
+        z-index: 1050;
+        inset: auto 0 auto 0;
+        max-height: 320px;
+        overflow: auto;
+        background: #fff;
+        border: 1px solid #dee2e6;
+        border-top: 0;
+        border-radius: 0 0 .5rem .5rem;
+        display: none
+    }
+
+        .ak-suggest.show {
+            display: block
+        }
+
+        .ak-suggest .list-group-item {
+            cursor: pointer
+        }
+
+    .ak-thumb {
+        width: 46px;
+        height: 46px;
+        object-fit: contain;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        background: #fff
+    }
+
+    .ak-readonly[readonly] {
+        background: #f8f9fa
+    }
+</style>
+
+<div class="ak-page">
+    <div class="ak-header container-fluid px-3 px-md-4">
+        <h1 class="ak-form-title m-1 mb-1">Nueva venta</h1>
+    </div>
+
+    <div class="ak-main">
+        <div class="container-fluid px-3 px-md-4">
+            <form asp-action="Confirmar" method="post" id="form-venta" novalidate>
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="alert alert-danger mb-3"></div>
+
+
+                <!-- ===== Encabezado (flexible, sin anchos fijos) ===== -->
+                <div class="card ak-card translucent shadow-sm w-100 mb-3">
+                    <div class="card-body ak-form ak-form-compact">
+                        <div class="ak-form-grid">
+
+                            <div class="ak-form-col">
+                                <label asp-for="VentaId" class="form-label">No. Venta</label>
+                                <input asp-for="VentaId" class="form-control" readonly />
+                            </div>
+
+                            <div class="ak-form-col">
+                                <label asp-for="FechaVenta" class="form-label">Fecha</label>
+                                <input asp-for="FechaVenta" type="datetime-local" class="form-control" />
+                            </div>
+
+                            <!-- Cliente ocupa un poco más de espacio -->
+                            <div class="ak-form-col ak-form-col--wide position-relative">
+                                <label class="form-label">Cliente</label>
+                                <input type="hidden" asp-for="ClienteId" id="ClienteId" />
+                                <input type="text" id="txtCliente" class="form-control"
+                                       placeholder="Buscar por nombre o NIT"
+                                       autocomplete="off"
+                                       data-url="@Url.Action("BuscarClientes", "Ventas")" />
+                                <div id="sugClientes" class="ak-suggest"></div>
+                                <small class="text-muted d-none d-xl-block">Escriba 2+ letras. Incluye opción “Consumidor Final”.</small>
+                                <span asp-validation-for="ClienteId" class="text-danger"></span>
+                            </div>
+
+                            <div class="ak-form-col">
+                                <label class="form-label">NIT</label>
+                                <input type="text" id="txtNitCliente" class="form-control" readonly />
+                            </div>
+
+                            <div class="ak-form-col">
+                                <label asp-for="SesionId" class="form-label">Sesión de caja</label>
+                                <input asp-for="SesionId" class="form-control" readonly />
+                            </div>
+
+                            <div class="ak-form-col">
+                                <label asp-for="UsuarioId" class="form-label">Vendedor</label>
+                                <input asp-for="UsuarioId" class="form-control" readonly />
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+                <div class="card ak-outline-green w-100 mb-3">
+                    <div class="card-body">
+                        <label class="form-label">Producto</label>
+                        <div class="position-relative">
+                            <input type="text"
+                                   id="txtProducto"
+                                   class="form-control"
+                                   placeholder="Buscar por código o nombre…"
+                                   autocomplete="off"
+                                   data-url="@Url.Action("BuscarInventario", "Ventas")" />
+                            <div id="sugProductos" class="ak-suggest"></div>
+                        </div>
+                        <small class="text-muted">
+                            Escribe al menos 2 caracteres para buscar. Presiona en el resultado para agregar al detalle.
+                        </small>
+                    </div>
+                </div>
+
+
+                <!-- ===== Detalle ===== -->
+                <div class="card ak-outline-green w-100">
+                    <div class="card-body">
+                        <div class="ak-table-frame ak-table-scroll">
+                            <table class="table table-bordered table-striped align-middle m-0">
+                                <thead class="text-center ak-thead-green">
+                                    <tr>
+                                        <th style="width:14%">Código</th>
+                                        <th style="width:26%">Nombre</th>
+                                        <th style="width:10%" class="text-center">Referencia</th>
+                                        <th style="width:12%" class="text-end">Cantidad</th>
+                                        <th style="width:12%" class="text-end">PVP</th>
+                                        <th style="width:14%" class="text-end">Subtotal</th>
+                                        <th style="width:12%">Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detalleBody"></tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="5" class="text-end">Total</th>
+                                        <th class="text-end" id="totalCell">@Model.Total.ToString("C2", CultureInfo.GetCultureInfo("es-GT"))</th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+
+
+
+
+
+
+                <!-- ===== Acciones ===== -->
+                <div class="card ak-card ak-actions-card w-100 mt-3">
+                    <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
+                        <a asp-action="Index" class="btn btn-ak btn-ak-cancel"><i class="fa-solid fa-xmark ak-icon"></i> Cancelar</a>
+                        <button type="button" class="btn btn-ak btn-ak-success" id="btnCobrar">
+                            <i class="fa-solid fa-cash-register ak-icon"></i> Confirmar y cobrar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hidden de pago -->
+                <input type="hidden" name="pago.MetodoPagoId" id="MetodoPagoId" />
+                <input type="hidden" name="pago.EfectivoRecibido" id="EfectivoRecibido" />
+                <input type="hidden" name="pago.CambioCalculado" id="CambioCalculado" />
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Host para inyectar el modal parcial -->
+<div id="ak-modal-host"></div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/ventas-create.js"></script>
+
+    @if ((TempData["SavedOk"] as bool?) == true)
+    {
+        <script>
+            (function(){
+              if (window.KarySwal && KarySwal.saveSuccess) {
+                KarySwal.saveSuccess({
+                  title: '¡Venta realizada!',
+                  text: 'Venta @savedVentaId por @(((decimal?)savedTotal)?.ToString("C2", CultureInfo.GetCultureInfo("es-GT")) ?? "")',
+                  indexUrl: '@Url.Action("Index", "Ventas")',
+                  createUrl: '@Url.Action("Create", "Ventas")'
+                });
+              }
+            })();
+        </script>
+    }
+}

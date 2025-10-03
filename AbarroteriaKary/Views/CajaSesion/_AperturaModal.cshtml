@@ -1,0 +1,51 @@
+﻿@model AbarroteriaKary.ModelsPartial.CajaAperturaViewModel
+
+<div class="modal fade" id="modalCajaApertura" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Apertura de Caja</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <form id="form-apertura-caja" asp-action="Abrir" asp-controller="CajaSesion" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+
+                    <input type="hidden" asp-for="CajaId" />
+                    <input type="hidden" asp-for="SesionId" />
+                    <input type="hidden" asp-for="UsuarioAperturaId" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Caja</label>
+                        <input class="form-control" value="@Model.CajaNombre" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Usuario Apertura</label>
+                        <input class="form-control" value="@Model.UsuarioAperturaNombre" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="MontoInicial" class="form-label">Efectivo de apertura</label>
+                        <input asp-for="MontoInicial" class="form-control" placeholder="Ingrese cantidad Q" />
+                        <span asp-validation-for="MontoInicial" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="NotaApertura" class="form-label">Nota</label>
+                        <textarea asp-for="NotaApertura" class="form-control" rows="3" placeholder="Opcional"></textarea>
+                        <span asp-validation-for="NotaApertura" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ak btn-ak-cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-aperturar">
+                        <i class="fa-solid fa-unlock-keyhole me-1"></i> Abrir Caja
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

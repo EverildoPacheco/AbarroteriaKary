@@ -1,0 +1,51 @@
+﻿@model AbarroteriaKary.ModelsPartial.CajaCierreViewModel
+
+<div class="modal fade" id="modalCajaCierre" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Cierre de Caja</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+
+            <form id="form-cierre-caja" asp-action="Cerrar" asp-controller="CajaSesion" method="post">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+
+                    <input type="hidden" asp-for="CajaId" />
+                    <input type="hidden" asp-for="SesionId" />
+                    <input type="hidden" asp-for="UsuarioCierreId" />
+
+                    <div class="mb-3">
+                        <label class="form-label">Caja</label>
+                        <input class="form-control" value="@Model.CajaNombre" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label">Usuario Cierre</label>
+                        <input class="form-control" value="@Model.UsuarioCierreNombre" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="MontoFinal" class="form-label">Efectivo final</label>
+                        <input asp-for="MontoFinal" class="form-control" placeholder="Ingrese cantidad Q" />
+                        <span asp-validation-for="MontoFinal" class="text-danger"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="NotaCierre" class="form-label">Nota de cierre</label>
+                        <textarea asp-for="NotaCierre" class="form-control" rows="3" placeholder="Opcional"></textarea>
+                        <span asp-validation-for="NotaCierre" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-ak btn-ak-cancel" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-cerrar">
+                        <i class="fa-solid fa-lock me-1"></i> Cerrar Caja
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
