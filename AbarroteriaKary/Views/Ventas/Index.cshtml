@@ -199,7 +199,19 @@
                             <a href="@Url.Action("Details", "Ventas", new { id = v.VentaId })" class="btn btn-sm me-2" title="Ver detalle">
                                 <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
                             </a>
-                            @* Si luego deseas edición, agrega aquí el botón Edit *@
+
+
+                            <a asp-controller="Ventas"
+                               asp-action="Recibo"
+                               asp-route-id="@v.VentaId"
+                               target="_blank" rel="noopener"
+                               class="btn btn-sm" title="Ver PDF">
+                                <img src="~/img/Botones/pdf.png" alt="PDF" class="icono-accion">
+                            </a>
+
+
+
+
                         </td>
                     </tr>
                 }

@@ -200,12 +200,12 @@
     @if (savedOk)
     {
         <script>
-            (async function(){
+            (async function () {
               const ventaId = '@savedVentaId';
               const totalTx = '@savedTotalFmt';
 
               // Paso 2: éxito con timer y botón OK
-              async function showSuccess(){
+              async function showSuccess() {
                 if (window.Swal?.fire) {
                   await Swal.fire({
                     title: '¡Venta registrada con éxito!',
@@ -221,28 +221,54 @@
                 }
               }
 
-              // Paso 3: ofrecer recibo (pendiente implementar)
-              async function askRecibo(){
-                if (window.Swal?.fire) {
-                  const r = await Swal.fire({
-                    title: '¿Quieres generar el recibo?',
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Sí, generar',
-                    cancelButtonText: 'No',
-                    reverseButtons: true
-                  });
-                  if (r.isConfirmed) {
-                    const url = '@Url.Action("Recibo", "Ventas")' + '?id=' + encodeURIComponent(ventaId);
-                    window.location.href = url; // (solo navega; implementa la acción cuando estés listo)
-                  }
-                } else {
-                  if (confirm('¿Generar recibo?')) {
-                    const url = '@Url.Action("Recibo", "Ventas")' + '?id=' + encodeURIComponent(ventaId);
-                    window.location.href = url;
-                  }
+                    // Paso 3: ofrecer recibo en nueva pestaña (sin navegar la actual y sin SweetAlert extra)
+            async function askRecibo() {
+              const url = '@Url.Action("Recibo", "Ventas")' + '?id=' + encodeURIComponent(ventaId);
+
+              if (window.Swal?.fire) {
+                const r = await Swal.fire({
+                  title: '¿Quieres generar el recibo?',
+                  icon: 'question',
+                  showCancelButton: true,
+                  confirmButtonText: 'Sí, generar',
+                  cancelButtonText: 'No',
+                  reverseButtons: true,
+                  allowOutsideClick: false
+                });
+                if (!r.isConfirmed) return;
+
+                // Intento 1: ventana nueva
+                const win = window.open(url, '_blank', 'noopener,noreferrer');
+                if (win && !win.closed) return;
+
+                // Intento 2: click programático en un enlace (sin mostrar nada)
+                const a = document.createElement('a');
+                a.href = url;
+                a.target = '_blank';
+                a.rel = 'noopener noreferrer';
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                return;
+              }
+
+              // Fallback sin SweetAlert
+              if (confirm('¿Generar recibo?')) {
+                const win = window.open(url, '_blank', 'noopener,noreferrer');
+                if (!win || win.closed) {
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.target = '_blank';
+                  a.rel = 'noopener noreferrer';
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
                 }
               }
+            }
+
+
+
 
               await showSuccess();
               await askRecibo();

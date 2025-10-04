@@ -1,0 +1,96 @@
+﻿@model AbarroteriaKary.ModelsPartial.CajaVentaDiariaPdfVM
+@using System.Globalization
+@{
+    Layout = null;
+    var gt = CultureInfo.GetCultureInfo("es-GT");
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Venta diaria - @Model.CajaNombre</title>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 12px;
+        }
+
+        h1 {
+            font-size: 18px;
+            margin: 0 0 6px 0;
+        }
+
+        .small {
+            color: #666;
+            font-size: 11px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 6px;
+        }
+
+        th {
+            background: #f3f4f6;
+            text-align: left;
+        }
+
+        .text-end {
+            text-align: right;
+        }
+
+        .tot {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>Venta diaria</h1>
+    <div class="small">
+        Caja: <strong>@Model.CajaNombre</strong> &nbsp;|&nbsp;
+        Sesión: <strong>@Model.SesionId</strong> &nbsp;|&nbsp;
+        Apertura: @Model.FechaApertura.ToString("dd/MM/yyyy HH:mm") &nbsp;|&nbsp;
+        Corte: @Model.FechaCorte.ToString("dd/MM/yyyy HH:mm") &nbsp;|&nbsp;
+        Usuario: @Model.UsuarioNombre
+    </div>
+
+    <table>
+        <thead>
+            <tr>
+                <th style="width:22%">No. Venta</th>
+                <th style="width:22%">Fecha</th>
+                <th>Cliente</th>
+                <th style="width:18%" class="text-end">Total</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var v in Model.Ventas)
+            {
+                <tr>
+                    <td>@v.VentaId</td>
+                    <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@(string.IsNullOrWhiteSpace(v.ClienteNombre) ? v.ClienteId : v.ClienteNombre)</td>
+                    <td class="text-end">@v.Total.ToString("C2", gt)</td>
+                </tr>
+            }
+            @if (!Model.Ventas.Any())
+            {
+                <tr><td colspan="4">No hay ventas registradas en la sesión.</td></tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3" class="text-end tot">TOTAL</td>
+                <td class="text-end tot">@Model.Total.ToString("C2", gt)</td>
+            </tr>
+        </tfoot>
+    </table>
+</body>
+</html>

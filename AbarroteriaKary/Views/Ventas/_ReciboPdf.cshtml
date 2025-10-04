@@ -1,0 +1,103 @@
+﻿@model AbarroteriaKary.ModelsPartial.ReciboPdfVM
+@using System.Globalization
+@{
+    Layout = null;
+    var gt = CultureInfo.GetCultureInfo("es-GT");
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 12px; color: #111; }
+        .ticket { width: 100%; }
+        .brand { text-align:center; margin-bottom:8px; }
+        .brand .name { font-weight:700; font-size:16px; letter-spacing:.4px; }
+        .brand .sub  { font-size:11px; color:#666; }
+        .line { border-top:1px dashed #9ad6bf; margin:8px 0; }
+        .hdr { display:flex; justify-content:space-between; font-size:11px; margin:1px 0; }
+        .tbl { width:100%; border-collapse:collapse; margin-top:4px; }
+        .tbl thead th { text-align:left; border-bottom:1px solid #1aa36d; padding-bottom:4px; font-size:11px;}
+        .tbl td { padding:4px 0; vertical-align:top; }
+        .tbl .qty { width:18%; text-align:right; }
+        .tbl .price { width:25%; text-align:right; }
+        .totals { margin-top:6px; }
+        .totals .row { display:flex; justify-content:space-between; margin:2px 0; }
+        .em { font-weight:600; }
+        .foot { text-align:center; margin-top:10px; font-size:11px; color:#555;}
+        .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+        .green { color:#1aa36d; }
+    </style>
+</head>
+<body>
+    <div class="ticket">
+
+        <div class="brand">
+            <div class="name">@(!string.IsNullOrWhiteSpace(Model.SucursalNombre) ? Model.SucursalNombre : "Abarrotería Kary")</div>
+            @if (!string.IsNullOrWhiteSpace(Model.SucursalDireccion))
+            {
+                <div class="sub">@Model.SucursalDireccion</div>
+            }
+            @if (!string.IsNullOrWhiteSpace(Model.SucursalNit))
+            {
+                <div class="sub">NIT: @Model.SucursalNit</div>
+            }
+        </div>
+
+        <div class="hdr">
+            <div><span class="em">Venta:</span> <span class="code">@Model.VentaId</span></div>
+            <div>@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.ReciboId))
+        {
+            <div class="hdr">
+                <div><span class="em">Recibo:</span> <span class="code">@Model.ReciboId</span></div>
+            </div>
+        }
+        <div class="hdr">
+            <div><span class="em">Cliente:</span> @Model.ClienteNombre (@Model.ClienteNit)</div>
+        </div>
+        <div class="hdr">
+            <div><span class="em">Vendedor:</span> @Model.UsuarioNombre</div>
+            <div><span class="em">Método:</span> @Model.MetodoPagoNombre</div>
+        </div>
+
+        <div class="line"></div>
+
+        <table class="tbl">
+            <thead>
+                <tr><th>Producto</th><th class="qty">Cant</th><th class="price">Importe</th></tr>
+            </thead>
+            <tbody>
+                @foreach (var l in Model.Lineas)
+                {
+                    <tr>
+                        <td>@l.Nombre</td>
+                        <td class="qty">@l.Cantidad</td>
+                        <td class="price">@l.Subtotal.ToString("C2", gt)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <div class="line"></div>
+
+        <div class="totals">
+            <div class="row"><div>Subtotal</div><div>@Model.Total.ToString("C2", gt)</div></div>
+            <div class="row em green"><div>Total</div><div>@Model.Total.ToString("C2", gt)</div></div>
+            @if (Model.EfectivoRecibido.HasValue)
+            {
+                <div class="row"><div>Efectivo</div><div>@Model.EfectivoRecibido.Value.ToString("C2", gt)</div></div>
+            }
+            @if (Model.Cambio.HasValue)
+            {
+                <div class="row"><div>Cambio</div><div>@Model.Cambio.Value.ToString("C2", gt)</div></div>
+            }
+        </div>
+
+        <div class="foot">
+            ¡Gracias por su compra!
+        </div>
+    </div>
+</body>
+</html>

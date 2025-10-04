@@ -100,10 +100,10 @@ namespace AbarroteriaKary.Services.Correlativos
 
         //--------------------------------------------
 
-        // Rango de correlativos para DETALLE_PEDIDO (Opción B)
+        // Rango de correlativos para DETALLE_PEDIDO 
         Task<IReadOnlyList<string>> NextDetallePedidosRangeAsync(int count, CancellationToken ct = default);
 
-        // (Opcional) ID único para un solo detalle desde SEQUENCE (si lo quisieras usar suelto)
+        // ID único para un solo detalle desde SEQUENCE (si lo quisieras usar suelto)
         Task<string> NextDetallePedidoFromSequenceAsync(CancellationToken ct = default);
 
         // --- NUEVOS: INVENTARIO ---
@@ -128,29 +128,78 @@ namespace AbarroteriaKary.Services.Correlativos
 
         // CAJA SESCION (PRO0000007)
 
+
+
+        //Task<string> PeekNextCajaSesionIdAsync(CancellationToken ct = default);
+        //Task<string> NextCajaSesionIdAsync(CancellationToken ct = default);
+
+        //// CAJA MOVIMIENTO CAJA (PRO0000007)
+
+        //Task<string> PeekNextMovimientoCajaIdAsync(CancellationToken ct = default);
+        //Task<string> NextMovimientoCajaIdAsync(CancellationToken ct = default);
+
+
+
+
+        //Task<string> PeekNextVentaIdAsync(CancellationToken ct = default);
+        //Task<string> NextVentaIdAsync(CancellationToken ct = default);
+
+
+
+        //Task<string> PeekNextDetalleVentaIdAsync(CancellationToken ct = default);
+        //Task<string> NextDetalleVentaIdAsync(CancellationToken ct = default);
+
+
+
+        //Task<string> PeekNextReciboIdAsync(CancellationToken ct = default);
+        //Task<string> NextReciboIdAsync(CancellationToken ct = default);
+
+
+
+
+
+
+        // ===== CAJA_SESION (si aún NO tienes sequence para esto) =====
         Task<string> PeekNextCajaSesionIdAsync(CancellationToken ct = default);
         Task<string> NextCajaSesionIdAsync(CancellationToken ct = default);
 
-        // CAJA MOVIMIENTO CAJA (PRO0000007)
-
+        // ===== MOVIMIENTO_CAJA (MCA + 7, desde SEQUENCE) =====
         Task<string> PeekNextMovimientoCajaIdAsync(CancellationToken ct = default);
         Task<string> NextMovimientoCajaIdAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<string>> NextMovimientoCajaRangeAsync(int count, CancellationToken ct = default);
 
-
-
-
+        // ===== VENTA (V + 9, desde SEQUENCE) =====
         Task<string> PeekNextVentaIdAsync(CancellationToken ct = default);
         Task<string> NextVentaIdAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<string>> NextVentaRangeAsync(int count, CancellationToken ct = default);
 
-
-
+        // ===== DETALLE_VENTA (D + 9, desde SEQUENCE) =====
         Task<string> PeekNextDetalleVentaIdAsync(CancellationToken ct = default);
         Task<string> NextDetalleVentaIdAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<string>> NextDetalleVentaRangeAsync(int count, CancellationToken ct = default);
 
-
-
+        // ===== RECIBO (R + 9, desde SEQUENCE) =====
         Task<string> PeekNextReciboIdAsync(CancellationToken ct = default);
         Task<string> NextReciboIdAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<string>> NextReciboRangeAsync(int count, CancellationToken ct = default);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -24,6 +24,7 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
+
 namespace AbarroteriaKary.Controllers
 {
     public class VentasController : Controller
@@ -157,6 +158,135 @@ namespace AbarroteriaKary.Controllers
             if (DateTime.TryParse(input, out d)) return d;
             return null;
         }
+
+
+        // Helper para armar el nombre completo (puedes ponerlo como método estático en algún util)
+        private static string BuildNombrePersona(PERSONA p) =>
+            string.Join(" ", new[]
+            {
+        p.PERSONA_PRIMERNOMBRE,
+        p.PERSONA_SEGUNDONOMBRE,
+        p.PERSONA_TERCERNOMBRE,
+        p.PERSONA_PRIMERAPELLIDO,
+        p.PERSONA_SEGUNDOAPELLIDO,
+        p.PERSONA_APELLIDOCASADA
+            }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> Recibo(string id, bool dl = false, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(id)) return NotFound();
+
+            // 1) Venta (header)
+            var v = await _context.VENTA.AsNoTracking()
+                .FirstOrDefaultAsync(x => x.VENTA_ID == id && !x.ELIMINADO, ct);
+            if (v is null) return NotFound();
+
+            // 2) Cliente (PERSONA)
+            var cli = await _context.PERSONA.AsNoTracking()
+                .Where(p => p.PERSONA_ID == v.CLIENTE_ID && !p.ELIMINADO)
+                .Select(p => new AbarroteriaKary.ModelsPartial.ClienteUiDto
+                {
+                    Id = p.PERSONA_ID,
+                    Nombre = (p.PERSONA_PRIMERNOMBRE + " "
+                             + (p.PERSONA_SEGUNDONOMBRE ?? "") + " "
+                             + (p.PERSONA_TERCERNOMBRE ?? "") + " "
+                             + p.PERSONA_PRIMERAPELLIDO + " "
+                             + (p.PERSONA_SEGUNDOAPELLIDO ?? "") + " "
+                             + (p.PERSONA_APELLIDOCASADA ?? "")).Trim(),
+                    Nit = p.PERSONA_NIT
+                })
+                .FirstOrDefaultAsync(ct);
+
+            // 3) Usuario (vendedor)
+            var usr = await _context.USUARIO.AsNoTracking()
+                .Where(u => u.USUARIO_ID == v.USUARIO_ID && !u.ELIMINADO)
+                .Select(u => new { u.USUARIO_ID, u.USUARIO_NOMBRE })
+                .FirstOrDefaultAsync(ct);
+
+            // 4) Recibo asociado (el último)
+            var rec = await _context.RECIBO.AsNoTracking()
+                .Where(r => r.VENTA_ID == id && !r.ELIMINADO)
+                .OrderByDescending(r => r.FECHA)
+                .Select(r => new { r.RECIBO_ID, r.METODO_PAGO_ID, r.MONTO, r.FECHA })
+                .FirstOrDefaultAsync(ct);
+
+            string? metodoPagoNombre = null;
+            if (rec != null)
+            {
+                metodoPagoNombre = await _context.METODO_PAGO.AsNoTracking()
+                    .Where(m => m.METODO_PAGO_ID == rec.METODO_PAGO_ID && !m.ELIMINADO)
+                    .Select(m => m.METODO_PAGO_NOMBRE)
+                    .FirstOrDefaultAsync(ct);
+            }
+
+            // 5) Detalle consolidado por producto (sumando lotes)
+            var lineas = await _context.DETALLE_VENTA.AsNoTracking()
+                .Where(d => d.VENTA_ID == id && !d.ELIMINADO)
+                .Join(_context.PRODUCTO.AsNoTracking(),
+                      d => d.PRODUCTO_ID,
+                      p => p.PRODUCTO_ID,
+                      (d, p) => new { d, p })
+                .GroupBy(x => new { x.p.PRODUCTO_ID, x.p.PRODUCTO_NOMBRE, x.d.PRECIO_UNITARIO })
+                .Select(g => new AbarroteriaKary.ModelsPartial.ReciboLineaVM
+                {
+                    ProductoId = g.Key.PRODUCTO_ID,
+                    Nombre = g.Key.PRODUCTO_NOMBRE,
+                    Cantidad = g.Sum(z => z.d.CANTIDAD),
+                    PrecioUnitario = g.Key.PRECIO_UNITARIO
+                })
+                .OrderBy(l => l.Nombre)
+                .ToListAsync(ct);
+
+            // 6) ViewModel para el PDF
+            var vm = new AbarroteriaKary.ModelsPartial.ReciboPdfVM
+            {
+                VentaId = v.VENTA_ID,
+                Fecha = v.FECHA,
+                ClienteId = v.CLIENTE_ID,
+                ClienteNombre = cli?.Nombre ?? "Consumidor Final",
+                ClienteNit = string.IsNullOrWhiteSpace(cli?.Nit) ? "CF" : cli!.Nit,
+                UsuarioId = v.USUARIO_ID,
+                UsuarioNombre = usr?.USUARIO_NOMBRE ?? v.USUARIO_ID,
+                ReciboId = rec?.RECIBO_ID,
+                MetodoPagoNombre = metodoPagoNombre ?? "N/D",
+                Total = v.TOTAL,
+                Lineas = lineas,
+
+                // Info fija o tomada de tu configuración/BD:
+                SucursalNombre = "Abarrotería Kary",
+                SucursalDireccion = "",
+                SucursalNit = ""
+            };
+
+            // 7) Render del PDF (inline para abrir en pestaña nueva)
+            return new ViewAsPdf("_ReciboPdf", vm)
+            {
+                FileName = $"Recibo_{vm.VentaId}.pdf",
+                PageSize = Size.A5,
+                PageOrientation = Orientation.Portrait,
+                PageMargins = new Margins { Top = 10, Right = 6, Bottom = 6, Left = 10 },
+                ContentDisposition = dl ? ContentDisposition.Attachment : ContentDisposition.Inline
+            };
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

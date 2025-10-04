@@ -341,27 +341,5 @@ namespace AbarroteriaKary.ModelsPartial
         public bool PuedeNuevaVenta => Estado.SesionAbierta;
     }
 
-    // ============================================================
-    // 6) Auditoría reusable (mismo patrón que usas en otros módulos)
-    // ============================================================
-    //public class AuditoriaViewModel
-    //{
-    //    [Display(Name = "Creado por")] public string? CreadoPor { get; set; }
-    //    [Display(Name = "Fecha creación")] public DateTime? FechaCreacion { get; set; }
-    //    [Display(Name = "Modificado por")] public string? ModificadoPor { get; set; }
-    //    [Display(Name = "Fecha modificación")] public DateTime? FechaModificacion { get; set; }
-    //    [Display(Name = "Eliminado")] public bool Eliminado { get; set; }
-    //    [Display(Name = "Eliminado por")] public string? EliminadoPor { get; set; }
-    //    [Display(Name = "Fecha eliminación")] public DateTime? FechaEliminacion { get; set; }
-
-    //    [Display(Name = "Estado")]
-    //    public string ESTADO
-    //    {
-    //        get => EstadoActivo ? CajaRegistroEstados.Activo : CajaRegistroEstados.Inactivo;
-    //        set => EstadoActivo = string.Equals(value, CajaRegistroEstados.Activo, StringComparison.OrdinalIgnoreCase);
-    //    }
-
-    //    [Display(Name = "Activo")]
-    //    public bool EstadoActivo { get; set; } = true;
-    //}
+  
 }

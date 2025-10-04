@@ -1,45 +1,90 @@
 ﻿@model AbarroteriaKary.ModelsPartial.CajaCierreViewModel
+@using System.Globalization
+@{
+    var gt = CultureInfo.GetCultureInfo("es-GT");
+}
 
 <div class="modal fade" id="modalCajaCierre" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-md">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Cierre de Caja</h5>
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-semibold">Cerrar caja</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
 
-            <form id="form-cierre-caja" asp-action="Cerrar" asp-controller="CajaSesion" method="post">
+            <div class="px-4"><hr class="my-2" /></div>
+
+            <form id="form-cierre-caja"
+                  asp-action="Cerrar"
+                  asp-controller="CajaSesion"
+                  method="post"
+                  class="px-4 pb-4"
+                  data-esperado="@Model.SaldoEsperado.ToString(System.Globalization.CultureInfo.InvariantCulture)">
                 @Html.AntiForgeryToken()
-                <div class="modal-body">
 
-                    <input type="hidden" asp-for="CajaId" />
-                    <input type="hidden" asp-for="SesionId" />
-                    <input type="hidden" asp-for="UsuarioCierreId" />
+                <div class="d-flex align-items-center gap-2 text-muted small mb-3">
+                    <span class="fw-semibold">Abierta desde:</span>
+                    <span>@Model.FechaApertura.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
 
-                    <div class="mb-3">
+                <input type="hidden" asp-for="CajaId" />
+                <input type="hidden" asp-for="SesionId" />
+                <input type="hidden" asp-for="UsuarioCierreId" />
+
+                <div class="row g-3 mb-2">
+                    <div class="col-md-6">
                         <label class="form-label">Caja</label>
-                        <input class="form-control" value="@Model.CajaNombre" readonly />
+                        <input class="form-control ak-readonly" value="@Model.CajaNombre" readonly />
                     </div>
-
-                    <div class="mb-3">
-                        <label class="form-label">Usuario Cierre</label>
-                        <input class="form-control" value="@Model.UsuarioCierreNombre" readonly />
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="MontoFinal" class="form-label">Efectivo final</label>
-                        <input asp-for="MontoFinal" class="form-control" placeholder="Ingrese cantidad Q" />
-                        <span asp-validation-for="MontoFinal" class="text-danger"></span>
-                    </div>
-
-                    <div class="mb-3">
-                        <label asp-for="NotaCierre" class="form-label">Nota de cierre</label>
-                        <textarea asp-for="NotaCierre" class="form-control" rows="3" placeholder="Opcional"></textarea>
-                        <span asp-validation-for="NotaCierre" class="text-danger"></span>
+                    <div class="col-md-6">
+                        <label class="form-label">Usuario cierre</label>
+                        <input class="form-control ak-readonly"
+                               value="@((Model.UsuarioCierreNombre ?? "Usuario") + " (" + Model.UsuarioCierreId + ")")"
+                               readonly />
                     </div>
                 </div>
 
-                <div class="modal-footer">
+                <div class="px-1"><hr class="my-2" /></div>
+
+                <div class="row g-3 align-items-start">
+                    <div class="col-md-6">
+                        <label class="form-label">Total de venta</label>
+                        <input class="form-control ak-readonly" value="@Model.SaldoEsperado.ToString("C2", gt)" readonly />
+                        <div class="form-text">
+                            Desde la apertura (ingresos − egresos + apertura).
+                        </div>
+
+                        <a asp-action="VentaDiaria"
+                           asp-controller="CajaSesion"
+                           asp-route-sesionId="@Model.SesionId"
+                           target="_blank" rel="noopener"
+                           class="btn btn-outline-secondary btn-sm mt-3">
+                            <i class="fa-solid fa-download me-1"></i> Venta diaria
+                        </a>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="MontoFinal" class="form-label">Total efectivo</label>
+                        <input asp-for="MontoFinal" type="number" step="0.01" min="0" class="form-control" placeholder="0.00" />
+                        <span asp-validation-for="MontoFinal" class="text-danger"></span>
+
+                        <div class="mt-2 small">
+                            <span class="text-muted">Diferencia: </span>
+                            <span id="akDiff" class="fw-semibold">Q 0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-1"><hr class="my-3" /></div>
+
+                <div class="mb-3">
+                    <label asp-for="NotaCierre" class="form-label">Nota de cierre</label>
+                    <textarea asp-for="NotaCierre" class="form-control" rows="3"
+                              placeholder="Obligatoria si no cuadra."></textarea>
+                    <span asp-validation-for="NotaCierre" class="text-danger"></span>
+                </div>
+
+                <div class="d-flex justify-content-end gap-2 mt-3">
                     <button type="button" class="btn btn-ak btn-ak-cancel" data-bs-dismiss="modal">Cancelar</button>
                     <button type="submit" class="btn btn-ak btn-ak-primary" id="btn-cerrar">
                         <i class="fa-solid fa-lock me-1"></i> Cerrar Caja
@@ -49,3 +94,67 @@
         </div>
     </div>
 </div>
+
+
+    <script>
+        (function () {
+          const fmtGT = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' });
+
+          // Valores base
+          const esperado = parseFloat('@Model.SaldoEsperado.ToString(CultureInfo.InvariantCulture)');
+          const $ef = document.getElementById('MontoFinal');
+          const $dif = document.getElementById('akDiff');
+          const $nota = document.getElementById('NotaCierre');
+          const $form = document.getElementById('form-cierre-caja');
+
+          function toNum(v) {
+            const n = parseFloat((v || '').toString().replace(',', '.'));
+            return isNaN(n) ? 0 : n;
+          }
+
+          function pintarDiferencia() {
+            const contado = toNum($ef.value);
+            const diff = Math.round((contado - esperado) * 100) / 100;
+
+            // Color semántico
+            let cls = 'text-success';
+            if (diff > 0) cls = 'text-primary';
+            if (diff < 0) cls = 'text-danger';
+
+            $dif.textContent = fmtGT.format(diff);
+            $dif.className = 'fw-semibold ' + cls;
+
+            // Nota obligatoria si no cuadra
+            const lbl = document.querySelector('label[for="NotaCierre"]');
+            if (diff !== 0) {
+              $nota.setAttribute('required', 'required');
+              if (lbl) lbl.textContent = 'Nota de cierre (obligatoria porque no cuadra)';
+            } else {
+              $nota.removeAttribute('required');
+              if (lbl) lbl.textContent = 'Nota de cierre';
+            }
+          }
+
+          // Init + eventos
+          pintarDiferencia();
+          $ef.addEventListener('input', pintarDiferencia);
+
+          // Validación rápida en submit (además de DataAnnotations)
+          $form.addEventListener('submit', function (e) {
+            $ef.classList.remove('is-invalid');
+            $nota.classList.remove('is-invalid');
+
+            const contado = toNum($ef.value);
+            if (isNaN(contado) || contado < 0) {
+              $ef.classList.add('is-invalid');
+              e.preventDefault();
+              return;
+            }
+            if ($nota.hasAttribute('required') && !$nota.value.trim()) {
+              $nota.classList.add('is-invalid');
+              e.preventDefault();
+            }
+          });
+        })();
+    </script>
+

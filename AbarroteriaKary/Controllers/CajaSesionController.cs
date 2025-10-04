@@ -5,12 +5,9 @@ using AbarroteriaKary.Services.Auditoria;      // IAuditoriaService
 using AbarroteriaKary.Services.Correlativos;   // ICorrelativoService
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-
 using System.Security.Claims; // ← para User.FindFirstValue(...)
+using Rotativa.AspNetCore;
+using Rotativa.AspNetCore.Options;
 
 namespace AbarroteriaKary.Controllers
 {
@@ -237,11 +234,10 @@ namespace AbarroteriaKary.Controllers
             if (sesion == null)
                 return NotFound(new { ok = false, message = "No se encontró ninguna caja aperturada." });
 
-            // Totales (ingresos / egresos)
             var tot = await _context.MOVIMIENTO_CAJA
                 .AsNoTracking()
                 .Where(m => !m.ELIMINADO && m.SESION_ID == sesion.SESION_ID)
-                .GroupBy(m => 1)
+                .GroupBy(_ => 1)
                 .Select(g => new
                 {
                     Ingresos = g.Where(m => m.TIPO == "INGRESO").Sum(m => (decimal?)m.MONTO) ?? 0m,
@@ -250,25 +246,43 @@ namespace AbarroteriaKary.Controllers
                 .FirstOrDefaultAsync(ct) ?? new { Ingresos = 0m, Egresos = 0m };
 
             var usuarioId = RequireUserId();
+            var usuarioNombre = await _auditoria.GetUsuarioNombreAsync();
+
+            var esperado = Math.Round((((decimal?)sesion.MONTO_INICIAL) ?? 0m) + tot.Ingresos - tot.Egresos, 2);
+
             var vm = new CajaCierreViewModel
             {
                 SesionId = sesion.SESION_ID,
                 CajaId = cajaId,
-                CajaNombre = await _context.CAJA.Where(c => c.CAJA_ID == cajaId).Select(c => c.CAJA_NOMBRE).FirstOrDefaultAsync(ct),
+                CajaNombre = await _context.CAJA
+                    .Where(c => c.CAJA_ID == cajaId)
+                    .Select(c => c.CAJA_NOMBRE)
+                    .FirstOrDefaultAsync(ct),
+
                 FechaApertura = sesion.FECHA_APERTURA,
-                MontoInicial = sesion.MONTO_INICIAL,
-                //UsuarioAperturaId = sesion.USUARIO_APERTURA_ID,
-                UsuarioAperturaId = usuarioId,
+                MontoInicial = ((decimal?)sesion.MONTO_INICIAL) ?? 0m,
+
+                // 👇 Estos dos SON CLAVE para que el POST sea válido
+                UsuarioCierreId = usuarioId,
+                UsuarioCierreNombre = usuarioNombre,
 
                 FechaCierre = DateTime.Now,
 
                 TotalIngresos = tot.Ingresos,
                 TotalEgresos = tot.Egresos,
-                SaldoEsperado = sesion.MONTO_INICIAL + tot.Ingresos - tot.Egresos
+                SaldoEsperado = esperado
             };
 
             return PartialView("~/Views/CajaSesion/_CierreModal.cshtml", vm);
         }
+
+
+
+
+
+
+
+
 
         // ============================================================
         // POST: /CajaSesion/Cerrar
@@ -287,19 +301,34 @@ namespace AbarroteriaKary.Controllers
             if (sesion == null || !string.Equals(sesion.ESTADO_SESION, "ABIERTA", StringComparison.OrdinalIgnoreCase))
                 return NotFound(new { ok = false, message = "No se encontró ninguna caja aperturada." });
 
-            var usuarioNombre = await _auditoria.GetUsuarioNombreAsync();
-            var ahora = DateTime.Now;
-            var usuarioId = RequireUserId(); // ✅
+            // Recalcular totales/esperado en servidor
+            var tot = await _context.MOVIMIENTO_CAJA
+                .AsNoTracking()
+                .Where(m => !m.ELIMINADO && m.SESION_ID == sesion.SESION_ID)
+                .GroupBy(_ => 1)
+                .Select(g => new
+                {
+                    Ingresos = g.Where(m => m.TIPO == "INGRESO").Sum(m => (decimal?)m.MONTO) ?? 0m,
+                    Egresos = g.Where(m => m.TIPO == "EGRESO").Sum(m => (decimal?)m.MONTO) ?? 0m
+                })
+                .FirstOrDefaultAsync(ct) ?? new { Ingresos = 0m, Egresos = 0m };
 
+            var esperado = Math.Round((((decimal?)sesion.MONTO_INICIAL) ?? 0m) + tot.Ingresos - tot.Egresos, 2);
+            var diferencia = Math.Round(vm.MontoFinal - esperado, 2);
+
+            // Nota obligatoria si no cuadra
+            if (diferencia != 0m && string.IsNullOrWhiteSpace(vm.NotaCierre))
+                return BadRequest(new { ok = false, message = "Si el efectivo no cuadra, la nota de cierre es obligatoria." });
+
+            var usuarioNombre = await _auditoria.GetUsuarioNombreAsync();
+            var usuarioId = RequireUserId();
+            var ahora = DateTime.Now;
 
             sesion.FECHA_CIERRE = ahora;
-            //sesion.USUARIO_CIERRE_ID = vm.UsuarioCierreId;
-            sesion.USUARIO_CIERRE_ID = usuarioId; // ✅ proveniente de claims
-
+            sesion.USUARIO_CIERRE_ID = usuarioId;
             sesion.MONTO_FINAL = vm.MontoFinal;
-            sesion.NOTACIERRE = vm.NotaCierre;
+            sesion.NOTACIERRE = string.IsNullOrWhiteSpace(vm.NotaCierre) ? null : vm.NotaCierre.Trim();
             sesion.ESTADO_SESION = "CERRADA";
-
             sesion.MODIFICADO_POR = usuarioNombre;
             sesion.FECHA_MODIFICACION = ahora;
 
@@ -310,7 +339,8 @@ namespace AbarroteriaKary.Controllers
                 {
                     ok = true,
                     message = "Caja cerrada correctamente.",
-                    sesionId = sesion.SESION_ID
+                    sesionId = sesion.SESION_ID,
+                    diferencia
                 });
             }
             catch (DbUpdateException ex)
@@ -318,5 +348,82 @@ namespace AbarroteriaKary.Controllers
                 return StatusCode(409, new { ok = false, message = $"No se pudo cerrar la caja: {ex.GetBaseException().Message}" });
             }
         }
+
+
+
+
+
+
+
+
+
+
+        [HttpGet]
+        public async Task<IActionResult> VentaDiaria(string sesionId, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(sesionId)) return NotFound();
+
+            var ses = await _context.CAJA_SESION.AsNoTracking()
+                .FirstOrDefaultAsync(s => s.SESION_ID == sesionId && !s.ELIMINADO, ct);
+            if (ses == null) return NotFound();
+
+            var cajaNombre = await _context.CAJA.AsNoTracking()
+                .Where(c => c.CAJA_ID == ses.CAJA_ID)
+                .Select(c => c.CAJA_NOMBRE)
+                .FirstOrDefaultAsync(ct) ?? ses.CAJA_ID;
+
+            // Ventas ligadas a MOVIMIENTO_CAJA (INGRESO) de la sesión
+            var ventas = await _context.MOVIMIENTO_CAJA.AsNoTracking()
+                .Where(m => !m.ELIMINADO && m.SESION_ID == sesionId && m.TIPO == "INGRESO" && m.REFERENCIA.StartsWith("V"))
+                .Join(_context.VENTA.AsNoTracking(),
+                      m => m.REFERENCIA, v => v.VENTA_ID,
+                      (m, v) => new { v.VENTA_ID, v.FECHA, v.TOTAL, v.CLIENTE_ID, v.USUARIO_ID })
+                .OrderBy(x => x.FECHA)
+                .ToListAsync(ct);
+
+            var items = ventas.Select(x => new AbarroteriaKary.ModelsPartial.CajaVentaDiariaItemVM
+            {
+                VentaId = x.VENTA_ID,
+                Fecha = x.FECHA,
+                ClienteId = x.CLIENTE_ID,
+                ClienteNombre = x.CLIENTE_ID, // si quieres, resuelve PERSONA aquí
+                Total = x.TOTAL
+            }).ToList();
+
+            var vm = new AbarroteriaKary.ModelsPartial.CajaVentaDiariaPdfVM
+            {
+                SesionId = sesionId,
+                CajaId = ses.CAJA_ID,
+                CajaNombre = cajaNombre,
+                FechaApertura = ses.FECHA_APERTURA,
+                FechaCorte = DateTime.Now,
+                UsuarioNombre = await _auditoria.GetUsuarioNombreAsync(),
+                Total = items.Sum(i => i.Total),
+                Ventas = items
+            };
+
+            return new ViewAsPdf("_VentaDiariaPdf", vm)
+            {
+                FileName = $"VentaDiaria_{sesionId}.pdf",
+                PageSize = Size.A4,
+                PageOrientation = Orientation.Portrait,
+                PageMargins = new Margins { Top = 10, Right = 10, Bottom = 10, Left = 10 },
+                ContentDisposition = ContentDisposition.Inline
+            };
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 }
