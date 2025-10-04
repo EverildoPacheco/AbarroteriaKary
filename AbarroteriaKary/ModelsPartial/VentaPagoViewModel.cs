@@ -1,5 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+﻿using Microsoft.AspNetCore.Mvc.ModelBinding.Validation;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel.DataAnnotations;
 
 namespace AbarroteriaKary.ModelsPartial
 {
@@ -15,5 +16,7 @@ namespace AbarroteriaKary.ModelsPartial
 
         [ValidateNever]
         public decimal? CambioCalculado { get; set; }
+        public decimal TotalPagar { get; set; }
+        public List<SelectListItem> Metodos { get; set; } = new();
     }
 }

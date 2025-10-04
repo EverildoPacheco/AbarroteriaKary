@@ -232,44 +232,227 @@
     });
 
     // --------- Cobrar ---------
-    document.getElementById('btnCobrar')?.addEventListener('click', async () => {
-        const total = recalcTotal();
-        if (total <= 0) {
-            (window.KarySwal?.warn ?? alert)({ title: 'Agregue productos a la venta.' });
-            return;
-        }
 
-        let metodo = null;
-        if (window.KarySwal?.select) {
-            metodo = await KarySwal.select({
-                title: 'Método de pago',
-                options: { 'MP000001': 'Efectivo', 'MP000002': 'Tarjeta' }
-            });
-            if (!metodo) return;
-        } else {
-            metodo = prompt('Método de pago (ID):', 'MP000001'); if (!metodo) return;
-        }
+    // --- calcular total actual (reutiliza tu función si ya la tienes) ---
+    function vc_recalcTotal() {
+        const fmt = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' });
+        let total = 0;
+        document.querySelectorAll('#detalleBody tr').forEach(tr => {
+            const qty = parseFloat(tr.querySelector('.js-cant')?.value || '0');
+            const pvp = parseFloat(tr.querySelector('.js-pvp')?.value || '0');
+            total += (Math.round(qty * pvp * 100) / 100);
+        });
+        document.getElementById('totalCell').textContent = fmt.format(Math.round(total * 100) / 100);
+        return Math.round(total * 100) / 100;
+    }
 
-        let recibido = null;
-        if (metodo === 'MP000001') {
-            if (window.KarySwal?.promptNumber) {
-                recibido = await KarySwal.promptNumber({
-                    title: `Total: ${fmtGT.format(total)}\nEfectivo recibido`,
-                    min: total, step: 0.01, defaultValue: total
-                });
-                if (recibido == null) return;
-            } else {
-                recibido = parseNum(prompt(`Total ${fmtGT.format(total)}\nEfectivo recibido:`));
-                if (!(recibido >= total)) { alert('Efectivo insuficiente'); return; }
+    //async function abrirModalPago(total) {
+    //    // Limpieza de modal/backdrops previos
+    //    document.getElementById('modalPagoVenta')?.remove();
+    //    document.querySelectorAll('.modal-backdrop').forEach(el => el.remove());
+    //    document.body.classList.remove('modal-open');
+    //    document.body.style.removeProperty('padding-right');
+
+    //    // Carga parcial
+    //    const url = `/Ventas/PagoModal?total=${encodeURIComponent(total)}`;
+    //    const rsp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+    //    if (!rsp.ok) {
+    //        const txt = await rsp.text();
+    //        (window.KarySwal?.error ?? alert)({ title: 'Error', text: txt || 'No se pudo cargar el modal de pago.' });
+    //        return;
+    //    }
+    //    const html = await rsp.text();
+
+    //    // Inyecta y muestra
+    //    const host = document.getElementById('ak-modal-host') || document.body;
+    //    host.insertAdjacentHTML('beforeend', html);
+
+    //    const modalEl = document.getElementById('modalPagoVenta');
+    //    const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+    //    modal.show();
+
+    //    // --- WIRING dentro del modal ---
+    //    const fmtGT = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' });
+    //    const parseN = v => { const n = parseFloat(String(v).replace(',', '.')); return isNaN(n) ? 0 : n; };
+
+    //    const $totalN = parseN(modalEl.querySelector('#pvTotalNumber')?.value || '0');
+    //    const $met = modalEl.querySelector('#pvMetodo');
+    //    const $efec = modalEl.querySelector('#pvEfectivo');
+    //    const $camb = modalEl.querySelector('#pvCambio');
+    //    const $ok = modalEl.querySelector('#pvConfirmar');
+
+    //    // Calcula cambio (auto)
+    //    const calcCambio = () => {
+    //        const recibido = parseN($efec.value);
+    //        const cambio = Math.max(0, Math.round((recibido - $totalN) * 100) / 100);
+    //        $camb.value = fmtGT.format(cambio);
+    //    };
+    //    calcCambio();
+    //    $efec.addEventListener('input', calcCambio);
+
+    //    // Confirmar venta
+    //    $ok.addEventListener('click', () => {
+    //        if (!$met.value) { $met.classList.add('is-invalid'); return; }
+    //        $met.classList.remove('is-invalid');
+
+    //        const recibido = parseN($efec.value);
+    //        if (recibido < $totalN) { $efec.classList.add('is-invalid'); return; }
+    //        $efec.classList.remove('is-invalid');
+
+    //        // Llenar hidden del form principal
+    //        document.getElementById('MetodoPagoId').value = $met.value;
+    //        document.getElementById('EfectivoRecibido').value = recibido.toFixed(2);
+    //        document.getElementById('CambioCalculado').value = Math.max(0, recibido - $totalN).toFixed(2);
+
+    //        modal.hide();
+    //        modalEl.addEventListener('hidden.bs.modal', () => {
+    //            modal.dispose();
+    //            modalEl.remove();
+    //            // Enviar form principal
+    //            document.getElementById('form-venta').submit();
+    //        }, { once: true });
+    //    }, { once: false });
+    //}
+
+
+    // === Reemplazo de abrirModalPago(total) ===
+    async function abrirModalPago(total) {
+        // Quita modal previo para evitar handlers duplicados
+        document.getElementById('modalPagoVenta')?.remove();
+        document.querySelectorAll('.modal-backdrop').forEach(e => e.remove());
+        document.body.classList.remove('modal-open');
+        document.body.style.removeProperty('padding-right');
+
+        // Carga el parcial
+        const url = `/Ventas/PagoModal?total=${encodeURIComponent(total)}`;
+        const rsp = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' } });
+        if (!rsp.ok) { (window.KarySwal?.error ?? alert)({ title: 'Error', text: 'No se pudo abrir el modal de pago.' }); return; }
+        const html = await rsp.text();
+
+        // Inyecta
+        const host = document.getElementById('ak-modal-host') || document.body;
+        host.insertAdjacentHTML('beforeend', html);
+
+        // Inicializa modal
+        const modalEl = document.getElementById('modalPagoVenta');
+        const modal = new bootstrap.Modal(modalEl, { backdrop: 'static' });
+        modal.show();
+
+        // ---- Bind de eventos (aquí sí corre el JS) ----
+        const fmtGT = new Intl.NumberFormat('es-GT', { style: 'currency', currency: 'GTQ' });
+        const parseNum = v => { const n = parseFloat(v); return isNaN(n) ? 0 : n; };
+
+        const totalN = parseNum(document.getElementById('pvTotalNumber').value || '0');
+        const $met = document.getElementById('pvMetodo');
+        const $efec = document.getElementById('pvEfectivo');
+        const $camb = document.getElementById('pvCambio');
+        const $okBtn = document.getElementById('pvConfirmar');
+
+        function calcCambio() {
+            const recibido = parseNum($efec.value);
+            const cambio = Math.max(0, Math.round((recibido - totalN) * 100) / 100);
+            $camb.value = fmtGT.format(cambio);
+        }
+        calcCambio();
+        $efec.addEventListener('input', calcCambio);
+
+        async function askConfirm({ title, text, confirmText = 'Sí, registrar', cancelText = 'No' }) {
+            if (window.KarySwal?.confirm) {
+                return await KarySwal.confirm({ title, text, confirmText, cancelText, icon: 'question' });
             }
+            if (window.Swal?.fire) {
+                const r = await Swal.fire({
+                    title, text, icon: 'question',
+                    showCancelButton: true, confirmButtonText: confirmText, cancelButtonText: cancelText, reverseButtons: true
+                });
+                return r.isConfirmed;
+            }
+            return window.confirm(`${title}\n\n${text}`);
         }
 
-        document.getElementById('MetodoPagoId').value = metodo;
-        document.getElementById('EfectivoRecibido').value = recibido ?? '';
-        document.getElementById('CambioCalculado').value = recibido ? Math.round((recibido - total) * 100) / 100 : '';
+        let submitting = false;
+        $okBtn.addEventListener('click', async () => {
+            if (submitting) return;
 
-        document.getElementById('form-venta').submit();
-    });
+            if (!$met.value) { $met.classList.add('is-invalid'); return; }
+            $met.classList.remove('is-invalid');
+
+            const recibido = parseNum($efec.value);
+            if (recibido < totalN) { $efec.classList.add('is-invalid'); return; }
+            $efec.classList.remove('is-invalid');
+
+            const cambio = Math.max(0, Math.round((recibido - totalN) * 100) / 100);
+            const metodoTx = $met.options[$met.selectedIndex]?.text || $met.value;
+
+            const ok = await askConfirm({
+                title: '¿Registrar la venta?',
+                text:
+                    `Total: ${fmtGT.format(totalN)}\n` +
+                    `Método: ${metodoTx}\n` +
+                    `Efectivo: ${fmtGT.format(recibido)}\n` +
+                    `Cambio: ${fmtGT.format(cambio)}`
+            });
+            if (!ok) return;
+
+            // Pasa datos al form principal y envía
+            document.getElementById('MetodoPagoId').value = $met.value;
+            document.getElementById('EfectivoRecibido').value = recibido.toFixed(2);
+            document.getElementById('CambioCalculado').value = cambio.toFixed(2);
+
+            submitting = true;
+            bootstrap.Modal.getInstance(modalEl)?.hide();
+            document.getElementById('form-venta').submit();
+        });
+
+        // Limpieza al cerrar
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            modal.dispose();
+            modalEl.remove();
+            document.querySelectorAll('.modal-backdrop').forEach(e => e.remove());
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('padding-right');
+        }, { once: true });
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    const btnCobrar = document.getElementById('btnCobrar');
+    if (btnCobrar && !btnCobrar.dataset.wired) {
+        btnCobrar.dataset.wired = '1';
+        btnCobrar.addEventListener('click', async () => {
+            // Evita prompts viejos y valida
+            if (!document.querySelector('#detalleBody tr')) {
+                (window.KarySwal?.warn ?? alert)({ title: 'Agregue productos a la venta.' });
+                return;
+            }
+            const total = vc_recalcTotal();
+            if (total <= 0) {
+                (window.KarySwal?.warn ?? alert)({ title: 'Agregue productos a la venta.' });
+                return;
+            }
+            await abrirModalPago(total);
+        });
+    }
+
+
+
+
 
     // init
     recalcTotal();
@@ -290,6 +473,30 @@
 
         cont.style.maxHeight = (hHead + rows * hRow + hFoot) + 'px';
     }
+
+
+
+
+
+
+
+
+
+
+
+   
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

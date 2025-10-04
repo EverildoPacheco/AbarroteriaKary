@@ -36,6 +36,12 @@ namespace AbarroteriaKary.ModelsPartial
         }
         private string _sesionId = string.Empty;
 
+
+        [ValidateNever]
+        public string UsuarioNombre { get; set; } = string.Empty; // ← solo para la UI
+
+
+
         // ---------- Encabezado (tabla VENTA) ----------
         [Display(Name = "Fecha")]
         public DateTime FechaVenta { get; set; } = DateTime.Now;

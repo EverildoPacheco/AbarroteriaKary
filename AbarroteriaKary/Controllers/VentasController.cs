@@ -24,7 +24,6 @@ using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
-
 namespace AbarroteriaKary.Controllers
 {
     public class VentasController : Controller
@@ -216,6 +215,23 @@ namespace AbarroteriaKary.Controllers
         }
 
 
+        // En VentasController (o en un BaseAppController)
+        private async Task<string> GetUsuarioNombreUiAsync(string usuarioId, CancellationToken ct)
+        {
+            // Si tu login ya pone el nombre en claims/session, úsalo y evita ir a DB
+            var fromClaims = User?.FindFirst("UsuarioNombre")?.Value
+                          ?? User?.Identity?.Name;
+            if (!string.IsNullOrWhiteSpace(fromClaims))
+                return fromClaims!;
+
+            // Fallback: lee de USUARIO.USUARIO_NOMBRE (EF/LINQ, nada de SQL plano)
+            var nombre = await _context.USUARIO.AsNoTracking()
+                .Where(u => !u.ELIMINADO && u.USUARIO_ID == usuarioId)
+                .Select(u => u.USUARIO_NOMBRE)
+                .FirstOrDefaultAsync(ct);
+
+            return string.IsNullOrWhiteSpace(nombre) ? usuarioId : nombre!;
+        }
 
 
 
@@ -229,7 +245,8 @@ namespace AbarroteriaKary.Controllers
         public async Task<IActionResult> Create(string? cajaId = null, CancellationToken ct = default)
         {
 
-            var usuarioId = await RequireUserIdAsync(ct);   // <--- aquí
+            var usuarioId = await RequireUserIdAsync(ct);
+            var usuarioNombre = await GetUsuarioNombreUiAsync(usuarioId, ct);
 
             // 1) Resolver CAJA_ID (puede venir en query o usar la asignada por defecto)
             var cajaIdUse = (cajaId ?? await _context.CAJA
@@ -269,7 +286,9 @@ namespace AbarroteriaKary.Controllers
                 SesionId = sesion.SESION_ID,
                 FechaVenta = DateTime.Now,
                 ClienteId = "CF",          // tu cliente de contado/final predeterminado
-                UsuarioId = usuarioId
+                UsuarioId = usuarioId,
+                UsuarioNombre = usuarioNombre   // se muestra este
+
             };
 
             ViewBag.CajaId = cajaIdUse; // para el header si lo necesitas
@@ -300,11 +319,22 @@ namespace AbarroteriaKary.Controllers
                 var usuarioNombre = await _auditoria.GetUsuarioNombreAsync();
                 var result = await _ventaTx.ConfirmarVentaAsync(vm, pago, usuarioNombre, ct);
 
-                TempData["SavedOk"] = true;
-                TempData["SavedVentaId"] = result.VentaId;
-                TempData["SavedTotal"] = result.Total;
+                //TempData["SavedOk"] = true;
+                //TempData["SavedVentaId"] = result.VentaId;
+                //TempData["SavedTotal"] = result.Total;
 
-                return RedirectToAction(nameof(Details), new { id = result.VentaId });
+
+                // ...
+                TempData["SavedOk"] = true;                  // bool está bien
+                TempData["SavedVentaId"] = result.VentaId;
+                // GUARDAR COMO STRING (formateado o invariante)
+                TempData["SavedTotal"] = result.Total.ToString(CultureInfo.InvariantCulture);
+                // opcional: también puedes guardar ya formateado para mostrar
+                TempData["SavedTotalFmt"] = result.Total.ToString("C2", CultureInfo.GetCultureInfo("es-GT"));
+
+
+                //return RedirectToAction(nameof(Details), new { id = result.VentaId });
+                return RedirectToAction(nameof(Create));
             }
             catch (InvalidOperationException ex)
             {
@@ -630,6 +660,30 @@ namespace AbarroteriaKary.Controllers
 
 
 
+
+        [HttpGet]
+        public async Task<IActionResult> PagoModal(decimal total, CancellationToken ct)
+        {
+            // Métodos de pago activos
+            var items = await _context.METODO_PAGO
+                .AsNoTracking()
+                .Where(m => !m.ELIMINADO && m.ESTADO == "ACTIVO")
+                .OrderBy(m => m.METODO_PAGO_NOMBRE)
+                .Select(m => new SelectListItem
+                {
+                    Value = m.METODO_PAGO_ID,
+                    Text = m.METODO_PAGO_NOMBRE
+                })
+                .ToListAsync(ct);
+
+            var vm = new AbarroteriaKary.ModelsPartial.VentaPagoViewModel
+            {
+                TotalPagar = total,
+                Metodos = items
+            };
+
+            return PartialView("~/Views/Ventas/_PagoVentaModal.cshtml", vm);
+        }
 
 
 

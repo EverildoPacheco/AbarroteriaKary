@@ -5,9 +5,15 @@
     ViewData["Title"] = "Nueva Venta";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    var savedOk = TempData["SavedOk"] as bool?;
+    // var savedOk = TempData["SavedOk"] as bool?;
+    // var savedVentaId = TempData["SavedVentaId"] as string ?? "";
+    // var savedTotal = TempData["SavedTotal"] as decimal?;
+
+
+
+    var savedOk = TempData["SavedOk"] as bool? == true;
     var savedVentaId = TempData["SavedVentaId"] as string ?? "";
-    var savedTotal = TempData["SavedTotal"] as decimal?;
+    var savedTotalFmt = TempData["SavedTotalFmt"] as string ?? ""; // ya viene bonito “Q 0.00”
 }
 
 <style>
@@ -97,9 +103,11 @@
                             </div>
 
                             <div class="ak-form-col">
-                                <label asp-for="UsuarioId" class="form-label">Vendedor</label>
-                                <input asp-for="UsuarioId" class="form-control" readonly />
+                                <label class="form-label">Vendedor</label>
+                                <input type="hidden" asp-for="UsuarioId" />
+                                <input class="form-control" value="@Model.UsuarioNombre" readonly />
                             </div>
+
 
                         </div>
                     </div>
@@ -182,24 +190,62 @@
 </div>
 
 <!-- Host para inyectar el modal parcial -->
-<div id="ak-modal-host"></div>
+// <div id="ak-modal-host"></div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/js/ventas-create.js"></script>
 
-    @if ((TempData["SavedOk"] as bool?) == true)
+    @* Solo mostrar los SweetAlerts si venimos de una venta registrada *@
+    @if (savedOk)
     {
         <script>
-            (function(){
-              if (window.KarySwal && KarySwal.saveSuccess) {
-                KarySwal.saveSuccess({
-                  title: '¡Venta realizada!',
-                  text: 'Venta @savedVentaId por @(((decimal?)savedTotal)?.ToString("C2", CultureInfo.GetCultureInfo("es-GT")) ?? "")',
-                  indexUrl: '@Url.Action("Index", "Ventas")',
-                  createUrl: '@Url.Action("Create", "Ventas")'
-                });
+            (async function(){
+              const ventaId = '@savedVentaId';
+              const totalTx = '@savedTotalFmt';
+
+              // Paso 2: éxito con timer y botón OK
+              async function showSuccess(){
+                if (window.Swal?.fire) {
+                  await Swal.fire({
+                    title: '¡Venta registrada con éxito!',
+                    text: `Venta ${ventaId} por ${totalTx}`,
+                    icon: 'success',
+                    timer: 10000,
+                    timerProgressBar: true,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK'
+                  });
+                } else {
+                  alert(`Venta ${ventaId} registrada por ${totalTx}`);
+                }
               }
+
+              // Paso 3: ofrecer recibo (pendiente implementar)
+              async function askRecibo(){
+                if (window.Swal?.fire) {
+                  const r = await Swal.fire({
+                    title: '¿Quieres generar el recibo?',
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sí, generar',
+                    cancelButtonText: 'No',
+                    reverseButtons: true
+                  });
+                  if (r.isConfirmed) {
+                    const url = '@Url.Action("Recibo", "Ventas")' + '?id=' + encodeURIComponent(ventaId);
+                    window.location.href = url; // (solo navega; implementa la acción cuando estés listo)
+                  }
+                } else {
+                  if (confirm('¿Generar recibo?')) {
+                    const url = '@Url.Action("Recibo", "Ventas")' + '?id=' + encodeURIComponent(ventaId);
+                    window.location.href = url;
+                  }
+                }
+              }
+
+              await showSuccess();
+              await askRecibo();
             })();
         </script>
     }
