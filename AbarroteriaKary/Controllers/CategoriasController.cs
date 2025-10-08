@@ -201,31 +201,24 @@ namespace AbarroteriaKary.Controllers
         // - Genera ID definitivo (NEXT) dentro de transacción.
         // - PRG → RedirectToAction(Create) para permitir altas consecutivas.
         // ==========================================
+
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(CategoriaViewModel vm, CancellationToken ct)
         {
-            // 1) Sincroniza checkbox -> cadena ESTADO
             vm.RefrescarEstadoDesdeBool();
-
-            // 2) Normalización básica (evita espacios/valores nulos)
             vm.CategoriaNombre = (vm.CategoriaNombre ?? string.Empty).Trim();
             vm.CategoriaDescripcion = vm.CategoriaDescripcion?.Trim();
 
-            // 3) Validación servidor
             if (!ModelState.IsValid)
             {
-                // Reponer "preview" si se perdió
                 if (string.IsNullOrWhiteSpace(vm.CategoriaID))
                     vm.CategoriaID = await _correlativos.PeekNextCategoriaIdAsync(ct);
 
                 return View(vm);
             }
-
-            // 4) Regla de dominio: nombre único entre no eliminados
             var duplicado = await _context.CATEGORIA.AnyAsync(c =>
                 !c.ELIMINADO && c.CATEGORIA_NOMBRE == vm.CategoriaNombre, ct);
-
             if (duplicado)
             {
                 ModelState.AddModelError(nameof(vm.CategoriaNombre), "Ya existe una categoría con ese nombre.");
@@ -233,17 +226,12 @@ namespace AbarroteriaKary.Controllers
                     vm.CategoriaID = await _correlativos.PeekNextCategoriaIdAsync(ct);
                 return View(vm);
             }
-
-            // 5) Alta dentro de transacción para asegurar correlativo único
             var ahora = DateTime.Now;
             var usuario = User?.Identity?.Name ?? "SYSTEM";
-
             await using var tx = await _context.Database.BeginTransactionAsync(System.Data.IsolationLevel.Serializable, ct);
             try
             {
-                // ID definitivo (atómico)
                 var nuevoId = await _correlativos.NextCategoriaIdAsync(ct);
-
                 var entidad = new CATEGORIA
                 {
                     CATEGORIA_ID = nuevoId,
@@ -251,8 +239,6 @@ namespace AbarroteriaKary.Controllers
                     CATEGORIA_DESCRIPCION = vm.CategoriaDescripcion,
                     ESTADO = vm.ESTADO,
                     ELIMINADO = false,
-
-                    // Auditoría de alta
                     CREADO_POR = usuario,
                     FECHA_CREACION = ahora,
                     MODIFICADO_POR = null,
@@ -260,29 +246,19 @@ namespace AbarroteriaKary.Controllers
                     ELIMINADO_POR = null,
                     FECHA_ELIMINACION = null
                 };
-
                 _context.CATEGORIA.Add(entidad);
                 await _context.SaveChangesAsync(ct);
                 await tx.CommitAsync(ct);
-
-                // Flags para modal/toast de éxito
                 TempData["SavedOk"] = true;
                 TempData["SavedName"] = entidad.CATEGORIA_NOMBRE;
-
-                // PRG: permite registrar varias categorías seguidas
                 return RedirectToAction(nameof(Create));
             }
             catch (DbUpdateException ex)
             {
                 await tx.RollbackAsync(ct);
-
-                // Mensaje legible para el usuario (sin stack técnico)
                 ModelState.AddModelError(string.Empty, $"Error al guardar en base de datos: {ex.GetBaseException().Message}");
-
-                // Reponer "preview" si procede
                 if (string.IsNullOrWhiteSpace(vm.CategoriaID))
                     vm.CategoriaID = await _correlativos.PeekNextCategoriaIdAsync(ct);
-
                 return View(vm);
             }
         }

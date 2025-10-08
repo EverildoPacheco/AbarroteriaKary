@@ -10,64 +10,37 @@
 }
 
 <div class="ak-page">
-    <!-- Encabezado -->
     <div class="ak-header container-fluid px-3 px-md-4">
         <h1 class="ak-form-title m-1 mb-4">Ingresar nueva categoría</h1>
     </div>
-
-    <!-- Contenido principal -->
     <div class="ak-main">
         <div class="container-fluid px-3 px-md-4">
-
-            <!-- Formulario -->
             <form asp-action="Create" method="post" id="form-create-categoria" novalidate>
                 @Html.AntiForgeryToken()
-
-                <!-- Resumen de validaciones -->
                 <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
-
-                <!-- Card del formulario -->
                 <div class="card ak-card translucent shadow-sm w-100">
                     <div class="card-body ak-form">
-
-                        <!-- Código (solo lectura, lo genera el correlativo) -->
                         <div class="mb-3">
                             <label asp-for="CategoriaID" class="form-label">Código</label>
                             <input asp-for="CategoriaID" class="form-control" readonly />
                             <div class="form-text">Se genera automáticamente al guardar.</div>
                         </div>
-
-                        <!-- Nombre (requerido) -->
                         <div class="mb-3">
                             <label asp-for="CategoriaNombre" class="form-label">Nombre*</label>
                             <input asp-for="CategoriaNombre" class="form-control" placeholder="Ej. Bebidas" />
                             <span asp-validation-for="CategoriaNombre" class="text-danger"></span>
                         </div>
-
-                        <!-- Descripción -->
                         <div class="mb-3">
                             <label asp-for="CategoriaDescripcion" class="form-label">Descripción</label>
                             <textarea asp-for="CategoriaDescripcion" class="form-control" rows="3" placeholder="Ej. Productos líquidos como gaseosas, jugos, agua"></textarea>
                             <span asp-validation-for="CategoriaDescripcion" class="text-danger"></span>
                         </div>
-
-                        <!-- Estado (checkbox Activo) -->
                         <div class="form-check mb-3 d-flex align-items-center gap-2">
                             <input class="form-check-input ak-checkbox js-loading" asp-for="EstadoActivo" />
                             <label class="form-check-label fw-bold js-loading" asp-for="EstadoActivo"></label>
-                        </div>
-
-                        <!-- (Opcional) Fecha de creación solo informativa -->
-                        @* 
-                        <div class="mb-3">
-                            <label class="form-label">Fecha de creación</label>
-                            <input value="@(Model.FechaCreacion?.ToString("dd/MM/yyyy HH:mm") ?? "")" class="form-control" readonly />
-                        </div>
-                        *@
+                        </div>                    
                     </div>
                 </div>
-
-                <!-- Acciones -->
                 <div class="card ak-card ak-actions-card w-100 mt-3">
                     <div class="card-body d-flex justify-content-center gap-5 flex-wrap">
                         <a asp-action="Index" class="btn btn-ak btn-ak-cancel js-leave">

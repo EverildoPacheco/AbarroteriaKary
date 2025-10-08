@@ -91,4 +91,7 @@ public partial class CAJA_SESION
     [ForeignKey("USUARIO_CIERRE_ID")]
     [InverseProperty("CAJA_SESIONUSUARIO_CIERRE")]
     public virtual USUARIO? USUARIO_CIERRE { get; set; }
+
+    [InverseProperty("SESION")]
+    public virtual ICollection<VENTA> VENTA { get; set; } = new List<VENTA>();
 }

@@ -534,11 +534,17 @@ public partial class KaryDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_VENTA_CLIENTE");
 
+            entity.HasOne(d => d.SESION).WithMany(p => p.VENTA).HasConstraintName("FK_VENTA_CAJA_SESION");
+
             entity.HasOne(d => d.USUARIO).WithMany(p => p.VENTA)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_VENTA_USUARIO");
         });
         modelBuilder.HasSequence("SEQ_DETALLE_PEDIDO");
+        modelBuilder.HasSequence("SEQ_DETALLE_VENTA");
+        modelBuilder.HasSequence("SEQ_MOVIMIENTO_CAJA");
+        modelBuilder.HasSequence("SEQ_RECIBO");
+        modelBuilder.HasSequence("SEQ_VENTA");
 
         OnModelCreatingPartial(modelBuilder);
     }

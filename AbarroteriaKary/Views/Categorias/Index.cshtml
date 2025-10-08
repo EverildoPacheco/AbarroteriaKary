@@ -90,12 +90,10 @@
     </div>
 </div>
 
-<!-- Tabla -->
 <div class="table-responsive">
     <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra">
         <thead class="text-center thead-kary">
             <tr>
-                @* ★ Encabezados seguros cuando no hay Items *@
                 @if (Model.Items.Any())
                 {
                     <th>@Html.DisplayNameFor(m => m.Items[0].CategoriaID)</th>
@@ -156,10 +154,14 @@
             }
         </tbody>
     </table>
-
-    @* Paginador (mismo parcial que en otros módulos) *@
     @await Html.PartialAsync("_Pager", Model)
 </div>
+
+
+
+
+
+
 
 @section Scripts {
     <script>

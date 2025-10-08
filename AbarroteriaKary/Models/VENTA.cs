@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AbarroteriaKary.Models;
 
 [Index("FECHA", "USUARIO_ID", Name = "IX_VENTA_FECHA_USUARIO")]
+[Index("SESION_ID", Name = "IX_VENTA_SESION_ID")]
 public partial class VENTA
 {
     [Key]
@@ -55,6 +56,10 @@ public partial class VENTA
     [Unicode(false)]
     public string ESTADO { get; set; } = null!;
 
+    [StringLength(10)]
+    [Unicode(false)]
+    public string? SESION_ID { get; set; }
+
     [ForeignKey("CLIENTE_ID")]
     [InverseProperty("VENTA")]
     public virtual CLIENTE CLIENTE { get; set; } = null!;
@@ -64,6 +69,10 @@ public partial class VENTA
 
     [InverseProperty("VENTA")]
     public virtual ICollection<RECIBO> RECIBO { get; set; } = new List<RECIBO>();
+
+    [ForeignKey("SESION_ID")]
+    [InverseProperty("VENTA")]
+    public virtual CAJA_SESION? SESION { get; set; }
 
     [ForeignKey("USUARIO_ID")]
     [InverseProperty("VENTA")]

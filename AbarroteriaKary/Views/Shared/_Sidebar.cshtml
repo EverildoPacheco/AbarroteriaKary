@@ -37,6 +37,18 @@
                         <i class="fa-solid fa-receipt kary-submenu__icon" aria-hidden="true"></i>
                         <span>Ventas</span>
                     </a>
+
+                    <a class="kary-submenu__item @active("Saber", "Index")"
+                       asp-controller="Ventas" asp-action="Index">
+                        <i class="fa-solid fa-receipt kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Historia de ventas</span>
+                    </a>
+                    <a class="kary-submenu__item @active("Cajas", "Index")"
+                       asp-controller="Cajas" asp-action="Index">
+                        <i class="fa-solid fa-cash-register kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Caja</span>
+                    </a>
+
                 </div>
             </div>
 
@@ -51,11 +63,11 @@
                 </button>
 
                 <div id="sm-caja" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Cajas", "Index")"
+                   @*  <a class="kary-submenu__item @active("Cajas", "Index")"
                        asp-controller="Cajas" asp-action="Index">
                         <i class="fa-solid fa-cash-register kary-submenu__icon" aria-hidden="true"></i>
                         <span>Caja</span>
-                    </a>
+                    </a> *@
                 </div>
             </div>
 
@@ -260,6 +272,11 @@
                        asp-controller="Permisos" asp-action="Index">
                         <i class="fa-solid fa-key kary-submenu__icon" aria-hidden="true"></i>
                         <span>Permiso</span>
+                    </a>
+                    <a class="kary-submenu__item @active("Permisos", "Index")"
+                       asp-controller="Permisos" asp-action="Index">
+                        <i class="fa-solid fa-key kary-submenu__icon" aria-hidden="true"></i>
+                        <span>Modulos</span>
                     </a>
                 </div>
             </div>

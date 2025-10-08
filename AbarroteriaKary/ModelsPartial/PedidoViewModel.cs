@@ -6,9 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace AbarroteriaKary.ModelsPartial
 {
-    /// <summary>
-    /// VM principal para crear/editar/visualizar un Pedido (encabezado + detalle).
-    /// </summary>
+
     public class PedidoViewModel : IValidatableObject
     {
         [Display(Name = "No. Pedido")]
@@ -17,19 +15,7 @@ namespace AbarroteriaKary.ModelsPartial
             get => _pedidoId;
             set => _pedidoId = (value ?? string.Empty).Trim().ToUpper();
         }
-        private string _pedidoId = string.Empty;
-
-        // (Opcional) Descomentar solo si existe columna NO_ORDEN/folio en PEDIDO
-        /*
-        [Display(Name = "No. Orden")]
-        [StringLength(30)]
-        public string NumeroOrden
-        {
-            get => _numeroOrden;
-            set => _numeroOrden = (value ?? string.Empty).Trim().ToUpper();
-        }
-        private string _numeroOrden = string.Empty;
-        */
+        private string _pedidoId = string.Empty;     
 
         [Required(ErrorMessage = "Seleccione un proveedor.")]
         [Display(Name = "Proveedor")]
@@ -51,19 +37,13 @@ namespace AbarroteriaKary.ModelsPartial
         }
         private string _usuarioCreadorId = string.Empty;
 
-        //[Display(Name = "Fecha del pedido")]
-        //[DataType(DataType.Date)]
-        //public DateTime? FechaPedido { get; set; }
-
 
         [Display(Name = "Fecha del pedido")]
         [DataType(DataType.Date)]
         [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd}", ApplyFormatInEditMode = true)]
         public DateTime? FechaPedido { get; set; }
 
-        //[Display(Name = "Fecha posible de entrega")]
-        //[DataType(DataType.Date)]
-        //public DateTime? FechaPosibleEntrega { get; set; }
+ 
 
         [Display(Name = "Fecha posible de entrega")]
         [DataType(DataType.Date)]
@@ -91,15 +71,6 @@ namespace AbarroteriaKary.ModelsPartial
         public List<SelectListItem> Estados { get; set; } = new();
 
 
-
-        //[Display(Name = "Observación")]
-        //[StringLength(500)]
-        //public string Observacion
-        //{
-        //    get => _observacion;
-        //    set => _observacion = (value ?? string.Empty).Trim();
-        //}
-        //private string _observacion = string.Empty;
 
 
         [Display(Name = "Observación")]
@@ -138,9 +109,7 @@ namespace AbarroteriaKary.ModelsPartial
             return total;
         }
 
-        /// <summary>
-        /// Validaciones de negocio del encabezado + detalle.
-        /// </summary>
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             // 1) Debe existir al menos 1 línea
@@ -239,12 +208,6 @@ namespace AbarroteriaKary.ModelsPartial
         public decimal? PrecioPedido { get; set; }      // PRECIO_PEDIDO (compra)
         public decimal? PrecioVenta { get; set; }       // PRECIO_VENTA
         public DateOnly? FechaVencimiento { get; set; } // FECHA_VENCIMIENTO (DATE en SQL; mapea a DateTime? o DateOnly? según tu modelo)
-
-
-
-
-
-
 
     }
 
