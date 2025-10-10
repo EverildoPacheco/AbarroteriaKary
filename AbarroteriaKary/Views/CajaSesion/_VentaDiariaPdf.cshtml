@@ -1,4 +1,4 @@
-﻿@model AbarroteriaKary.ModelsPartial.CajaVentaDiariaPdfVM
+﻿@* @model AbarroteriaKary.ModelsPartial.VentaDiariaDetPdfVM
 @using System.Globalization
 @{
     Layout = null;
@@ -9,7 +9,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <title>Venta diaria - @Model.CajaNombre</title>
+    <title>Venta diaria detallada - @Model.CajaNombre</title>
     <style>
         body {
             font-family: Arial, Helvetica, sans-serif;
@@ -21,15 +21,24 @@
             margin: 0 0 6px 0;
         }
 
+        h2 {
+            font-size: 14px;
+            margin: 12px 0 6px 0;
+        }
+
         .small {
             color: #666;
             font-size: 11px;
         }
 
+        .muted {
+            color: #777;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
+            margin-top: 6px;
         }
 
         th, td {
@@ -49,48 +58,260 @@
         .tot {
             font-weight: bold;
         }
+
+        .venta-block {
+            margin-top: 10px;
+            page-break-inside: avoid;
+        }
+
+        .venta-head {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .venta-meta {
+            font-size: 11px;
+            color: #555;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid #e5e7eb;
+            margin: 10px 0;
+        }
     </style>
 </head>
 <body>
-    <h1>Venta diaria</h1>
+    <h1>Venta diaria detallada</h1>
     <div class="small">
         Caja: <strong>@Model.CajaNombre</strong> &nbsp;|&nbsp;
         Sesión: <strong>@Model.SesionId</strong> &nbsp;|&nbsp;
         Apertura: @Model.FechaApertura.ToString("dd/MM/yyyy HH:mm") &nbsp;|&nbsp;
         Corte: @Model.FechaCorte.ToString("dd/MM/yyyy HH:mm") &nbsp;|&nbsp;
-        Usuario: @Model.UsuarioNombre
+        Generado por: @Model.UsuarioNombre
     </div>
 
-    <table>
-        <thead>
+    <hr />
+
+    @if (!Model.Ventas.Any())
+    {
+        <p class="muted">No hay ventas registradas en la sesión.</p>
+    }
+    else
+    {
+        foreach (var v in Model.Ventas)
+        {
+            <div class="venta-block">
+                <div class="venta-head">
+                    <h2>Venta @v.VentaId</h2>
+                    <div class="venta-meta">
+                        Fecha: @v.Fecha.ToString("dd/MM/yyyy HH:mm") &nbsp;|&nbsp;
+                        Cliente: @(string.IsNullOrWhiteSpace(v.ClienteNombre) ? v.ClienteId : v.ClienteNombre) &nbsp;|&nbsp;
+                        Vendedor: @(string.IsNullOrWhiteSpace(v.UsuarioNombre) ? v.UsuarioId : v.UsuarioNombre)
+                    </div>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:12%">Código</th>
+                            <th>Producto</th>
+                            <th style="width:12%" class="text-end">Cant.</th>
+                            <th style="width:16%" class="text-end">P. Unitario</th>
+                            <th style="width:16%" class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var ln in v.Lineas)
+                        {
+                            <tr>
+                                <td>@ln.ProductoId</td>
+                                <td>@ln.Nombre</td>
+                                <td class="text-end">@ln.Cantidad</td>
+                                <td class="text-end">@ln.PrecioUnitario.ToString("C2", gt)</td>
+                                <td class="text-end">@ln.Subtotal.ToString("C2", gt)</td>
+                            </tr>
+                        }
+                        @if (!v.Lineas.Any())
+                        {
+                            <tr><td colspan="5" class="muted">Sin líneas.</td></tr>
+                        }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="4" class="text-end tot">TOTAL VENTA</td>
+                            <td class="text-end tot">@v.Total.ToString("C2", gt)</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+
+        <hr />
+        <table>
             <tr>
-                <th style="width:22%">No. Venta</th>
-                <th style="width:22%">Fecha</th>
-                <th>Cliente</th>
-                <th style="width:18%" class="text-end">Total</th>
+                <td class="text-end tot">TOTAL SESIÓN</td>
+                <td style="width:16%" class="text-end tot">@Model.Total.ToString("C2", gt)</td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach (var v in Model.Ventas)
-            {
-                <tr>
-                    <td>@v.VentaId</td>
-                    <td>@v.Fecha.ToString("dd/MM/yyyy HH:mm")</td>
-                    <td>@(string.IsNullOrWhiteSpace(v.ClienteNombre) ? v.ClienteId : v.ClienteNombre)</td>
-                    <td class="text-end">@v.Total.ToString("C2", gt)</td>
-                </tr>
-            }
-            @if (!Model.Ventas.Any())
-            {
-                <tr><td colspan="4">No hay ventas registradas en la sesión.</td></tr>
-            }
-        </tbody>
-        <tfoot>
-            <tr>
-                <td colspan="3" class="text-end tot">TOTAL</td>
-                <td class="text-end tot">@Model.Total.ToString("C2", gt)</td>
-            </tr>
-        </tfoot>
+        </table>
+    }
+</body>
+</html>
+ *@
+ 
+
+@model AbarroteriaKary.ModelsPartial.VentaDiariaDetPdfVM
+@using System.Globalization
+@{
+    Layout = null;
+    var gt = CultureInfo.GetCultureInfo("es-GT");
+
+    // Asegúrate de llenar estas propiedades en el controlador si quieres logo/teléfono
+    var logo = Model.LogoUrl;
+    // var tel  = Model.Telefono;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Venta diaria - @Model.CajaNombre (@Model.SesionId)</title>
+<style>
+    /* ===== Reset mínimo y tipografía ===== */
+    * { box-sizing: border-box; }
+    html, body { margin:0; padding:0; }
+    body{
+        font-family: Arial, Helvetica, sans-serif;
+        font-size: 11px;
+        color:#222;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+        padding: 16px;
+    }
+    .muted{ color:#667085; }
+    .mono{ font-family: Consolas, "Liberation Mono", Menlo, monospace; }
+
+    /* ===== Header estilo "imagen 1" sin grid/flex ===== */
+    .hdr-wrap{ width:100%; }
+    .hdr-left{ width:48px; vertical-align:top; }
+    .hdr-center{ text-align:center; }
+    .logo{
+        width:42px; height:42px; object-fit:contain; opacity:.9;
+    }
+    .title{
+        font-size:22px; font-weight:800; letter-spacing:.8px; text-transform:uppercase;
+    }
+    .subline{ color:#415a6b; font-weight:700; }
+    .sep{
+        border:0; border-top:3px solid #b38d7a; margin:8px 0 12px 0;
+        height:0;
+    }
+
+    /* ===== Bloque de resumen (tabla simple) ===== */
+    .tbl-meta{ width:100%; border-collapse:collapse; margin-bottom:8px; }
+    .tbl-meta td{ padding:2px 4px; vertical-align:top; }
+    .lbl{ color:#6b7280; font-size:10px; }
+    .val{ font-weight:600; }
+
+    /* ===== Títulos por venta ===== */
+    .venta{ page-break-inside: avoid; margin-top:12px; }
+    .venta .head{ font-weight:800; font-size:13px; margin:8px 0 6px 0; }
+    .venta .meta{ color:#667085; font-size:10.5px; margin-bottom:6px; }
+
+    /* ===== Tabla de líneas estilo "imagen 2" ===== */
+    table{ width:100%; border-collapse:collapse; }
+    th, td{ border:1px solid #ddd; padding:6px 7px; }
+    th{
+        background:#b9d3da !important; /* cabecera celeste */
+        text-align:left; font-weight:700;
+    }
+    tbody tr:nth-child(even){ background:#f7fbfc; } /* zebra */
+    .text-end{ text-align:right; }
+
+    /* ===== Total general ===== */
+    .tot-gen{ margin-top:12px; font-weight:800; text-align:right; }
+</style>
+</head>
+<body>
+
+    <!-- Encabezado -->
+    <table class="hdr-wrap">
+        <tr>
+            <td class="hdr-left">
+                @if(!string.IsNullOrWhiteSpace(logo)){ <img class="logo" src="@logo" alt="Logo" /> }
+            </td>
+            <td class="hdr-center">
+                <div class="title">ABARROTERÍA KARY</div>
+@*                 <div class="subline">
+                    Sesión <span class="mono">@Model.SesionId</span>
+                    @if(!string.IsNullOrWhiteSpace(tel)){ @: &nbsp;·&nbsp; Cel: @tel }
+                </div> *@
+            </td>
+            <td class="hdr-left"></td>
+        </tr>
     </table>
+    <hr class="sep" />
+
+    <!-- Resumen sesión -->
+    <table class="tbl-meta">
+        <tr>
+            <td width="25%"><div class="lbl">Caja</div><div class="val">@Model.CajaNombre <span class="mono">(@Model.CajaId)</span></div></td>
+            <td width="25%"><div class="lbl">Apertura</div><div class="val">@Model.FechaApertura.ToString("dd/MM/yyyy HH:mm")</div></td>
+            <td width="25%"><div class="lbl">Corte</div><div class="val">@Model.FechaCorte.ToString("dd/MM/yyyy HH:mm")</div></td>
+            <td width="25%"><div class="lbl">Usuario</div><div class="val">@Model.UsuarioNombre</div></td>
+        </tr>
+    </table>
+
+    <!-- Ventas -->
+    @if (Model.Ventas?.Any() == true)
+    {
+        foreach (var v in Model.Ventas)
+        {
+            <div class="venta">
+                <div class="head">Venta @v.VentaId</div>
+                <div class="meta">
+                    @v.Fecha.ToString("dd/MM/yyyy HH:mm")
+                    · Cliente: @(string.IsNullOrWhiteSpace(v.ClienteNombre) ? v.ClienteId : v.ClienteNombre)
+                    · Vendedor: @(string.IsNullOrWhiteSpace(v.UsuarioNombre) ? v.UsuarioId : v.UsuarioNombre)
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="width:46%">Producto</th>
+                            <th style="width:12%" class="text-end">Cant.</th>
+                            <th style="width:18%" class="text-end">P. Unit.</th>
+                            <th style="width:24%" class="text-end">Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var ln in v.Lineas)
+                    {
+                        <tr>
+                            <td><strong>@ln.Nombre</strong></td>
+                            <td class="text-end">@ln.Cantidad</td>
+                            <td class="text-end">@ln.PrecioUnitario.ToString("C2", gt)</td>
+                            <td class="text-end">@ln.Subtotal.ToString("C2", gt)</td>
+                        </tr>
+                    }
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Total venta</strong></td>
+                            <td class="text-end"><strong>@v.Total.ToString("C2", gt)</strong></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        }
+
+        <div class="tot-gen">TOTAL GENERAL: @Model.Total.ToString("C2", gt)</div>
+    }
+    else
+    {
+        <div class="muted">No hay ventas registradas en la sesión.</div>
+    }
+
 </body>
 </html>

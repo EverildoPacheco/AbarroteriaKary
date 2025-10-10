@@ -14,12 +14,23 @@
 
             <div class="px-4"><hr class="my-2" /></div>
 
+@*             <form id="form-cierre-caja"
+                  asp-action="Cerrar"
+                  asp-controller="CajaSesion"
+                  method="post"
+                  class="px-4 pb-4"
+                  data-esperado="@Model.SaldoEsperado.ToString(System.Globalization.CultureInfo.InvariantCulture)"> *@
+
             <form id="form-cierre-caja"
                   asp-action="Cerrar"
                   asp-controller="CajaSesion"
                   method="post"
                   class="px-4 pb-4"
                   data-esperado="@Model.SaldoEsperado.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+
+
+
+
                 @Html.AntiForgeryToken()
 
                 <div class="d-flex align-items-center gap-2 text-muted small mb-3">

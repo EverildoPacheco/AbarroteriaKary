@@ -3,11 +3,12 @@ using AbarroteriaKary.Models;
 using AbarroteriaKary.ModelsPartial;           // VMs de Caja
 using AbarroteriaKary.Services.Auditoria;      // IAuditoriaService
 using AbarroteriaKary.Services.Correlativos;   // ICorrelativoService
+using DocumentFormat.OpenXml.InkML;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims; // ← para User.FindFirstValue(...)
 using Rotativa.AspNetCore;
 using Rotativa.AspNetCore.Options;
+using System.Security.Claims; // ← para User.FindFirstValue(...)
 
 namespace AbarroteriaKary.Controllers
 {
@@ -284,10 +285,6 @@ namespace AbarroteriaKary.Controllers
 
 
 
-        // ============================================================
-        // POST: /CajaSesion/Cerrar
-        // Cierra la sesión (ESTADO_SESION=CERRADA) y guarda totales de cierre.
-        // ============================================================
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cerrar(CajaCierreViewModel vm, CancellationToken ct)
@@ -301,7 +298,7 @@ namespace AbarroteriaKary.Controllers
             if (sesion == null || !string.Equals(sesion.ESTADO_SESION, "ABIERTA", StringComparison.OrdinalIgnoreCase))
                 return NotFound(new { ok = false, message = "No se encontró ninguna caja aperturada." });
 
-            // Recalcular totales/esperado en servidor
+            // Totales/esperado recalculados en servidor
             var tot = await _context.MOVIMIENTO_CAJA
                 .AsNoTracking()
                 .Where(m => !m.ELIMINADO && m.SESION_ID == sesion.SESION_ID)
@@ -313,10 +310,16 @@ namespace AbarroteriaKary.Controllers
                 })
                 .FirstOrDefaultAsync(ct) ?? new { Ingresos = 0m, Egresos = 0m };
 
-            var esperado = Math.Round((((decimal?)sesion.MONTO_INICIAL) ?? 0m) + tot.Ingresos - tot.Egresos, 2);
-            var diferencia = Math.Round(vm.MontoFinal - esperado, 2);
+            // Redondeos consistentes a 2 decimales
+            var montoInicial = Math.Round(sesion.MONTO_INICIAL, 2);
+            var esperado = Math.Round(montoInicial + tot.Ingresos - tot.Egresos, 2);
+            var contado = Math.Round(vm.MontoFinal, 2);
+            var diferencia = Math.Round(contado - esperado, 2);
 
-            // Nota obligatoria si no cuadra
+            // Validaciones defensivas
+            if (contado < 0m)
+                return BadRequest(new { ok = false, message = "El total efectivo no puede ser negativo." });
+
             if (diferencia != 0m && string.IsNullOrWhiteSpace(vm.NotaCierre))
                 return BadRequest(new { ok = false, message = "Si el efectivo no cuadra, la nota de cierre es obligatoria." });
 
@@ -326,7 +329,7 @@ namespace AbarroteriaKary.Controllers
 
             sesion.FECHA_CIERRE = ahora;
             sesion.USUARIO_CIERRE_ID = usuarioId;
-            sesion.MONTO_FINAL = vm.MontoFinal;
+            sesion.MONTO_FINAL = contado; // ya redondeado
             sesion.NOTACIERRE = string.IsNullOrWhiteSpace(vm.NotaCierre) ? null : vm.NotaCierre.Trim();
             sesion.ESTADO_SESION = "CERRADA";
             sesion.MODIFICADO_POR = usuarioNombre;
@@ -356,74 +359,195 @@ namespace AbarroteriaKary.Controllers
 
 
 
+        //[HttpGet]
+        //public async Task<IActionResult> VentaDiaria(string sesionId, CancellationToken ct = default)
+        //{
+        //    if (string.IsNullOrWhiteSpace(sesionId)) return NotFound();
+
+        //    var ses = await _context.CAJA_SESION.AsNoTracking()
+        //        .FirstOrDefaultAsync(s => s.SESION_ID == sesionId && !s.ELIMINADO, ct);
+        //    if (ses == null) return NotFound();
+
+        //    var cajaNombre = await _context.CAJA.AsNoTracking()
+        //        .Where(c => c.CAJA_ID == ses.CAJA_ID)
+        //        .Select(c => c.CAJA_NOMBRE)
+        //        .FirstOrDefaultAsync(ct) ?? ses.CAJA_ID;
+
+        //    // Ventas ligadas a MOVIMIENTO_CAJA (INGRESO) de la sesión
+        //    var ventas = await _context.MOVIMIENTO_CAJA.AsNoTracking()
+        //        .Where(m => !m.ELIMINADO && m.SESION_ID == sesionId && m.TIPO == "INGRESO" && m.REFERENCIA.StartsWith("V"))
+        //        .Join(_context.VENTA.AsNoTracking(),
+        //              m => m.REFERENCIA, v => v.VENTA_ID,
+        //              (m, v) => new { v.VENTA_ID, v.FECHA, v.TOTAL, v.CLIENTE_ID, v.USUARIO_ID })
+        //        .OrderBy(x => x.FECHA)
+        //        .ToListAsync(ct);
+
+        //    var items = ventas.Select(x => new AbarroteriaKary.ModelsPartial.CajaVentaDiariaItemVM
+        //    {
+        //        VentaId = x.VENTA_ID,
+        //        Fecha = x.FECHA,
+        //        ClienteId = x.CLIENTE_ID,
+        //        ClienteNombre = x.CLIENTE_ID, // si quieres, resuelve PERSONA aquí
+        //        Total = x.TOTAL
+        //    }).ToList();
+
+        //    var vm = new AbarroteriaKary.ModelsPartial.CajaVentaDiariaPdfVM
+        //    {
+        //        SesionId = sesionId,
+        //        CajaId = ses.CAJA_ID,
+        //        CajaNombre = cajaNombre,
+        //        FechaApertura = ses.FECHA_APERTURA,
+        //        FechaCorte = DateTime.Now,
+        //        UsuarioNombre = await _auditoria.GetUsuarioNombreAsync(),
+        //        Total = items.Sum(i => i.Total),
+        //        Ventas = items
+        //    };
+
+        //    return new ViewAsPdf("_VentaDiariaPdf", vm)
+        //    {
+        //        FileName = $"VentaDiaria_{sesionId}.pdf",
+        //        PageSize = Size.A4,
+        //        PageOrientation = Orientation.Portrait,
+        //        PageMargins = new Margins { Top = 10, Right = 10, Bottom = 10, Left = 10 },
+        //        ContentDisposition = ContentDisposition.Inline
+        //    };
+        //}
 
 
-        [HttpGet]
-        public async Task<IActionResult> VentaDiaria(string sesionId, CancellationToken ct = default)
+        // using Rotativa.AspNetCore;
+// using Rotativa.AspNetCore.Options;
+
+
+[HttpGet]
+    public async Task<IActionResult> VentaDiaria(string sesionId, CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(sesionId)) return NotFound();
+
+        var ses = await _context.CAJA_SESION.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.SESION_ID == sesionId && !s.ELIMINADO, ct);
+        if (ses == null) return NotFound();
+
+        var cajaNombre = await _context.CAJA.AsNoTracking()
+            .Where(c => c.CAJA_ID == ses.CAJA_ID)
+            .Select(c => c.CAJA_NOMBRE)
+            .FirstOrDefaultAsync(ct) ?? ses.CAJA_ID;
+
+        // === 1) Ventas por SESION_ID ===
+        var ventasBase = await _context.VENTA.AsNoTracking()
+            .Where(v => !v.ELIMINADO && v.SESION_ID == sesionId)
+            .OrderBy(v => v.FECHA)
+            .Select(v => new { v.VENTA_ID, v.FECHA, v.TOTAL, v.CLIENTE_ID, v.USUARIO_ID })
+            .ToListAsync(ct);
+
+        var ventaIds = ventasBase.Select(v => v.VENTA_ID).ToList();
+
+        // === 2) Nombres de clientes (PERSONA) y usuarios (USUARIO) ===
+        var clienteIds = ventasBase.Select(v => v.CLIENTE_ID).Distinct().ToList();
+        var clientes = await _context.PERSONA.AsNoTracking()
+            .Where(p => clienteIds.Contains(p.PERSONA_ID) && !p.ELIMINADO)
+            .Select(p => new
+            {
+                p.PERSONA_ID,
+                Nombre = (p.PERSONA_PRIMERNOMBRE + " "
+                         + (p.PERSONA_SEGUNDONOMBRE ?? "") + " "
+                         + (p.PERSONA_TERCERNOMBRE ?? "") + " "
+                         + p.PERSONA_PRIMERAPELLIDO + " "
+                         + (p.PERSONA_SEGUNDOAPELLIDO ?? "") + " "
+                         + (p.PERSONA_APELLIDOCASADA ?? "")).Trim()
+            })
+            .ToListAsync(ct);
+        var mapClientes = clientes.ToDictionary(x => x.PERSONA_ID, x => x.Nombre);
+
+        var usuarioIds = ventasBase.Select(v => v.USUARIO_ID).Distinct().ToList();
+        var usuarios = await _context.USUARIO.AsNoTracking()
+            .Where(u => usuarioIds.Contains(u.USUARIO_ID) && !u.ELIMINADO)
+            .Select(u => new { u.USUARIO_ID, u.USUARIO_NOMBRE })
+            .ToListAsync(ct);
+        var mapUsuarios = usuarios.ToDictionary(x => x.USUARIO_ID, x => x.USUARIO_NOMBRE);
+
+        // === 3) Detalle de productos de todas las ventas (una sola consulta) ===
+        var dets = await _context.DETALLE_VENTA.AsNoTracking()
+            .Where(d => !d.ELIMINADO && ventaIds.Contains(d.VENTA_ID))
+            .Join(_context.PRODUCTO.AsNoTracking(),
+                  d => d.PRODUCTO_ID,
+                  p => p.PRODUCTO_ID,
+                  (d, p) => new
+                  {
+                      d.VENTA_ID,
+                      d.PRODUCTO_ID,
+                      p.PRODUCTO_NOMBRE,
+                      d.CANTIDAD,
+                      d.PRECIO_UNITARIO
+                  })
+            .ToListAsync(ct);
+
+        // Consolidar por venta y por producto (si hubo varios lotes del mismo producto)
+        var detPorVenta = dets
+            .GroupBy(x => x.VENTA_ID)
+            .ToDictionary(
+                g => g.Key,
+                g => g
+                    .GroupBy(z => new { z.PRODUCTO_ID, z.PRODUCTO_NOMBRE, z.PRECIO_UNITARIO })
+                    .Select(z => new VentaDiariaDetLineaVM
+                    {
+                        ProductoId = z.Key.PRODUCTO_ID,
+                        Nombre = z.Key.PRODUCTO_NOMBRE,
+                        Cantidad = z.Sum(k => k.CANTIDAD),
+                        PrecioUnitario = z.Key.PRECIO_UNITARIO
+                    })
+                    .OrderBy(l => l.Nombre)
+                    .ToList()
+            );
+
+        // === 4) Armar items finales ===
+        var items = ventasBase.Select(x => new VentaDiariaDetVentaVM
         {
-            if (string.IsNullOrWhiteSpace(sesionId)) return NotFound();
+            VentaId = x.VENTA_ID,
+            Fecha = x.FECHA,
+            ClienteId = x.CLIENTE_ID,
+            ClienteNombre = (mapClientes.TryGetValue(x.CLIENTE_ID, out var cn) && !string.IsNullOrWhiteSpace(cn))
+                            ? cn : (x.CLIENTE_ID ?? "CF"),
+            UsuarioId = x.USUARIO_ID,
+            UsuarioNombre = (mapUsuarios.TryGetValue(x.USUARIO_ID, out var un) && !string.IsNullOrWhiteSpace(un))
+                            ? un : x.USUARIO_ID,
+            Total = x.TOTAL,
+            Lineas = detPorVenta.TryGetValue(x.VENTA_ID, out var ls) ? ls : new List<VentaDiariaDetLineaVM>()
+        }).ToList();
 
-            var ses = await _context.CAJA_SESION.AsNoTracking()
-                .FirstOrDefaultAsync(s => s.SESION_ID == sesionId && !s.ELIMINADO, ct);
-            if (ses == null) return NotFound();
+        var vm = new VentaDiariaDetPdfVM
+        {
+            SesionId = sesionId,
+            CajaId = ses.CAJA_ID,
+            CajaNombre = cajaNombre,
+            FechaApertura = ses.FECHA_APERTURA,
+            FechaCorte = DateTime.Now,
+            UsuarioNombre = await _auditoria.GetUsuarioNombreAsync(),
+            Total = items.Sum(i => i.Total),
+            Ventas = items,
+            LogoUrl = Url.Content("~/img/LOGO.png")
 
-            var cajaNombre = await _context.CAJA.AsNoTracking()
-                .Where(c => c.CAJA_ID == ses.CAJA_ID)
-                .Select(c => c.CAJA_NOMBRE)
-                .FirstOrDefaultAsync(ct) ?? ses.CAJA_ID;
+        };
 
-            // Ventas ligadas a MOVIMIENTO_CAJA (INGRESO) de la sesión
-            var ventas = await _context.MOVIMIENTO_CAJA.AsNoTracking()
-                .Where(m => !m.ELIMINADO && m.SESION_ID == sesionId && m.TIPO == "INGRESO" && m.REFERENCIA.StartsWith("V"))
-                .Join(_context.VENTA.AsNoTracking(),
-                      m => m.REFERENCIA, v => v.VENTA_ID,
-                      (m, v) => new { v.VENTA_ID, v.FECHA, v.TOTAL, v.CLIENTE_ID, v.USUARIO_ID })
-                .OrderBy(x => x.FECHA)
-                .ToListAsync(ct);
-
-            var items = ventas.Select(x => new AbarroteriaKary.ModelsPartial.CajaVentaDiariaItemVM
-            {
-                VentaId = x.VENTA_ID,
-                Fecha = x.FECHA,
-                ClienteId = x.CLIENTE_ID,
-                ClienteNombre = x.CLIENTE_ID, // si quieres, resuelve PERSONA aquí
-                Total = x.TOTAL
-            }).ToList();
-
-            var vm = new AbarroteriaKary.ModelsPartial.CajaVentaDiariaPdfVM
-            {
-                SesionId = sesionId,
-                CajaId = ses.CAJA_ID,
-                CajaNombre = cajaNombre,
-                FechaApertura = ses.FECHA_APERTURA,
-                FechaCorte = DateTime.Now,
-                UsuarioNombre = await _auditoria.GetUsuarioNombreAsync(),
-                Total = items.Sum(i => i.Total),
-                Ventas = items
-            };
-
-            return new ViewAsPdf("_VentaDiariaPdf", vm)
-            {
-                FileName = $"VentaDiaria_{sesionId}.pdf",
-                PageSize = Size.A4,
-                PageOrientation = Orientation.Portrait,
-                PageMargins = new Margins { Top = 10, Right = 10, Bottom = 10, Left = 10 },
-                ContentDisposition = ContentDisposition.Inline
-            };
-        }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+        return new ViewAsPdf("_VentaDiariaPdf", vm)
+        {
+            FileName = $"VentaDiaria_{sesionId}.pdf",
+            PageSize = Size.A4,
+            PageOrientation = Orientation.Portrait,
+            PageMargins = new Margins { Top = 10, Right = 8, Bottom = 10, Left = 10 },
+            ContentDisposition = ContentDisposition.Inline
+        };
     }
+
+
+
+
+
+
+
+
+
+
+
+
+}
 }

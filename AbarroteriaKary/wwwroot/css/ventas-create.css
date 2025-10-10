@@ -1,0 +1,41 @@
+﻿/* wwwroot/css/ventas-create.css */
+
+/* Sugerencias (clientes / productos) */
+.ak-suggest {
+    position: absolute;
+    z-index: 1050;
+    inset: auto 0 auto 0;
+    max-height: 320px;
+    overflow: auto;
+    background: #fff;
+    border: 1px solid #dee2e6;
+    border-top: 0;
+    border-radius: 0 0 .5rem .5rem;
+    display: none
+}
+
+    .ak-suggest.show {
+        display: block
+    }
+
+    .ak-suggest .list-group-item {
+        cursor: pointer
+    }
+
+/* Miniaturas */
+.ak-thumb {
+    width: 46px;
+    height: 46px;
+    object-fit: contain;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    background: #fff
+}
+
+/* Inputs readonly con fondo neutro */
+.ak-readonly[readonly] {
+    background: #f8f9fa
+}
+
+/* Encabezado de tabla (si usa la clase) */
+/* .ak-thead-green { ... }  -> si ya la tiene en su site.css, omita */

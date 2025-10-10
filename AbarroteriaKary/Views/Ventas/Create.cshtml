@@ -5,52 +5,12 @@
     ViewData["Title"] = "Nueva Venta";
     Layout = "~/Views/Shared/_Layout.cshtml";
 
-    // var savedOk = TempData["SavedOk"] as bool?;
-    // var savedVentaId = TempData["SavedVentaId"] as string ?? "";
-    // var savedTotal = TempData["SavedTotal"] as decimal?;
-
-
-
     var savedOk = TempData["SavedOk"] as bool? == true;
     var savedVentaId = TempData["SavedVentaId"] as string ?? "";
-    var savedTotalFmt = TempData["SavedTotalFmt"] as string ?? ""; // ya viene bonito “Q 0.00”
+    var savedTotalFmt = TempData["SavedTotalFmt"] as string ?? "";
 }
 
-<style>
-    .ak-suggest {
-        position: absolute;
-        z-index: 1050;
-        inset: auto 0 auto 0;
-        max-height: 320px;
-        overflow: auto;
-        background: #fff;
-        border: 1px solid #dee2e6;
-        border-top: 0;
-        border-radius: 0 0 .5rem .5rem;
-        display: none
-    }
 
-        .ak-suggest.show {
-            display: block
-        }
-
-        .ak-suggest .list-group-item {
-            cursor: pointer
-        }
-
-    .ak-thumb {
-        width: 46px;
-        height: 46px;
-        object-fit: contain;
-        border: 1px solid #e5e7eb;
-        border-radius: 6px;
-        background: #fff
-    }
-
-    .ak-readonly[readonly] {
-        background: #f8f9fa
-    }
-</style>
 
 <div class="ak-page">
     <div class="ak-header container-fluid px-3 px-md-4">
@@ -79,7 +39,7 @@
                                 <input asp-for="FechaVenta" type="datetime-local" class="form-control" />
                             </div>
 
-                            <!-- Cliente ocupa un poco más de espacio -->
+                            <!-- Cliente ocupa un poco más de espacio 
                             <div class="ak-form-col ak-form-col--wide position-relative">
                                 <label class="form-label">Cliente</label>
                                 <input type="hidden" asp-for="ClienteId" id="ClienteId" />
@@ -90,12 +50,64 @@
                                 <div id="sugClientes" class="ak-suggest"></div>
                                 <small class="text-muted d-none d-xl-block">Escriba 2+ letras. Incluye opción “Consumidor Final”.</small>
                                 <span asp-validation-for="ClienteId" class="text-danger"></span>
+                            </div>-->
+                            <!-- Cliente ocupa un poco más de espacio -->
+                            <div class="ak-form-col ak-form-col--wide position-relative">
+                                <label class="form-label d-flex align-items-center gap-2">
+                                    Cliente
+                                    @if (string.Equals(Model.ClienteId, "CF", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(Model.ClienteId))
+                                    {
+                                        <span class="badge bg-secondary">CF por defecto</span>
+                                    }
+                                </label>
+
+                                <input type="hidden" asp-for="ClienteId" id="ClienteId" />
+
+                                <!--
+                                    Si viene CF (o vacío), muestro "Consumidor Final" y NIT "CF" pre-cargados.
+                                    Si luego el usuario elige otro cliente desde el buscador, tu JS ya reemplaza ambos valores.
+                                -->
+                                <input type="text"
+                                       id="txtCliente"
+                                       class="form-control"
+                                       placeholder="Buscar por nombre o NIT"
+                                       autocomplete="off"
+                                       data-url="@Url.Action("BuscarClientes", "Ventas")"
+                                       value="@( (string.Equals(Model.ClienteId, "CF", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(Model.ClienteId))
+                                                            ? "Consumidor Final"
+                                                            : "" )" />
+                                <div id="sugClientes" class="ak-suggest"></div>
+
+                                <small class="text-muted d-none d-xl-block">
+                                    Escriba 2+ letras. Incluye opción “Consumidor Final”.
+                                </small>
+                                <span asp-validation-for="ClienteId" class="text-danger"></span>
                             </div>
 
                             <div class="ak-form-col">
                                 <label class="form-label">NIT</label>
-                                <input type="text" id="txtNitCliente" class="form-control" readonly />
+                                <input type="text"
+                                       id="txtNitCliente"
+                                       class="form-control"
+                                       value="@( (string.Equals(Model.ClienteId, "CF", StringComparison.OrdinalIgnoreCase) || string.IsNullOrWhiteSpace(Model.ClienteId))
+                                                            ? "CF"
+                                                            : "" )"
+                                       readonly />
                             </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
                             <div class="ak-form-col">
                                 <label asp-for="SesionId" class="form-label">Sesión de caja</label>
@@ -146,7 +158,7 @@
                                         <th style="width:26%">Nombre</th>
                                         <th style="width:10%" class="text-center">Referencia</th>
                                         <th style="width:12%" class="text-end">Cantidad</th>
-                                        <th style="width:12%" class="text-end">PVP</th>
+                                        <th style="width:12%" class="text-end">Costo Unitario</th>
                                         <th style="width:14%" class="text-end">Subtotal</th>
                                         <th style="width:12%">Acciones</th>
                                     </tr>
@@ -163,8 +175,6 @@
                         </div>
                     </div>
                 </div>
-
-
 
 
 
@@ -190,7 +200,7 @@
 </div>
 
 <!-- Host para inyectar el modal parcial -->
-// <div id="ak-modal-host"></div>
+ <div id="ak-modal-host"></div>
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

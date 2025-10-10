@@ -306,6 +306,9 @@ namespace AbarroteriaKary.Services.Ventas
                     CLIENTE_ID = vm.ClienteId,
                     USUARIO_ID = vm.UsuarioId,
                     TOTAL = totalVenta,
+                    SESION_ID = vm.SesionId, // ✅ correcto
+
+
 
                     CREADO_POR = usuarioNombre,
                     FECHA_CREACION = ahora,

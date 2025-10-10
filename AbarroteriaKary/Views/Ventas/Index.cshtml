@@ -223,8 +223,16 @@
     @await Html.PartialAsync("_Pager", Model)
 </div>
 
-@* Host para inyectar los modales de CAJA (apertura/cierre) *@
+@* Host para inyectar los       // <div id="ak-modal-host"></div>
+                modales de CAJA (apertura/cierre) *@
+
+
+<!-- Host para inyectar modales -->
 <div id="ak-modal-host"></div>
+
+<!-- Caja actual (DEBE tener valor) -->
+<input type="hidden" id="CajaIdActual" value="@ViewBag.CajaId" />
+
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />

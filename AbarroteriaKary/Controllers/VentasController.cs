@@ -48,48 +48,73 @@ namespace AbarroteriaKary.Controllers
         // GET: Ventas
 
 
+        
+
+
         [HttpGet]
         public async Task<IActionResult> Index(
-          string? estado, string? q = null,
-          string? fDesde = null, string? fHasta = null,
-          int page = 1, int pageSize = 10,
-          CancellationToken ct = default)
+            string? estado = "ACTIVO",
+            string? q = null,
+            string? fDesde = null,
+            string? fHasta = null,
+            int page = 1,
+            int pageSize = 10,
+            CancellationToken ct = default)
         {
-            // 0) Normalización de estado
+            // 1) Resolver CAJA para la barra (igual que en Create)
+            var cajaIdUse = await _context.CAJA
+                .AsNoTracking()
+                .Where(c => !c.ELIMINADO && c.ESTADO == "ACTIVO")
+                .OrderBy(c => c.CAJA_ID)
+                .Select(c => c.CAJA_ID)
+                .FirstOrDefaultAsync(ct);
+
+            ViewBag.CajaId = cajaIdUse; // para el hidden CajaIdActual en la vista
+
+            // 2) Buscar la SESIÓN ABIERTA de esa caja
+            var sesionAbiertaId = await _context.CAJA_SESION
+                .AsNoTracking()
+                .Where(s => !s.ELIMINADO && s.CAJA_ID == cajaIdUse && s.ESTADO_SESION == "ABIERTA")
+                .OrderByDescending(s => s.FECHA_APERTURA)
+                .Select(s => s.SESION_ID)
+                .FirstOrDefaultAsync(ct);
+
+            // 3) Query base (solo ventas de la sesión abierta; si no hay, lista vacía)
+            var query = _context.VENTA.AsNoTracking().Where(v => !v.ELIMINADO);
+
+            if (string.IsNullOrWhiteSpace(sesionAbiertaId))
+                query = query.Where(_ => false); // sin sesión abierta → vacío
+            else
+                query = query.Where(v => v.SESION_ID == sesionAbiertaId);
+
+            // --- Filtros restantes sobre el MISMO 'query' ---
+
+            // Estado
             var estadoNorm = (estado ?? "ACTIVO").Trim().ToUpperInvariant();
             if (estadoNorm is not ("ACTIVO" or "INACTIVO" or "TODOS"))
                 estadoNorm = "ACTIVO";
 
-            // 1) Fechas (acepta dd/MM/yyyy o yyyy-MM-dd) contra VENTA.FECHA
+            if (estadoNorm is "ACTIVO" or "INACTIVO")
+                query = query.Where(v => v.ESTADO == estadoNorm);
+
+            // Fechas (acepta dd/MM/yyyy o yyyy-MM-dd)
             DateTime? desde = ParseDate(fDesde);
             DateTime? hasta = ParseDate(fHasta);
+            if (desde.HasValue) query = query.Where(v => v.FECHA >= desde.Value.Date);
+            if (hasta.HasValue) query = query.Where(v => v.FECHA < hasta.Value.Date.AddDays(1));
 
-            // 2) Base query (ignora eliminados lógicos)
-            var qry = _context.VENTA
-                .AsNoTracking()
-                .Where(v => !v.ELIMINADO);
-
-            // 3) Filtro por estado
-            if (estadoNorm is "ACTIVO" or "INACTIVO")
-                qry = qry.Where(v => v.ESTADO == estadoNorm);
-
-            // 4) Búsqueda: por VENTA_ID, CLIENTE_ID, USUARIO_ID (sin asumir nombres de columnas del cliente)
+            // Búsqueda
             if (!string.IsNullOrWhiteSpace(q))
             {
                 var term = $"%{q.Trim()}%";
-                qry = qry.Where(v =>
+                query = query.Where(v =>
                     EF.Functions.Like(v.VENTA_ID, term) ||
                     EF.Functions.Like(v.CLIENTE_ID, term) ||
-                    EF.Functions.Like(v.USUARIO_ID, term)
-                );
+                    EF.Functions.Like(v.USUARIO_ID, term));
             }
 
-            // 5) Rango de fechas (inclusivo) por FECHA
-            if (desde.HasValue) qry = qry.Where(v => v.FECHA >= desde.Value.Date);
-            if (hasta.HasValue) qry = qry.Where(v => v.FECHA < hasta.Value.Date.AddDays(1));
-
-            // 6) Orden + Proyección a VM (ANTES de paginar)
-            var proyectado = qry
+            // Orden + Proyección
+            var proyectado = query
                 .OrderByDescending(v => v.FECHA)
                 .ThenBy(v => v.VENTA_ID)
                 .Select(v => new VentaViewModel
@@ -98,51 +123,40 @@ namespace AbarroteriaKary.Controllers
                     FechaVenta = v.FECHA,
                     ClienteId = v.CLIENTE_ID,
                     UsuarioId = v.USUARIO_ID,
-                    //Total = v.TOTAL,
                     TotalDb = v.TOTAL,
-                    //Estad
-
-                    // Suficiente para el Index; el resto de auditoría lo verás en Details
                     Auditoria = new AuditoriaViewModel
                     {
-                        //ESTADO = v.ESTADO,
                         FechaCreacion = v.FECHA_CREACION,
                         ModificadoPor = v.MODIFICADO_POR,
                         FechaModificacion = v.FECHA_MODIFICACION
                     }
                 });
 
-            // 7) Paginación
+            // Paginación
             var permitidos = new[] { 10, 25, 50, 100 };
             pageSize = permitidos.Contains(pageSize) ? pageSize : 10;
 
             var resultado = await proyectado.ToPagedAsync(page, pageSize, ct);
 
-            // 8) RouteValues para pager
+            // RouteValues para pager
             resultado.RouteValues["estado"] = estadoNorm;
             resultado.RouteValues["q"] = q;
             resultado.RouteValues["fDesde"] = desde?.ToString("yyyy-MM-dd");
             resultado.RouteValues["fHasta"] = hasta?.ToString("yyyy-MM-dd");
 
-            // 9) Toolbar (persistencia de filtros)
+            // Persistencia toolbar
             ViewBag.Estado = estadoNorm;
             ViewBag.Q = q;
             ViewBag.FDesde = resultado.RouteValues["fDesde"];
             ViewBag.FHasta = resultado.RouteValues["fHasta"];
 
-            // 10) Caja actual: usa tu lógica real de asignación
-            //     (por ahora, tomamos la primera caja ACTIVA como fallback para habilitar el botón "Nueva venta")
-            var cajaIdActual = await _context.CAJA
-                .AsNoTracking()
-                .Where(c => !c.ELIMINADO && c.ESTADO == "ACTIVO")
-                .OrderBy(c => c.CAJA_ID)
-                .Select(c => c.CAJA_ID)
-                .FirstOrDefaultAsync(ct);
-
-            ViewBag.CajaId = cajaIdActual; // lo usa la vista Index.cshtml de Ventas para el botón "Caja"
+            // Caja actual (para el botón Caja / JS)
+            ViewBag.CajaId = cajaIdUse;
 
             return View(resultado);
         }
+
+
 
         // === Utilidad local para parsear fechas ===
         private static DateTime? ParseDate(string? input)
@@ -158,6 +172,10 @@ namespace AbarroteriaKary.Controllers
             if (DateTime.TryParse(input, out d)) return d;
             return null;
         }
+
+
+
+
 
 
         // Helper para armar el nombre completo (puedes ponerlo como método estático en algún util)
@@ -281,34 +299,6 @@ namespace AbarroteriaKary.Controllers
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-        //// Helper: USUARIO_ID desde Claims (ya lo usamos en Caja)
-        //private string RequireUserId()
-        //{
-        //    var id = User.FindFirstValue(ClaimTypes.NameIdentifier)
-        //          ?? User.FindFirstValue("sub")
-        //          ?? User.FindFirst("usuario_id")?.Value
-        //          ?? User.Identity?.Name;
-
-        //    if (string.IsNullOrWhiteSpace(id))
-        //        throw new InvalidOperationException("No se pudo determinar el USUARIO_ID del usuario autenticado.");
-        //    return id.Trim().ToUpperInvariant();
-        //}
-
-        // using System.Security.Claims;
-        // using Microsoft.EntityFrameworkCore;
-
         private async Task<string> RequireUserIdAsync(CancellationToken ct)
         {
             // 1) Claims comunes (NameIdentifier / sub / custom)
@@ -425,50 +415,98 @@ namespace AbarroteriaKary.Controllers
             return View(vm);            // → Views/Ventas/Create.cshtml (abajo)
         }
 
-        // POST: Ventas/Confirmar (form principal con líneas + info de pago)
+        //// POST: Ventas/Confirmar (form principal con líneas + info de pago)
+        //[HttpPost]
+        //[ValidateAntiForgeryToken]
+        //public async Task<IActionResult> Confirmar(VentaViewModel vm, VentaPagoViewModel pago, CancellationToken ct = default)
+        //{
+        //    var usuarioId = await RequireUserIdAsync(ct);   // <--- aquí
+
+        //    // Normalización mínima
+        //    vm.ClienteId = (vm.ClienteId ?? "").Trim().ToUpperInvariant();
+        //    vm.UsuarioId = usuarioId; // seguridad: no confiar en form
+        //    vm.SesionId = (vm.SesionId ?? "").Trim().ToUpperInvariant();
+
+        //    // Validación básica de servidor
+        //    if (!ModelState.IsValid || vm.Lineas == null || vm.Lineas.Count == 0)
+        //    {
+        //        ModelState.AddModelError("", "Agregue al menos un producto.");
+        //        return View("Create", vm);
+        //    }
+
+        //    try
+        //    {
+        //        var usuarioNombre = await _auditoria.GetUsuarioNombreAsync();
+        //        var result = await _ventaTx.ConfirmarVentaAsync(vm, pago, usuarioNombre, ct);
+
+        //        //TempData["SavedOk"] = true;
+        //        //TempData["SavedVentaId"] = result.VentaId;
+        //        //TempData["SavedTotal"] = result.Total;
+
+
+        //        // ...
+        //        TempData["SavedOk"] = true;                  // bool está bien
+        //        TempData["SavedVentaId"] = result.VentaId;
+        //        // GUARDAR COMO STRING (formateado o invariante)
+        //        TempData["SavedTotal"] = result.Total.ToString(CultureInfo.InvariantCulture);
+        //        // opcional: también puedes guardar ya formateado para mostrar
+        //        TempData["SavedTotalFmt"] = result.Total.ToString("C2", CultureInfo.GetCultureInfo("es-GT"));
+
+
+        //        //return RedirectToAction(nameof(Details), new { id = result.VentaId });
+        //        return RedirectToAction(nameof(Create));
+        //    }
+        //    catch (InvalidOperationException ex)
+        //    {
+        //        // Errores de negocio: caja sin sesión, stock insuficiente, etc.
+        //        ModelState.AddModelError("", ex.Message);
+        //        return View("Create", vm);
+        //    }
+        //    catch (DbUpdateException ex)
+        //    {
+        //        ModelState.AddModelError("", $"Error BD: {ex.GetBaseException().Message}");
+        //        return View("Create", vm);
+        //    }
+        //}
+
+
+        // Controllers/VentasController.cs  (reemplazar el método POST Confirmar)
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Confirmar(VentaViewModel vm, VentaPagoViewModel pago, CancellationToken ct = default)
         {
-            var usuarioId = await RequireUserIdAsync(ct);   // <--- aquí
+            var usuarioId = await RequireUserIdAsync(ct);
 
-            // Normalización mínima
+            // Normalización segura
             vm.ClienteId = (vm.ClienteId ?? "").Trim().ToUpperInvariant();
-            vm.UsuarioId = usuarioId; // seguridad: no confiar en form
+            vm.UsuarioId = usuarioId;
             vm.SesionId = (vm.SesionId ?? "").Trim().ToUpperInvariant();
 
-            // Validación básica de servidor
-            if (!ModelState.IsValid || vm.Lineas == null || vm.Lineas.Count == 0)
-            {
-                ModelState.AddModelError("", "Agregue al menos un producto.");
-                return View("Create", vm);
-            }
+            // Mapeo/validación de cliente (CF o real)
+            var (okCli, errCli) = await NormalizarClienteAsync(vm, ct);
+            if (!okCli) ModelState.AddModelError("", errCli!);
+
+            // Validaciones de negocio previas
+            var errores = await ValidarVentaAsync(vm, pago, ct);
+            foreach (var e in errores) ModelState.AddModelError("", e);
+
+            if (!ModelState.IsValid)
+                return View("Create", vm); // el resumen en la vista mostrará la lista
 
             try
             {
                 var usuarioNombre = await _auditoria.GetUsuarioNombreAsync();
                 var result = await _ventaTx.ConfirmarVentaAsync(vm, pago, usuarioNombre, ct);
 
-                //TempData["SavedOk"] = true;
-                //TempData["SavedVentaId"] = result.VentaId;
-                //TempData["SavedTotal"] = result.Total;
-
-
-                // ...
-                TempData["SavedOk"] = true;                  // bool está bien
+                TempData["SavedOk"] = true;
                 TempData["SavedVentaId"] = result.VentaId;
-                // GUARDAR COMO STRING (formateado o invariante)
-                TempData["SavedTotal"] = result.Total.ToString(CultureInfo.InvariantCulture);
-                // opcional: también puedes guardar ya formateado para mostrar
-                TempData["SavedTotalFmt"] = result.Total.ToString("C2", CultureInfo.GetCultureInfo("es-GT"));
+                TempData["SavedTotal"] = result.Total.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                TempData["SavedTotalFmt"] = result.Total.ToString("C2", System.Globalization.CultureInfo.GetCultureInfo("es-GT"));
 
-
-                //return RedirectToAction(nameof(Details), new { id = result.VentaId });
                 return RedirectToAction(nameof(Create));
             }
             catch (InvalidOperationException ex)
             {
-                // Errores de negocio: caja sin sesión, stock insuficiente, etc.
                 ModelState.AddModelError("", ex.Message);
                 return View("Create", vm);
             }
@@ -478,6 +516,132 @@ namespace AbarroteriaKary.Controllers
                 return View("Create", vm);
             }
         }
+
+
+
+
+
+
+
+
+
+        // Controllers/VentasController.cs  (agregar al inicio de la clase)
+        private const string CF_CLIENTE_ID = "CLI0000004";
+
+        // Normaliza el ClienteId del ViewModel: si el usuario dejó "CF" o vacío,
+        // lo mapeamos al CLIENTE real en BD. Valida que el cliente exista/esté activo.
+        private async Task<(bool ok, string? error)> NormalizarClienteAsync(VentaViewModel vm, CancellationToken ct)
+        {
+            var cli = (vm.ClienteId ?? "").Trim().ToUpperInvariant();
+            if (string.IsNullOrWhiteSpace(cli) || cli == "CF")
+            {
+                vm.ClienteId = CF_CLIENTE_ID; // <-- mapeo a su cliente CF real
+                return (true, null);
+            }
+
+            var existe = await _context.CLIENTE
+                .AsNoTracking()
+                .AnyAsync(c => !c.ELIMINADO && c.ESTADO == "ACTIVO" && c.CLIENTE_ID == cli, ct);
+
+            return existe ? (true, null) : (false, $"El cliente '{vm.ClienteId}' no existe o está inactivo.");
+        }
+
+        // Valida la venta *antes* de confirmar la transacción de negocio.
+        // - cantidades > 0
+        // - precios > 0
+        // - stock suficiente (consolidado por producto)
+        // - método de pago y efectivo >= total
+        private async Task<List<string>> ValidarVentaAsync(VentaViewModel vm, VentaPagoViewModel pago, CancellationToken ct)
+        {
+            var errores = new List<string>();
+
+            // 1) Debe existir al menos una línea
+            if (vm.Lineas == null || vm.Lineas.Count == 0)
+            {
+                errores.Add("Debe agregar al menos un producto a la venta.");
+                return errores; // lo demás no tiene sentido validarlo
+            }
+
+            // 2) Cantidades y precios
+            foreach (var (item, idx) in vm.Lineas.Select((x, i) => (x, i)))
+            {
+                if (item.Cantidad <= 0)
+                    errores.Add($"Línea {idx + 1}: la cantidad para '{item.NombreProducto ?? item.CodigoProducto}' debe ser mayor a 0.");
+
+                if (item.PrecioUnitario <= 0)
+                    errores.Add($"Línea {idx + 1}: el precio del producto '{item.NombreProducto ?? item.CodigoProducto}' debe ser mayor a Q0.00.");
+            }
+
+            // 3) Stock (consolidado por producto)
+            var prodIds = vm.Lineas.Select(l => l.ProductoId).Distinct().ToList();
+            var stockDict = await _context.INVENTARIO.AsNoTracking()
+                .Where(i => !i.ELIMINADO && prodIds.Contains(i.PRODUCTO_ID))
+                .GroupBy(i => i.PRODUCTO_ID)
+                .Select(g => new { ProductoId = g.Key, Stock = (decimal?)g.Sum(x => x.STOCK_ACTUAL) ?? 0m })
+                .ToDictionaryAsync(x => x.ProductoId, x => x.Stock, ct);
+
+            foreach (var (item, idx) in vm.Lineas.Select((x, i) => (x, i)))
+            {
+                var stock = stockDict.TryGetValue(item.ProductoId, out var s) ? s : 0m;
+                if (item.Cantidad > stock)
+                    errores.Add($"Línea {idx + 1}: '{item.NombreProducto ?? item.CodigoProducto}' no tiene stock suficiente. Disponible: {stock:0.##}.");
+            }
+
+            // 4) Pago
+            // Total calculado en servidor (decimal no nulo)
+            var total = vm.Lineas.Sum(l => Math.Round(l.Cantidad * l.PrecioUnitario, 2));
+            total = Math.Round(total, 2);
+
+            if (total <= 0m)
+                errores.Add("El total de la venta debe ser mayor a Q0.00.");
+
+            // Método de pago requerido
+            if (string.IsNullOrWhiteSpace(pago?.MetodoPagoId))
+            {
+                errores.Add("Debe seleccionar un método de pago.");
+            }
+            else
+            {
+                // Buscar el nombre del método para saber si es EFECTIVO
+                var mpNombre = await _context.METODO_PAGO.AsNoTracking()
+                    .Where(m => !m.ELIMINADO && m.METODO_PAGO_ID == pago.MetodoPagoId)
+                    .Select(m => m.METODO_PAGO_NOMBRE)
+                    .FirstOrDefaultAsync(ct);
+
+                var esEfectivo = string.Equals(mpNombre?.Trim(), "EFECTIVO", StringComparison.OrdinalIgnoreCase);
+
+                // Normalizamos nullables a decimal
+                var recibido = pago.EfectivoRecibido ?? 0m;
+
+                if (esEfectivo)
+                {
+                    // En EFECTIVO: recibido debe cubrir el total
+                    if (recibido < total)
+                        errores.Add($"El efectivo recibido (Q{recibido:0.00}) no alcanza para cubrir el total (Q{total:0.00}).");
+
+                    // Calculamos cambio y validamos no negativo
+                    var cambioBruto = Math.Round(recibido - total, 2);
+                    if (cambioBruto < 0m)
+                        errores.Add("El cambio no puede ser negativo.");
+
+                    pago.CambioCalculado = Math.Max(0m, cambioBruto);
+                }
+                else
+                {
+                    // Otros métodos (tarjeta/transferencia, etc.): no exigimos efectivo; cambio = 0
+                    pago.CambioCalculado = 0m;
+                }
+            }
+
+            // <-- FALTABA ESTE RETURN
+            return errores;
+        }
+
+
+
+
+
+
 
         // GET: Ventas/Details/{id} (luego te doy la vista si quieres)
         [HttpGet]
@@ -550,7 +714,7 @@ namespace AbarroteriaKary.Controllers
                 .ToListAsync(ct);
 
             // Opción CF al inicio
-            items.Insert(0, new { clienteId = "CF", nombre = "Consumidor Final", nit = "CF", info = "Sin factura" });
+            //items.Insert(0, new { clienteId = "CF", nombre = "Consumidor Final", nit = "CF", info = "Sin factura" });
 
             // HTML de cada sugerencia (lo consume el JS como item._html)
             var itemsHtml = items.Select(x => new {

@@ -9,95 +9,359 @@
 <head>
     <meta charset="utf-8" />
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Arial, sans-serif; font-size: 12px; color: #111; }
-        .ticket { width: 100%; }
-        .brand { text-align:center; margin-bottom:8px; }
-        .brand .name { font-weight:700; font-size:16px; letter-spacing:.4px; }
-        .brand .sub  { font-size:11px; color:#666; }
-        .line { border-top:1px dashed #9ad6bf; margin:8px 0; }
-        .hdr { display:flex; justify-content:space-between; font-size:11px; margin:1px 0; }
-        .tbl { width:100%; border-collapse:collapse; margin-top:4px; }
-        .tbl thead th { text-align:left; border-bottom:1px solid #1aa36d; padding-bottom:4px; font-size:11px;}
-        .tbl td { padding:4px 0; vertical-align:top; }
-        .tbl .qty { width:18%; text-align:right; }
-        .tbl .price { width:25%; text-align:right; }
-        .totals { margin-top:6px; }
-        .totals .row { display:flex; justify-content:space-between; margin:2px 0; }
-        .em { font-weight:600; }
-        .foot { text-align:center; margin-top:10px; font-size:11px; color:#555;}
-        .code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-        .green { color:#1aa36d; }
+        /* ===== Base (igual a tu versión que ya se ve bien) ===== */
+        body {
+            font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+            font-size: 12px;
+            color: #111;
+        }
+
+        .ticket {
+            width: 100%;
+        }
+
+        /* ===== Encabezado 3 columnas ===== */
+        .hdr3 {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 6px;
+        }
+
+            .hdr3 td {
+                vertical-align: top;
+                padding: 0;
+            }
+
+            .hdr3 .logo-cell {
+                width: 64px;
+            }
+
+            .hdr3 .logo {
+                width: 48px;
+                height: 48px;
+                object-fit: contain;
+                display: block;
+                margin-top: 2px;
+            }
+
+            .hdr3 .company .name {
+                font-weight: 700;
+                font-size: 16px;
+                letter-spacing: .4px;
+                margin-bottom: 2px;
+            }
+
+            .hdr3 .company .row {
+                margin: 1px 0;
+            }
+
+            .hdr3 .company .lbl {
+                font-weight: 700;
+            }
+
+            .hdr3 .company .val {
+                margin-left: 4px;
+            }
+
+            .hdr3 .right {
+                width: 260px;
+                text-align: right;
+                font-size: 11.5px;
+            }
+
+                .hdr3 .right .lbl {
+                    font-weight: 700;
+                }
+
+        /* ===== Separadores (tu estilo) ===== */
+        .line {
+            /* border-top: 1px dashed #2e2c2c; */
+            border-top: 1px solid #2e2c2c;
+            margin: 8px 0;
+        }
+        /* Línea específica antes de la tabla (si necesitas otro espaciado) */
+        .line-table-top {
+            margin: 8px 0 6px;
+        }
+        /* <-- AJUSTA si quieres más/menos separación */
+
+        /* ===== Cliente/Vendedor (2 columnas) ===== */
+        .info2 {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 4px 0 8px;
+        }
+
+            .info2 td {
+                padding: 0;
+            }
+
+            .info2 .lbl {
+                font-weight: 600;
+            }
+
+            .info2 .left {
+                width: 60%;
+            }
+
+            .info2 .right {
+                text-align: right;
+            }
+
+        /* ===== Tabla detalle ===== */
+        .tbl {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+        }
+
+            /* Encabezado de la tabla con color de fondo */
+            .tbl thead th {
+                text-align: left;
+                font-weight: 700;
+                font-size: 11px;
+                padding: 6px 8px 4px;
+                background: #87a8b8; /* ← color de fondo del header */
+                color: #000; /* ← color de texto del header */
+                border-bottom: 1px solid #87a8b8; /* línea bajo el header (mantiene tu estilo) */
+            }
+
+            .tbl td {
+                padding: 6px 0;
+                vertical-align: top;
+            }
+
+            .tbl .qty, .tbl .unit, .tbl .sub {
+                width: 18%;
+                text-align: right;
+            }
+
+            /* Líneas separadoras entre productos: */
+            .tbl tbody tr td {
+                border-top: 1px dashed #7a7a7a;
+            }
+            /* <-- color/estilo de separador por fila */
+            .tbl tbody tr:first-child td {
+                border-top: none;
+            }
+        /* sin línea antes de la primera fila */
+
+            .tbl tbody tr:last-child td {
+                border-bottom: 1px dashed #7a7a7a; /* mismo tono que las filas */
+            }
+
+
+        .pname {
+            font-weight: 500;
+        }
+
+        .pdesc {
+            color: #666;
+            font-size: 10px;
+            margin-top: 0.5px;
+        }
+
+        /* ===== Bloque de pago ===== */
+        .paybox {
+            float: right;
+            width: 180px; /* <-- AJUSTA ancho total del bloque de pago para “juntarlo” más o menos */
+            border: 1.5px dashed #7a7a7a;
+            padding: 10px;
+            margin: 10px 0 0;
+        }
+
+            .paybox table {
+                width: 100%;
+                border-collapse: collapse;
+                table-layout: fixed;
+            }
+
+            /* Columnas del bloque de pago: usa colgroup para controlar cercanía izq-der */
+            .paybox col.wLbl {
+                width: 58%;
+            }
+            /* <-- AUMENTA para acercar el valor a la etiqueta (p.ej. 62%) */
+            .paybox col.wVal {
+                width: 42%;
+            }
+            /* <-- REDUCE para acercarlos (p.ej. 38%) */
+
+            .paybox td {
+                padding: 2px 0;
+                font-size: 12px;
+            }
+                /* <-- AJUSTA padding vertical (2px más “juntito”) */
+                .paybox td:first-child {
+                    font-weight: 600;
+                }
+
+                .paybox td:last-child {
+                    text-align: right;
+                }
+
+        .pay-sep {
+            border-top: 1px solid #2e2c2c;
+            margin: 6px 0;
+        }
+        /* Línea recta antes del Total */
+        .pay-total td {
+            font-weight: 700;
+        }
+
+        /* ===== Pie ===== */
+        /* Asegura que el texto final quede DEBAJO del cuadro de pago */
+        .foot {
+            clear: both; /* <-- clave para bajar el bloque debajo del float */
+            display: block;
+            margin-top: 25px; /* separa un poco del cuadro de pago */
+            text-align: center;
+            font-size: 12px;
+            color: #555;
+        }
+
+
+        .code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        }
+
+
+        .hdr-table { /* tabla de 3 columnas del encabezado */
+            margin-bottom: 15px; /* ↓ aumenta para más espacio, reduce para “juntar” */
+        }
+
+        /* ===== línea debajo del encabezado ===== */
+        .line.line-table-top { /* el separador que pones antes de la tabla */
+            margin: 10px 0; /* controla espacio arriba/abajo de la línea */
+        }
+
+        .client { /* fila con Cliente/NIT y Vendedor */
+            margin: 8px 0 10px; /* top | horiz | bottom */
+            font-size: 12px;
+            line-height: 1.25;
+        }
+
+        /* separa/junta las FILAS de la tabla */
+        .tbl td { /* celdas de cuerpo */
+            padding: 3px 4px; /* ↓ baja a 3–4px para filas más compactas */
+        }
+
+        .tbl { /* bloque completo de tabla */
+            margin: 20px 0 20px; /* espacio antes y después de la tabla */
+        }
+
+        .ty{                         /* “¡Gracias por su compra!” */
+  margin: 10px 0 0;          /* ↑ baja a 6px para acercarla al cuadro de pago */
+}
+
+
     </style>
 </head>
 <body>
     <div class="ticket">
 
-        <div class="brand">
-            <div class="name">@(!string.IsNullOrWhiteSpace(Model.SucursalNombre) ? Model.SucursalNombre : "Abarrotería Kary")</div>
-            @if (!string.IsNullOrWhiteSpace(Model.SucursalDireccion))
-            {
-                <div class="sub">@Model.SucursalDireccion</div>
-            }
-            @if (!string.IsNullOrWhiteSpace(Model.SucursalNit))
-            {
-                <div class="sub">NIT: @Model.SucursalNit</div>
-            }
-        </div>
+        <!-- ===== Encabezado: 3 columnas ===== -->
+        <table class="hdr3" role="presentation" aria-hidden="true">
+            <tr>
+                <td class="logo-cell">
+                    <img class="logo" src="/img/logologo.png" alt="Logo" />
+                </td>
+                <td>
+                    <div class="company">
+                        <div class="name">@(!string.IsNullOrWhiteSpace(Model.SucursalNombre) ? Model.SucursalNombre : "Abarrotería Kary")</div>
+                        <div class="row"><span class="lbl">NIT:</span><span class="val">@(!string.IsNullOrWhiteSpace(Model.SucursalNit) ? Model.SucursalNit : "12345689")</span></div>
+                        <div class="row"><span class="lbl">Dirección:</span><span class="val">@(!string.IsNullOrWhiteSpace(Model.SucursalDireccion) ? Model.SucursalDireccion : "Santa Clara La Laguna Sololá")</span></div>                    
+                       <div class="row"><span class="lbl">Tel:</span><span class="val">(502) 1234-5678</span></div>
 
-        <div class="hdr">
-            <div><span class="em">Venta:</span> <span class="code">@Model.VentaId</span></div>
-            <div>@Model.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
-        </div>
-        @if (!string.IsNullOrWhiteSpace(Model.ReciboId))
-        {
-            <div class="hdr">
-                <div><span class="em">Recibo:</span> <span class="code">@Model.ReciboId</span></div>
-            </div>
-        }
-        <div class="hdr">
-            <div><span class="em">Cliente:</span> @Model.ClienteNombre (@Model.ClienteNit)</div>
-        </div>
-        <div class="hdr">
-            <div><span class="em">Vendedor:</span> @Model.UsuarioNombre</div>
-            <div><span class="em">Método:</span> @Model.MetodoPagoNombre</div>
-        </div>
 
-        <div class="line"></div>
 
+
+
+
+                    </div>
+                </td>
+                <td class="right">
+                    @if (!string.IsNullOrWhiteSpace(Model.ReciboId))
+                    {
+                        <div><span class="lbl">Recibo No:</span> <span class="code">@Model.ReciboId</span></div>
+
+
+                    }
+                    <div><span class="lbl">Fecha:</span> @Model.Fecha.ToString("dd/MM/yyyy HH:mm")</div>
+                    <div><span class="lbl">Vendedor:</span> <span class="code">@Model.UsuarioNombre</span></div>
+
+                </td>
+            </tr>
+        </table>
+
+        <!-- Línea sobre el encabezado de la tabla (se mantiene) -->
+        <div class="line line-table-top"></div>
+
+        <!-- ===== Cliente / Vendedor en 2 columnas ===== -->
+        <table class="info2" role="presentation" aria-hidden="true">
+            <tr>
+                <td class="left">
+                    <span class="lbl">Cliente:</span> @Model.ClienteNombre<br />
+                    <span class="lbl">NIT:</span> @Model.ClienteNit
+                </td>
+@*                 <td class="right">
+                    <span class="lbl">Vendedor:</span> @Model.UsuarioNombre
+                </td> *@
+            </tr>
+        </table>
+
+        <!-- ===== Detalle (4 columnas + separadores por fila) ===== -->
         <table class="tbl">
             <thead>
-                <tr><th>Producto</th><th class="qty">Cant</th><th class="price">Importe</th></tr>
+                <tr>
+                    <th>Producto</th>
+                    <th class="qty">Cantidad</th>
+                    <th class="unit">Precio Unitario</th>
+                    <th class="sub">SubTotal</th>
+                </tr>
             </thead>
             <tbody>
                 @foreach (var l in Model.Lineas)
                 {
                     <tr>
-                        <td>@l.Nombre</td>
+                        <td>
+                            <div class="pname">@l.Nombre</div>
+                            @* Descripción (si tu VM la trae) *@
+                            @if ((l as dynamic)?.Descripcion != null && !string.IsNullOrWhiteSpace((string)(l as dynamic).Descripcion))
+                            {
+                                <div class="pdesc">@((string)(l as dynamic).Descripcion)</div>
+                            }
+                        </td>
                         <td class="qty">@l.Cantidad</td>
-                        <td class="price">@l.Subtotal.ToString("C2", gt)</td>
+                        <td class="unit">@l.PrecioUnitario.ToString("C2", gt)</td>
+                        <td class="sub">@l.Subtotal.ToString("C2", gt)</td>
                     </tr>
                 }
             </tbody>
         </table>
 
-        <div class="line"></div>
-
-        <div class="totals">
-            <div class="row"><div>Subtotal</div><div>@Model.Total.ToString("C2", gt)</div></div>
-            <div class="row em green"><div>Total</div><div>@Model.Total.ToString("C2", gt)</div></div>
-            @if (Model.EfectivoRecibido.HasValue)
-            {
-                <div class="row"><div>Efectivo</div><div>@Model.EfectivoRecibido.Value.ToString("C2", gt)</div></div>
-            }
-            @if (Model.Cambio.HasValue)
-            {
-                <div class="row"><div>Cambio</div><div>@Model.Cambio.Value.ToString("C2", gt)</div></div>
-            }
+        <!-- ===== Pago (método / efectivo / cambio / línea / total) ===== -->
+        <div class="paybox">
+            <table>
+                <!-- Controla cercanía izquierda-derecha con estos colgroup (ver CSS .paybox col.*) -->
+                <colgroup>
+                    <col class="wLbl" />  <!-- ancho etiqueta -->
+                    <col class="wVal" />  <!-- ancho valor -->
+                </colgroup>
+                <tr><td>Método de pago:</td><td>@Model.MetodoPagoNombre</td></tr>
+              @*   <tr><td>Efectivo Re:</td><td>@(Model.EfectivoRecibido.HasValue? Model.EfectivoRecibido.Value.ToString("C2", gt) : "—")</td></tr>
+                <tr><td>Cambio:</td><td>@(Model.Cambio.HasValue? Model.Cambio.Value.ToString("C2", gt) : "—")</td></tr> *@
+            </table>
+            <div class="pay-sep"></div>
+            <table>
+                <colgroup>
+                    <col class="wLbl" />
+                    <col class="wVal" />
+                </colgroup>
+                <tr class="pay-total"><td>Total:</td><td>@Model.Total.ToString("C2", gt)</td></tr>
+            </table>
         </div>
+        <div style="clear: both;"></div> <!-- fuerza salto bajo el float -->
 
-        <div class="foot">
-            ¡Gracias por su compra!
-        </div>
-    </div>
+        <div class="foot">¡Gracias por su compra!</div>
 </body>
 </html>

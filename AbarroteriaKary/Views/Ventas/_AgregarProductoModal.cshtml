@@ -40,7 +40,7 @@
                             <input class="form-control" value="@Model.StockDisponible" readonly>
                         </div>
                         <div class="col-12 col-md-4">
-                            <label class="form-label">PVP vigente</label>
+                            <label class="form-label">Costo Unitario</label>
                             <input class="form-control" value="@Model.PrecioUnitario.ToString("C2", CultureInfo.GetCultureInfo("es-GT"))" readonly>
                         </div>
                         <div class="col-12 col-md-4">
@@ -49,10 +49,19 @@
                         </div>
                     </div>
 
-                    <div class="mt-3">
+@*                     <div class="mt-3">
                         <label class="form-label">Cantidad a vender</label>
                         <input id="apCantidad" type="number" class="form-control" min="1" step="1" value="@Model.Cantidad" required>
                     </div>
+ *@
+
+                    <div class="mt-3">
+                        <label class="form-label">Cantidad a vender</label>
+                        <input id="apCantidad" type="number" class="form-control" min="1" step="1" value="@Model.Cantidad" required>
+                        <div id="apCantidadFb" class="invalid-feedback"></div>
+                    </div>
+
+
 
                     <!-- Hiddens para el JS -->
                     <input type="hidden" id="apProdId" value="@Model.ProductoId" />

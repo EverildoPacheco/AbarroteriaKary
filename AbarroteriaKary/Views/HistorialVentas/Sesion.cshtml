@@ -1,0 +1,160 @@
+﻿
+
+@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.HistorialVentaItemVM>
+@using System.Globalization
+@{
+    ViewData["Title"] = "Ventas de la sesión";
+    var gt = CultureInfo.GetCultureInfo("es-GT");
+    var sesionId = ViewBag.SesionId as string ?? "";
+    var caja = ViewBag.CajaNombre as string ?? "-";
+    DateTime fAper = ViewBag.FechaApertura ?? DateTime.MinValue;
+    DateTime? fCie = ViewBag.FechaCierre as DateTime?;
+
+    string q = ViewBag.Q as string;
+    string fDesde = ViewBag.FDesde as string;
+    string fHasta = ViewBag.FHasta as string;
+
+    string rangoTexto = "";
+    if (DateTime.TryParse(fDesde, out var d1) && DateTime.TryParse(fHasta, out var d2))
+        rangoTexto = $"{d1:dd/MM/yyyy} - {d2:dd/MM/yyyy}";
+}
+<div class="ak-toolbar mb-3 mt-4">
+    <div class="ak-toolbar__row align-items-end gap-2 flex-wrap" >
+        <h1 class="ak-toolbar__title m-0 me-auto">
+            Ventas de la sesión @sesionId
+        </h1>
+
+        <!-- Botón volver fuera del form para no enviarlo -->
+        <a asp-action="Index"
+           class="btn btn-ak-primary btn-ak-square  d-inline-flex align-items-center gap-2">
+
+            <i class="fa-solid fa-arrow-left me-1"></i> Volver
+        </a>
+
+        <form id="frmFiltros" method="get" asp-action="Sesion"
+              class="d-flex align-items-center gap-2 flex-wrap order-2">
+            <input type="hidden" name="id" value="@sesionId" />
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+            <div class="input-group ak-daterange-group" style="width:clamp(220px, 20vw, 260px);">
+                <span class="input-group-text bg-white border-end-0" title="Rango de fechas">
+                    <i class="fa-regular fa-calendar"></i>
+                </span>
+                <input id="rangoFechas" class="form-control border-start-0 border-end-0"
+                       placeholder="Filtrar por fecha" value="@rangoTexto" autocomplete="off" />
+                <button type="button" id="btnClearRange"
+                        class="input-group-text bg-white border-start-0" title="Limpiar">
+                    <i class="fa-solid fa-eraser"></i>
+                </button>
+            </div>
+            <input type="hidden" name="fDesde" id="fDesde" value="@fDesde" />
+            <input type="hidden" name="fHasta" id="fHasta" value="@fHasta" />
+
+            <div class="input-group ak-search" style="width:clamp(260px, 24vw, 320px);">
+                <button type="submit" class="input-group-text bg-white border-end-0" title="Buscar">
+                    <i class="fas fa-search"></i>
+                </button>
+                <input name="q" value="@q" class="form-control border-start-0"
+                       placeholder="Venta, cliente o vendedor" />
+            </div>
+        </form>
+    </div>
+
+    <div class="text-muted small mt-2">
+        <div><b>Caja:</b> @caja</div>
+        <div><b>Apertura:</b> @fAper.ToString("dd/MM/yyyy HH:mm")</div>
+        <div><b>Cierre:</b> @(fCie?.ToString("dd/MM/yyyy HH:mm") ?? "-")</div>
+    </div>
+</div>
+
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra js-sortable">
+        <thead class="text-center thead-kary">
+            <tr>
+                <th>Venta</th>
+                <th>Fecha</th>
+                <th>Hora</th>
+                <th>Cliente</th>
+                <th>Vendedor</th>
+                <th>Total</th>
+                <th>Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr><td colspan="7" class="text-center py-4 text-muted">No hay ventas para los filtros.</td></tr>
+            }
+            else
+            {
+                foreach (var v in Model.Items)
+                {
+                    <tr>
+                        <td class="text-monospace">@v.VentaId</td>
+                        <td>@v.Fecha.ToString("dd/MM/yyyy")</td>
+                        <td>@v.Fecha.ToString("hh:mm tt")</td>
+                        <td>@(string.IsNullOrWhiteSpace(v.ClienteNombre) ? (v.ClienteId ?? "-") : v.ClienteNombre)</td>
+                        <td>@(string.IsNullOrWhiteSpace(v.UsuarioNombre) ? (v.UsuarioId ?? "-") : v.UsuarioNombre)</td>
+
+                        <td class="text-end">@v.Total.ToString("C2", gt)</td>
+                        <td class="text-center">
+                            <a asp-action="Venta" asp-route-id="@v.VentaId" class="btn btn-sm me-1" title="Ver detalle">
+                                <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
+                            </a>
+                            <a asp-controller="Ventas" asp-action="Recibo" asp-route-id="@v.VentaId"
+                               target="_blank" rel="noopener" class="btn btn-sm" title="PDF">
+                                <img src="~/img/Botones/pdf.png" alt="PDF" class="icono-accion">
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    @await Html.PartialAsync("~/Views/Shared/_Pager.cshtml", Model)
+</div>
+
+
+
+@section Scripts {
+    <script>
+        (function(){
+          const form = document.getElementById('frmFiltros');
+          const input = document.getElementById('rangoFechas');
+          const fDesde = document.getElementById('fDesde');
+          const fHasta = document.getElementById('fHasta');
+          const btnClr = document.getElementById('btnClearRange');
+
+          const start = '@(ViewBag.FDesde as string ?? "")';
+          const end   = '@(ViewBag.FHasta as string ?? "")';
+
+          if (input && input._litepicker && typeof input._litepicker.destroy === 'function') {
+            input._litepicker.destroy();
+          }
+
+          const picker = new Litepicker({
+            element: input, singleMode: false, autoApply: true, allowRepick: true,
+            numberOfMonths: 2, numberOfColumns: 2, splitView: true,
+            format: 'DD/MM/YYYY', lang: 'es-ES',
+            startDate: start || null, endDate: end || null
+          });
+
+          picker.on('selected', (s, e) => {
+            if (s && e) {
+              fDesde.value = s.format('YYYY-MM-DD');
+              fHasta.value = e.format('YYYY-MM-DD');
+              form.submit();
+            }
+          });
+
+          btnClr?.addEventListener('click', () => {
+            input.value = ''; fDesde.value = ''; fHasta.value = '';
+            try { picker.clearSelection(); } catch {}
+            form.submit();
+          });
+        })();
+    </script>
+}

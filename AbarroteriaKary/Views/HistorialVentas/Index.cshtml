@@ -1,0 +1,143 @@
+﻿@model AbarroteriaKary.ModelsPartial.Paginacion.PaginadoViewModel<AbarroteriaKary.ModelsPartial.HistorialSesionItemVM>
+@using System.Globalization
+@{
+    ViewData["Title"] = "Historial de ventas por sesión";
+    var gt = CultureInfo.GetCultureInfo("es-GT");
+    string q = ViewBag.Q as string;
+    string fDesde = ViewBag.FDesde as string;
+    string fHasta = ViewBag.FHasta as string;
+
+    string rangoTexto = "";
+    if (DateTime.TryParse(fDesde, out var d1) && DateTime.TryParse(fHasta, out var d2))
+        rangoTexto = $"{d1:dd/MM/yyyy} - {d2:dd/MM/yyyy}";
+}
+
+<div class="ak-toolbar mb-4 mt-4">
+    <div class="ak-toolbar__row">
+        <h1 class="ak-toolbar__title m-0">Historial de ventas por sesión</h1>
+
+        <form id="frmFiltros" method="get" asp-action="Index"
+              class="d-inline-flex align-items-center gap-2 ms-auto">
+            <input type="hidden" name="page" value="1" />
+            <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+            <div class="input-group ak-daterange-group" style="width:clamp(220px, 20vw, 260px);">
+                <span class="input-group-text bg-white border-end-0" title="Rango de fechas">
+                    <i class="fa-regular fa-calendar"></i>
+                </span>
+                <input id="rangoFechas" class="form-control border-start-0 border-end-0"
+                       placeholder="Filtrar por cierre" value="@rangoTexto" autocomplete="off" />
+                <button type="button" id="btnClearRange" class="input-group-text bg-white border-start-0" title="Limpiar rango">
+                    <i class="fa-solid fa-eraser"></i>
+                </button>
+            </div>
+
+            <input type="hidden" name="fDesde" id="fDesde" value="@fDesde" />
+            <input type="hidden" name="fHasta" id="fHasta" value="@fHasta" />
+
+            <div class="input-group ak-search" style="width:clamp(260px, 24vw, 320px);">
+                <button type="submit" class="input-group-text bg-white border-end-0" title="Buscar">
+                    <i class="fas fa-search"></i>
+                </button>
+                <input name="q" value="@q" class="form-control border-start-0"
+                       placeholder="Sesión, caja o usuario" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="table-responsive">
+    <table class="table table-bordered table-striped table-hover align-middle table-kary-zebra js-sortable">
+        <thead class="text-center thead-kary">
+            <tr>
+                <th>Sesión</th>
+                <th>Caja</th>
+                <th>Apertura</th>
+                <th>Cierre</th>
+                <th>Usuario cierre</th>
+                <th class="text-end">Total ventas</th>
+                <th style="width:120px;">Acción</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (!Model.Items.Any())
+            {
+                <tr>
+                    <td colspan="7" class="text-center py-4 text-muted">
+                        <i class="fa-regular fa-face-frown me-1"></i> No hay sesiones cerradas.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var s in Model.Items)
+                {
+                    <tr>
+                        <td class="text-monospace">@s.SesionId</td>
+                        <td>@(s.CajaNombre ?? "-")</td>
+                        <td>@s.FechaApertura.ToString("dd/MM/yyyy HH:mm")</td>
+                        <td>@(s.FechaCierre?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                        <td>@(s.UsuarioCierreNombre ?? "-")</td>
+                        <td class="text-end">@s.TotalVentas.ToString("C2", gt)</td>
+                        <td class="text-center">
+                            <!-- Ver ventas de la sesión -->
+                            <a asp-action="Sesion" asp-route-id="@s.SesionId"
+                               class="btn btn-sm me-1" title="Ver ventas">
+                                <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
+                            </a>
+
+                            <!-- PDF Venta diaria detallada -->
+                            <a asp-controller="CajaSesion" asp-action="VentaDiariaDet" asp-route-sesionId="@s.SesionId"
+                               target="_blank" rel="noopener"
+                               class="btn btn-sm btn-outline-danger" title="PDF detallado">
+                                <i class="fa-solid fa-file-pdf"></i>
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+
+    @await Html.PartialAsync("~/Views/Shared/_Pager.cshtml", Model)
+</div>
+
+@section Scripts {
+    <script>
+        (function(){
+          const form = document.getElementById('frmFiltros');
+          const input = document.getElementById('rangoFechas');
+          const fDesde = document.getElementById('fDesde');
+          const fHasta = document.getElementById('fHasta');
+          const btnClr = document.getElementById('btnClearRange');
+
+          const start='@(ViewBag.FDesde as string ?? "")';
+          const end='@(ViewBag.FHasta as string ?? "")';
+
+          if (input && input._litepicker && typeof input._litepicker.destroy==='function') {
+            input._litepicker.destroy();
+          }
+
+          const picker = new Litepicker({
+            element: input, singleMode: false, autoApply: true, allowRepick: true,
+            numberOfMonths: 2, numberOfColumns: 2, splitView: true,
+            format: 'DD/MM/YYYY', lang: 'es-ES',
+            startDate: start || null, endDate: end || null
+          });
+
+          picker.on('selected', (s,e) => {
+            if (s && e) {
+              fDesde.value = s.format('YYYY-MM-DD');
+              fHasta.value = e.format('YYYY-MM-DD');
+              form.submit();
+            }
+          });
+
+          btnClr?.addEventListener('click', () => {
+            input.value=''; fDesde.value=''; fHasta.value='';
+            try { picker.clearSelection(); } catch {}
+            form.submit();
+          });
+        })();
+    </script>
+}

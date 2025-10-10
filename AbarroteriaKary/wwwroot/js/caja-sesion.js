@@ -90,7 +90,7 @@
         ef?.addEventListener('input', pintar);
     }
 
-    // Inserta modal, elimina uno anterior con el mismo id, lo muestra y ejecuta init específico
+    // Inserta modal, 
     function insertAndShowModal(html, modalId) {
         if (!host) return;
 
@@ -202,7 +202,43 @@
     // ---------- Delegación SUBMIT (POST Abrir / Cerrar) ----------
     document.addEventListener('submit', async function (ev) {
         const form = ev.target;
-        if (!(form instanceof HTMLFormElement)) return;
+        //if (!(form instanceof HTMLFormElement)) return;
+
+        //// APERTURA -> POST /CajaSesion/Abrir
+        //if (form.id === 'form-apertura-caja') {
+        //    ev.preventDefault();
+        //    const data = new FormData(form);
+
+        //    try { window.KaryForms?.lockButton?.('#btn-aperturar', '<i class="fa-solid fa-spinner fa-spin me-1"></i> Abriendo...'); } catch { }
+
+        //    try {
+        //        const res = await fetch(form.action, {
+        //            method: 'POST',
+        //            body: data,
+        //            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        //        });
+
+        //        const json = await readJsonSafe(res) ?? { ok: false, message: 'Respuesta no válida del servidor.' };
+        //        if (!res.ok || !json.ok) {
+        //            (window.KarySwal?.error || alert)({ title: 'No se pudo abrir la caja', text: json.message || '' });
+        //            return;
+        //        }
+
+        //        (window.KarySwal?.saveSuccess || alert)({ title: '¡Caja aperturada!', text: json.message || 'La caja quedó abierta.' });
+
+        //        document.dispatchEvent(new CustomEvent('caja:estadoChanged', { detail: { abierta: true, sesionId: json.sesionId } }));
+
+        //        const modalEl = document.getElementById('modalCajaApertura');
+        //        const modal = bootstrap.Modal.getInstance(modalEl);
+        //        modal?.hide();
+        //        modalEl?.remove();
+        //    } catch (e) {
+        //        (window.KarySwal?.error || alert)({ title: 'Error', text: e.message || 'No se pudo abrir la caja.' });
+        //    } finally {
+        //        try { window.KaryForms?.unlockButton?.('#btn-aperturar'); } catch { }
+        //    }
+        //}
+
 
         // APERTURA -> POST /CajaSesion/Abrir
         if (form.id === 'form-apertura-caja') {
@@ -218,20 +254,40 @@
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
 
-                const json = await readJsonSafe(res) ?? { ok: false, message: 'Respuesta no válida del servidor.' };
+                const json = await (async () => {
+                    const ct = (res.headers.get('Content-Type') || '').toLowerCase();
+                    if (ct.includes('application/json')) try { return await res.json(); } catch { }
+                    return null;
+                })() ?? { ok: false, message: 'Respuesta no válida del servidor.' };
+
                 if (!res.ok || !json.ok) {
                     (window.KarySwal?.error || alert)({ title: 'No se pudo abrir la caja', text: json.message || '' });
                     return;
                 }
 
-                (window.KarySwal?.saveSuccess || alert)({ title: '¡Caja aperturada!', text: json.message || 'La caja quedó abierta.' });
-
+                // Actualiza estado UI (habilita "Nueva venta")
                 document.dispatchEvent(new CustomEvent('caja:estadoChanged', { detail: { abierta: true, sesionId: json.sesionId } }));
 
+                // Cierra el modal Bootstrap de apertura
                 const modalEl = document.getElementById('modalCajaApertura');
                 const modal = bootstrap.Modal.getInstance(modalEl);
                 modal?.hide();
                 modalEl?.remove();
+
+                // Éxito con UN SOLO botón (sin timer, sin "Guardar y nuevo")
+                if (window.Swal?.fire) {
+                    await Swal.fire({
+                        title: '¡Caja aperturada!',
+                        text: json.message || 'La caja quedó abierta.',
+                        icon: 'success',
+                        confirmButtonText: 'Aceptar',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false
+                    });
+                } else {
+                    alert('¡Caja aperturada!\n' + (json.message || 'La caja quedó abierta.'));
+                }
+
             } catch (e) {
                 (window.KarySwal?.error || alert)({ title: 'Error', text: e.message || 'No se pudo abrir la caja.' });
             } finally {
@@ -239,6 +295,13 @@
             }
         }
 
+
+
+
+
+
+
+        // CIERRE -> POST /CajaSesion/Cerrar  (con validación previa)
         // CIERRE -> POST /CajaSesion/Cerrar  (con validación previa)
         if (form.id === 'form-cierre-caja') {
             ev.preventDefault();
@@ -277,28 +340,61 @@
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
 
-                const json = await readJsonSafe(res) ?? { ok: false, message: 'Respuesta no válida del servidor.' };
+                const json = await (async () => {
+                    const ct = (res.headers.get('Content-Type') || '').toLowerCase();
+                    if (ct.includes('application/json')) try { return await res.json(); } catch { }
+                    return null;
+                })() ?? { ok: false, message: 'Respuesta no válida del servidor.' };
+
                 if (!res.ok || !json.ok) {
                     (window.KarySwal?.error || alert)({ title: 'No se pudo cerrar la caja', text: json.message || '' });
                     return;
                 }
 
-                (window.KarySwal?.saveSuccess || alert)({ title: '¡Caja cerrada!', text: json.message || 'La caja quedó cerrada.' });
-
-                // Deshabilitar "Nueva venta"
+                // Actualiza estado UI
                 document.dispatchEvent(new CustomEvent('caja:estadoChanged', { detail: { abierta: false, sesionId: null } }));
 
+                // Cierra el modal Bootstrap primero
                 const modalEl = document.getElementById('modalCajaCierre');
                 const modal = bootstrap.Modal.getInstance(modalEl);
                 modal?.hide();
                 modalEl?.remove();
+
+                // Éxito SIN timer (espera que el usuario pulse OK)
+                if (window.Swal?.fire) {
+                    await Swal.fire({
+                        title: '¡Caja cerrada!',
+                        text: json.message || 'La caja quedó cerrada.',
+                        icon: 'success',
+                        confirmButtonText: 'OK',
+                        allowOutsideClick: false,
+                        allowEscapeKey: false
+                    });
+                } else {
+                    alert('¡Caja cerrada!\n' + (json.message || 'La caja quedó cerrada.'));
+                }
+
+                // Recarga después de que el usuario confirme
+                if (location.pathname.toLowerCase().includes('/ventas')) {
+                    location.reload();
+                }
             } catch (e) {
                 (window.KarySwal?.error || alert)({ title: 'Error', text: e.message || 'No se pudo cerrar la caja.' });
             } finally {
                 try { window.KaryForms?.unlockButton?.('#btn-cerrar'); } catch { }
             }
         }
+
+
+
+
+
+
     });
+
+
+       
+
 
     // Estado inicial (habilita/deshabilita "Nueva venta")
     (async function initEstado() {

@@ -7,8 +7,10 @@ namespace AbarroteriaKary.ModelsPartial
     {
         public string ProductoId { get; set; } = "";
         public string Nombre { get; set; } = "";
-        public int Cantidad { get; set; }
+        public string? Descripcion { get; set; }  // <--- NUEVO
+        public decimal Cantidad { get; set; }
         public decimal PrecioUnitario { get; set; }
+
         public decimal Subtotal => Math.Round(Cantidad * PrecioUnitario, 2);
     }
 
@@ -28,8 +30,8 @@ namespace AbarroteriaKary.ModelsPartial
         public string? MetodoPagoNombre { get; set; }
 
         public decimal Total { get; set; }
-        public decimal? EfectivoRecibido { get; set; }   // si luego lo guardas en RECIBO
-        public decimal? Cambio { get; set; }             // si luego lo guardas en RECIBO
+        public decimal? EfectivoRecibido { get; set; }
+        public decimal? Cambio { get; set; }
 
         public List<ReciboLineaVM> Lineas { get; set; } = new();
 
@@ -38,6 +40,7 @@ namespace AbarroteriaKary.ModelsPartial
         public string? SucursalDireccion { get; set; }
         public string? SucursalNit { get; set; }
     }
+
 
 
     public sealed class ClienteUiDto
