@@ -16,6 +16,8 @@ using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using AbarroteriaKary.Filters;                 // <<★ importante: trae [KaryAuthorize]
+
 //using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T>
 //using System.Threading.Tasks;
 //using Microsoft.AspNetCore.Http;
@@ -28,8 +30,11 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 
 namespace AbarroteriaKary.Controllers
 {
+    [KaryAuthorize("VER")]
+
     public class AreasController : Controller
     {
+
         private readonly KaryDbContext _context;
         private readonly ICorrelativoService _correlativos;
         private readonly IReporteExportService _exportSvc;
@@ -342,6 +347,8 @@ namespace AbarroteriaKary.Controllers
 
 
         // GET: /Areas/Create
+        [KaryAuthorize("CREAR")]
+
         [HttpGet] 
         public async Task<IActionResult> Create()
         {
@@ -359,8 +366,9 @@ namespace AbarroteriaKary.Controllers
 
 
         // POST: /Areas/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [KaryAuthorize("CREAR")]
+        //[HttpPost]
+        [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(AreasViewModel vm)
         {
             if (!ModelState.IsValid)
@@ -411,6 +419,8 @@ namespace AbarroteriaKary.Controllers
 
 
         // GET: Areas/Edit/5
+        [KaryAuthorize("EDITAR")]
+
         [HttpGet]
         public async Task<IActionResult> Edit(string id)
         {
@@ -436,8 +446,10 @@ namespace AbarroteriaKary.Controllers
         }
 
         // POST: Areas/Edit/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        [KaryAuthorize("EDITAR")]
+
+        //[HttpPost]
+        [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, AreasViewModel vm)
         {
             if (string.IsNullOrWhiteSpace(id) || !string.Equals(id, vm.areaId, StringComparison.Ordinal))

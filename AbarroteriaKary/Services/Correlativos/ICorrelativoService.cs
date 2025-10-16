@@ -192,9 +192,19 @@ namespace AbarroteriaKary.Services.Correlativos
 
 
 
+        // Genérico por prefijo configurado (ej.: "PER" -> "PER0000001")
+        Task<string> NextAsync(string prefix, CancellationToken ct = default);
 
+        // Reserva un rango y devuelve IDs ya formateados (prefijo + padding)
+        Task<IReadOnlyList<string>> NextRangeAsync(string prefix, int count, CancellationToken ct = default);
 
+        // Conveniencias: serie específica de PERMISOS
+        Task<string> NextPermisoAsync(CancellationToken ct = default);
+        Task<IReadOnlyList<string>> NextPermisosRangeAsync(int count, CancellationToken ct = default);
 
+        // Bajo nivel (por si lo necesitas en otros módulos):
+        Task<long> NextNumberAsync(string sequenceName, CancellationToken ct = default);
+        Task<(long first, int size)> ReserveRangeAsync(string sequenceName, int count, CancellationToken ct = default);
 
 
 

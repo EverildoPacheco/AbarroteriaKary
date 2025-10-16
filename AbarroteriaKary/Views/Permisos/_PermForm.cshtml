@@ -1,0 +1,65 @@
+﻿@* / Permisos/_PermForm / *@
+@model AbarroteriaKary.ModelsPartial.PermisoEditVM
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <label class="form-label">Rol <span class="text-danger">*</span></label>
+        <select asp-for="RolId" asp-items="Model.Roles" class="form-select"></select>
+        <span asp-validation-for="RolId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Módulo <span class="text-danger">*</span></label>
+        <select asp-for="ModuloId" asp-items="Model.Modulos" class="form-select" id="moduloSelect"></select>
+        <span asp-validation-for="ModuloId" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-4">
+        <label class="form-label">Sub-módulo</label>
+        <select asp-for="SubmoduloId" asp-items="Model.Submodulos" class="form-select" id="submoduloSelect">
+            <option value="">-- (permiso a todo el módulo) --</option>
+        </select>
+    </div>
+
+    <div class="col-12">
+        <label class="form-label">Operaciones</label>
+        <div class="d-flex flex-wrap gap-3">
+            <div class="form-check">
+                <input class="form-check-input" asp-for="PuedeVer" />
+                <label class="form-check-label" for="PuedeVer">Ver</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" asp-for="PuedeCrear" />
+                <label class="form-check-label" for="PuedeCrear">Crear</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" asp-for="PuedeEditar" />
+                <label class="form-check-label" for="PuedeEditar">Editar</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" asp-for="PuedeEliminar" />
+                <label class="form-check-label" for="PuedeEliminar">Eliminar</label>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Carga dinámica de submódulos por módulo (AJAX sencillo)
+        document.getElementById('moduloSelect')?.addEventListener('change', async (e) => {
+            const moduloId = e.target.value;
+            const sel = document.getElementById('submoduloSelect');
+            sel.innerHTML = '<option value="">-- (permiso a todo el módulo) --</option>';
+            if (!moduloId) return;
+            const resp = await fetch(`@Url.Action("SubmodulosPorModulo", "Permisos")?moduloId=${encodeURIComponent(moduloId)}`);
+            if (!resp.ok) return;
+            const items = await resp.json(); // [{value,text}]
+            for (const it of items) {
+                const opt = document.createElement('option');
+                opt.value = it.value; opt.textContent = it.text;
+                sel.appendChild(opt);
+            }
+        });
+    </script>
+}

@@ -19,6 +19,8 @@
     <link rel="stylesheet" href="~/css/ak-sort.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/ak-producto.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/css/ventas-create.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/css/permisos.css" asp-append-version="true" />
+
 
     <!-- Bootstrap Icons (CDN jsDelivr) -->
     <link rel="stylesheet"
@@ -33,6 +35,7 @@
 <body>
     <div class="kary-shell">
         @await Html.PartialAsync("_LoadingOverlay")
+        <div class="small text-muted">ROL_ID: @User.FindFirst("ROL_ID")?.Value</div>
 
 
         @await Html.PartialAsync("_header")
@@ -67,6 +70,8 @@
     <script src="~/js/ak-sort.js" defer asp-append-version="true"></script>
     <script src="~/js/caja-sesion.js" defer asp-append-version="true"></script>
     <script src="~/js/ventas-create.js" defer asp-append-version="true"></script>
+    <script src="~/js/permisos-create.js" defer asp-append-version="true"></script>
+
 
 
 

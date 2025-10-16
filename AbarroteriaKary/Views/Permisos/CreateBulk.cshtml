@@ -1,0 +1,130 @@
+﻿@model AbarroteriaKary.ModelsPartial.PermisoBulkVM
+@{
+    ViewData["Title"] = "Asignar permisos por Rol";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+<!-- === un cambio en la clase se agrego Page Create===== -->
+
+<div class="container-fluid permiso-create page-create">
+    <h4 class="mb-3">Crear  permisos por rol</h4>
+
+    <section class="filters-section">
+        <div class="filter-group">
+            <label for="ddlRol">Rol <span class="text-danger">*</span></label>
+            <select asp-for="RolId" asp-items="Model.Roles" id="ddlRol" class="form-select">
+                <option value="">Seleccione…</option>
+            </select>
+        </div>
+
+        <div class="filter-group">
+            <label for="ddlModulo">Módulo <span class="text-danger">*</span></label>
+            <select asp-for="ModuloId" asp-items="Model.Modulos" id="ddlModulo" class="form-select" disabled>
+                <option value="">Seleccione…</option>
+            </select>
+        </div>
+    </section>
+
+    <!-- ===== Grid 2 columnas: módulos / submódulos ===== -->
+    <main class="permissions-grid">
+        <!-- Izquierda: módulos -->
+        <aside class="panel modules-panel">
+            <h3>Módulos</h3>
+            <ul id="modList" class="modules-list">
+                @foreach (var m in Model.Modulos)
+                {
+                    <li class="module-item mod-item d-flex justify-content-between align-items-center"
+                        data-id="@m.Value" tabindex="0" role="button" aria-pressed="false">
+                        <span>@m.Text</span>
+                        <i class="bi bi-chevron-right opacity-50"></i>
+                    </li>
+                }
+            </ul>
+        </aside>
+
+        <!-- Derecha: submódulos + acciones -->
+        <section class="panel submodules-panel">
+            <div class="submods-header">
+                <h3>Submódulos y Permisos</h3>
+
+                <div class="text-center">
+                    <small id="lblContexto" class="context-hint">Seleccione un módulo…</small>
+
+                </div>
+               
+            </div>
+
+            <!-- FORM: mantiene el mismo post/IDs -->
+            <form asp-action="BulkAssign" method="post" id="frmBulk">
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
+
+                <input type="hidden" name="RolId" id="hidRol" />
+                <input type="hidden" name="ModuloId" id="hidModulo" />
+                <span asp-validation-for="Items" class="text-danger"></span>
+
+                <!-- Loader / error -->
+                <div id="loadState" class="kary-loader" hidden>
+                    <div class="spinner-border" role="status" aria-hidden="true"></div>
+                    <span class="ms-2">Cargando submódulos…</span>
+                </div>
+                <div id="errorBox" class="alert alert-danger d-none" role="alert"></div>
+
+                <!-- Acordeón (inyectado por JS) -->
+                <div id="submodsList" class="kary-accordion" aria-live="polite"></div>
+
+                <!-- Footer -->
+                <div class="action-buttons">
+
+                    <a asp-action="Index" class="btn btn-cancel js-leave">
+                        <i class="fa-solid fa-xmark"></i> Cancelar
+                    </a>
+
+                    <button type="submit" class="btn btn-save" id="btn-guardar">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar
+                    </button>
+
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/permisos.css" />
+}
+
+
+
+
+@section Scripts {
+    <script src="~/js/permisos.create.js"></script>
+    <script>
+        (function () {
+          const formSel = '#frmBulk';
+          if (window.KarySwal && typeof KarySwal.guardUnsaved === 'function') {
+            KarySwal.guardUnsaved(formSel, '.js-leave');
+          }
+        })();
+    </script>
+
+    @* Modal de éxito tras PRG: leer y CONSUMIR TempData (sin Peek) *@
+    @if (TempData["SavedOk"] as bool? == true)
+    {
+        var rol = (TempData["SavedRol"] as string) ?? "";
+        var modulo = (TempData["SavedModulo"] as string) ?? "";
+        var count = (TempData["SavedCount"] as int?) ?? 0;
+        <script>
+            (function () {
+              if (window.KarySwal && typeof KarySwal.saveSuccess === 'function') {
+                KarySwal.saveSuccess({
+                  title: '¡Permisos guardados!',
+                  text: 'Se asignaron @count permiso(s) para el rol "@rol" en el módulo "@modulo".',
+                  indexUrl: '@Url.Action("Index", "Permisos", new { rolId = Model.RolId })',
+                  createUrl: '@Url.Action("Create", "Permisos", new { rolId = Model.RolId, moduloId = Model.ModuloId })'
+                });
+              }
+            })();
+        </script>
+    }
+}

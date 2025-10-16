@@ -6,20 +6,24 @@ using Microsoft.EntityFrameworkCore;
 
 namespace AbarroteriaKary.Models;
 
-public partial class MODULO
+public partial class SUBMODULO
 {
     [Key]
+    [StringLength(10)]
+    [Unicode(false)]
+    public string SUBMODULO_ID { get; set; } = null!;
+
     [StringLength(10)]
     [Unicode(false)]
     public string MODULO_ID { get; set; } = null!;
 
     [StringLength(100)]
     [Unicode(false)]
-    public string MODULO_NOMBRE { get; set; } = null!;
+    public string SUBMODULO_NOMBRE { get; set; } = null!;
 
-    [StringLength(250)]
+    [StringLength(200)]
     [Unicode(false)]
-    public string? MODULO_DESCRIPCION { get; set; }
+    public string? SUBMODULO_RUTA { get; set; }
 
     [StringLength(50)]
     [Unicode(false)]
@@ -48,9 +52,10 @@ public partial class MODULO
     [Unicode(false)]
     public string ESTADO { get; set; } = null!;
 
-    [InverseProperty("MODULO")]
-    public virtual ICollection<PERMISOS> PERMISOS { get; set; } = new List<PERMISOS>();
+    [ForeignKey("MODULO_ID")]
+    [InverseProperty("SUBMODULO")]
+    public virtual MODULO MODULO { get; set; } = null!;
 
-    [InverseProperty("MODULO")]
-    public virtual ICollection<SUBMODULO> SUBMODULO { get; set; } = new List<SUBMODULO>();
+    [InverseProperty("SUBMODULO")]
+    public virtual ICollection<PERMISOS> PERMISOS { get; set; } = new List<PERMISOS>();
 }

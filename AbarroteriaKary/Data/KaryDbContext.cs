@@ -74,6 +74,8 @@ public partial class KaryDbContext : DbContext
 
     public virtual DbSet<SUBCATEGORIA> SUBCATEGORIA { get; set; }
 
+    public virtual DbSet<SUBMODULO> SUBMODULO { get; set; }
+
     public virtual DbSet<TIPO_EMPAQUE> TIPO_EMPAQUE { get; set; }
 
     public virtual DbSet<TIPO_PRODUCTO> TIPO_PRODUCTO { get; set; }
@@ -347,6 +349,10 @@ public partial class KaryDbContext : DbContext
         {
             entity.HasKey(e => e.PERMISOS_ID).HasName("PK_PERMISOS_ID");
 
+            entity.HasIndex(e => new { e.ROL_ID, e.MODULO_ID, e.SUBMODULO_ID }, "UX_PERMISOS_ROL_MOD_SUB")
+                .IsUnique()
+                .HasFilter("([ELIMINADO]=(0))");
+
             entity.Property(e => e.ESTADO).HasDefaultValue("ACTIVO");
             entity.Property(e => e.FECHA_CREACION).HasDefaultValueSql("(getdate())");
 
@@ -357,6 +363,8 @@ public partial class KaryDbContext : DbContext
             entity.HasOne(d => d.ROL).WithMany(p => p.PERMISOS)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_PERMISOS_ROL");
+
+            entity.HasOne(d => d.SUBMODULO).WithMany(p => p.PERMISOS).HasConstraintName("FK_PERMISOS_SUBMODULO");
         });
 
         modelBuilder.Entity<PERSONA>(entity =>
@@ -466,6 +474,16 @@ public partial class KaryDbContext : DbContext
             entity.HasOne(d => d.CATEGORIA).WithMany(p => p.SUBCATEGORIA)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("FK_SUBCATEGORIA_CATEGORIA");
+        });
+
+        modelBuilder.Entity<SUBMODULO>(entity =>
+        {
+            entity.Property(e => e.ESTADO).HasDefaultValue("ACTIVO");
+            entity.Property(e => e.FECHA_CREACION).HasDefaultValueSql("(getdate())");
+
+            entity.HasOne(d => d.MODULO).WithMany(p => p.SUBMODULO)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_SUBMODULO_MODULO");
         });
 
         modelBuilder.Entity<TIPO_EMPAQUE>(entity =>

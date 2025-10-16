@@ -1,0 +1,35 @@
+﻿@{
+    var ok = TempData["SwalOk"] as string;
+    var warn = TempData["SwalWarn"] as string;
+    var err = TempData["SwalErr"] as string;
+}
+
+@if (!string.IsNullOrWhiteSpace(ok) || !string.IsNullOrWhiteSpace(warn) || !string.IsNullOrWhiteSpace(err))
+{
+    <script>
+        (function() {
+            const ok = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ok));
+            const warn = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(warn));
+            const err = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(err));
+
+            function fire(type, msg) {
+                if (!msg) return;
+                if (window.karySwal && typeof window.karySwal[type] === 'function') {
+                    window.karySwal[type](msg);
+                } else if (window.Swal && Swal.fire) {
+                    const map = {
+                        success: { icon: 'success', title: 'Éxito' },
+                        warning: { icon: 'warning', title: 'Atención' },
+                        error:   { icon: 'error',   title: 'Error' }
+                    };
+                    Swal.fire({ ...map[type], text: msg, confirmButtonText: 'OK' });
+                } else {
+                    alert(msg);
+                }
+            }
+            fire('success', ok);
+            fire('warning', warn);
+            fire('error', err);
+        })();
+    </script>
+}

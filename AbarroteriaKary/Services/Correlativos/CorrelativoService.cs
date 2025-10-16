@@ -1,14 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using AbarroteriaKary.Data;
+using AbarroteriaKary.Models;
 using Microsoft.Data.SqlClient;                  // IMPORTANTE
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage;     // GetDbTransaction()
-using AbarroteriaKary.Data;
-using AbarroteriaKary.Models;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AbarroteriaKary.Services.Correlativos
 {
@@ -19,6 +20,20 @@ namespace AbarroteriaKary.Services.Correlativos
     public class CorrelativoService : ICorrelativoService
     {
         private readonly KaryDbContext _context;
+
+
+        private static readonly IReadOnlyDictionary<string, (string seq, int pad, string prefix)> _series =
+            new Dictionary<string, (string seq, int pad, string prefix)>(StringComparer.OrdinalIgnoreCase)
+            {
+                // PERMISOS: PE00000001
+                { "PE", ("SEQ_PERMISOS", 8, "PE") },
+
+               
+            };
+
+
+
+
         public CorrelativoService(KaryDbContext context) => _context = context;
 
         // =======================
@@ -576,5 +591,145 @@ namespace AbarroteriaKary.Services.Correlativos
 
         public Task<IReadOnlyList<string>> NextReciboRangeAsync(int count, CancellationToken ct = default)
             => NextRangeFromSequenceAsync("dbo.SEQ_RECIBO", "R", 9, count, ct);
+
+
+
+
+
+
+
+        // ============================
+        // API de alto nivel (por prefijo)
+        // ============================
+
+        /// Ej.: "PER" => "PE0000001"
+        public async Task<string> NextAsync(string prefix, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(prefix))
+                throw new ArgumentException("Prefix requerido.", nameof(prefix));
+
+            if (!_series.TryGetValue(prefix, out var cfg))
+                throw new InvalidOperationException($"No hay secuencia configurada para el prefijo '{prefix}'.");
+
+            var n = await NextNumberAsync(cfg.seq, ct);
+            return cfg.prefix + n.ToString().PadLeft(cfg.pad, '0');
+        }
+
+        /// Reserva count valores y devuelve la lista ya formateada.
+        public async Task<IReadOnlyList<string>> NextRangeAsync(string prefix, int count, CancellationToken ct = default)
+        {
+            if (count <= 0) return Array.Empty<string>();
+
+            if (string.IsNullOrWhiteSpace(prefix))
+                throw new ArgumentException("Prefix requerido.", nameof(prefix));
+
+            if (!_series.TryGetValue(prefix, out var cfg))
+                throw new InvalidOperationException($"No hay secuencia configurada para el prefijo '{prefix}'.");
+
+            var (first, size) = await ReserveRangeAsync(cfg.seq, count, ct);
+            var list = new List<string>(size);
+            for (var i = 0; i < size; i++)
+                list.Add(cfg.prefix + (first + i).ToString().PadLeft(cfg.pad, '0'));
+
+            return list;
+        }
+
+        // Conveniencias “por serie”
+        public Task<string> NextPermisoAsync(CancellationToken ct = default)
+            => NextAsync("PE", ct);
+
+        public Task<IReadOnlyList<string>> NextPermisosRangeAsync(int count, CancellationToken ct = default)
+            => NextRangeAsync("PE", count, ct);
+
+        // ============================
+        // Bajo nivel
+        // ============================
+
+        /// Retorna un único número crudo desde una SEQUENCE (thread-safe en SQL).
+        public async Task<long> NextNumberAsync(string sequenceName, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(sequenceName))
+                throw new ArgumentException("Nombre de secuencia requerido.", nameof(sequenceName));
+
+            var db = _context.Database;
+            var conn = db.GetDbConnection();
+            var openedHere = false;
+
+            if (conn.State != ConnectionState.Open)
+            {
+                await conn.OpenAsync(ct);
+                openedHere = true;
+            }
+
+            try
+            {
+                await using var cmd = conn.CreateCommand();
+                cmd.CommandText = $"SELECT NEXT VALUE FOR dbo.{sequenceName};";
+                cmd.CommandType = CommandType.Text;
+
+                // Compartimos transacción si EF tiene una activa
+                var current = db.CurrentTransaction;
+                if (current != null)
+                    cmd.Transaction = current.GetDbTransaction();
+
+                var result = await cmd.ExecuteScalarAsync(ct);
+                return Convert.ToInt64(result);
+            }
+            finally
+            {
+                if (openedHere && conn.State == ConnectionState.Open)
+                    await conn.CloseAsync();
+            }
+        }
+
+        /// Reserva un rango vía sp_sequence_get_range y retorna (first, size real).
+        public async Task<(long first, int size)> ReserveRangeAsync(string sequenceName, int count, CancellationToken ct = default)
+        {
+            if (string.IsNullOrWhiteSpace(sequenceName))
+                throw new ArgumentException("Nombre de secuencia requerido.", nameof(sequenceName));
+            if (count <= 0) return (0L, 0);
+
+            var db = _context.Database;
+            var conn = db.GetDbConnection();
+            var openedHere = false;
+
+            if (conn.State != ConnectionState.Open)
+            {
+                await conn.OpenAsync(ct);
+                openedHere = true;
+            }
+
+            try
+            {
+                await using var cmd = conn.CreateCommand();
+                cmd.CommandText = "sys.sp_sequence_get_range";
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                // Transacción actual de EF si existe
+                var current = db.CurrentTransaction;
+                if (current != null)
+                    cmd.Transaction = current.GetDbTransaction();
+
+                var pSeqName = new SqlParameter("@sequence_name", SqlDbType.NVarChar, 128) { Value = $"dbo.{sequenceName}" };
+                var pSize = new SqlParameter("@range_size", SqlDbType.Int) { Value = count };
+                var pFirst = new SqlParameter("@range_first_value", SqlDbType.Variant) { Direction = ParameterDirection.Output };
+
+                cmd.Parameters.Add(pSeqName);
+                cmd.Parameters.Add(pSize);
+                cmd.Parameters.Add(pFirst);
+
+                await cmd.ExecuteNonQueryAsync(ct);
+
+                var firstVal = Convert.ToInt64(pFirst.Value);
+                return (firstVal, count);
+            }
+            finally
+            {
+                if (openedHere && conn.State == ConnectionState.Open)
+                    await conn.CloseAsync();
+            }
+        }
+
+
     }
 }

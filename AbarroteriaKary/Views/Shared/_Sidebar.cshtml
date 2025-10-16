@@ -1,4 +1,9 @@
-﻿@{
+﻿@* ====== INYECCIÓN DEL SERVICIO DE PERMISOS ====== *@
+@using AbarroteriaKary.Services.Security
+@inject IKaryPermissionService Perms
+
+@{
+    // ====== CONTEXTO ACTUAL (para "activo" y expandir grupos) ======
     var ctrl = (ViewContext.RouteData.Values["controller"]?.ToString() ?? "").ToLower();
     var act = (ViewContext.RouteData.Values["action"]?.ToString() ?? "").ToLower();
 
@@ -8,297 +13,450 @@
         var isAct = string.IsNullOrWhiteSpace(a) || act == a.ToLower();
         return (isCtrl && isAct) ? " is-active " : "";
     };
+
+    // ====== ROL del usuario (claim) ======
+    var rolId = User.FindFirst("ROL_ID")?.Value;
+
+    // Nota: si rolId es null (no autenticado), "&& rolId != null" oculta todo lo protegido.
+
+    // ====== PERMISOS POR MÓDULO (permiso a nivel general del módulo) ======
+    // Ajuste los MODULO_ID para que coincidan con su tabla MODULO.
+    var canVentasModulo = rolId != null && await Perms.HasPermissionAsync(rolId, "VENTAS", null, "VER");
+    var canInventarioModulo = rolId != null && await Perms.HasPermissionAsync(rolId, "INVENTARIO", null, "VER");
+    var canProductosModulo = rolId != null && await Perms.HasPermissionAsync(rolId, "PRODUCTOS", null, "VER");
+    var canProveedorModulo = rolId != null && await Perms.HasPermissionAsync(rolId, "PROVEEDOR", null, "VER");
+    var canClienteModulo = rolId != null && await Perms.HasPermissionAsync(rolId, "CLIENTE", null, "VER");
+    var canEmpleadoModulo = rolId != null && await Perms.HasPermissionAsync(rolId, "EMPLEADO", null, "VER");
+    var canUsuarioModulo = rolId != null && await Perms.HasPermissionAsync(rolId, "USUARIO", null, "VER");
+    var canPermisoModulo = rolId != null && await Perms.HasPermissionAsync(rolId, "PERMISO", null, "VER");
+    var canReportesModulo = rolId != null && await Perms.HasPermissionAsync(rolId, "REPORTES", null, "VER");
+
+    // ====== PERMISOS POR SUB-MÓDULO (por ruta /Controller/Action) ======
+    // VENTAS
+    var canVentasIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Ventas", "Index", "VER");
+    var canHistorialVentas = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "HistorialVentas", "Index", "VER");
+    var canCajasIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Cajas", "Index", "VER");
+
+    // INVENTARIO
+    var canPedidosIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Pedidos", "Index", "VER");
+    var canInventariosIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Inventarios", "Index", "VER");
+    var canKardexIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Kardex", "Index", "VER");
+
+    // PRODUCTOS
+    var canProductosIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Productos", "Index", "VER");
+    var canCategoriasIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Categorias", "Index", "VER");
+    var canSubCategoriasIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "SubCategorias", "Index", "VER");
+    var canTipoProductosIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "TipoProductos", "Index", "VER");
+    var canMateriaEnvasesIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "MateriaEnvases", "Index", "VER");
+    var canTipoEmpaquesIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "TipoEmpaques", "Index", "VER");
+    var canUnidadesIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "UnidadDeMedidas", "Index", "VER");
+    var canMarcasIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Marcas", "Index", "VER");
+
+    // PROVEEDOR
+    var canProveedoresIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Proveedores", "Index", "VER");
+
+    // CLIENTE
+    var canClientesIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Clientes", "Index", "VER");
+
+    // EMPLEADO
+    var canEmpleadosIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Empleados", "Index", "VER");
+    var canPuestoIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Puesto", "Index", "VER");
+    var canAreasIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Areas", "Index", "VER");
+
+    // USUARIO
+    var canUsuariosIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Usuarios", "Index", "VER");
+    var canRolesIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Roles", "Index", "VER");
+
+    // PERMISO (ajuste: si su controlador es "Permisos" o "Permissions")
+    var canPermisosIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Permisos", "Index", "VER");
+    var canModulosIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Modulos", "Index", "VER");
+
+    // REPORTES
+    var canReportesIndex = rolId != null && await Perms.HasPermissionByRouteAsync(rolId, "Reportes", "Index", "VER");
+
+    // ====== GRUPOS EXPANDIDOS (por página activa) ======
+    bool openVentas = new[] { "ventas", "historialventas", "cajas" }.Contains(ctrl);
+    bool openInventario = new[] { "pedidos", "inventarios", "kardex" }.Contains(ctrl);
+    bool openProductos = new[] { "productos", "categorias", "subcategorias", "tipoproductos", "materiaenvases", "tipoempaques", "unidaddemedidas", "marcas" }.Contains(ctrl);
+    bool openProveedor = (ctrl == "proveedores");
+    bool openCliente = (ctrl == "clientes");
+    bool openEmpleado = new[] { "empleados", "puesto", "areas" }.Contains(ctrl);
+    bool openUsuario = new[] { "usuarios", "roles" }.Contains(ctrl);
+    bool openPermisos = new[] { "Permisos", "modulos" }.Contains(ctrl);
+    bool openReportes = (ctrl == "reportes");
+
+    var ventasHidden = openVentas ? "" : "hidden";
+    var inventarioHidden = openInventario ? "" : "hidden";
+    var productosHidden = openProductos ? "" : "hidden";
+    var proveedorHidden = openProveedor ? "" : "hidden";
+    var clienteHidden = openCliente ? "" : "hidden";
+    var empleadoHidden = openEmpleado ? "" : "hidden";
+    var usuarioHidden = openUsuario ? "" : "hidden";
+    var permisosHidden = openPermisos ? "" : "hidden";
+    var reportesHidden = openReportes ? "" : "hidden";
 }
 
 <aside class="kary-sidebar" id="karySidebar" aria-label="Menú principal">
     <div class="kary-sidebar__card">
         <nav class="kary-menu">
 
-            <!-- INICIO (no se toca el icono principal) -->
+            @* ================== INICIO ================== *@
             <a class="kary-menu__item @active("Home", "Inicio")"
                asp-controller="Home" asp-action="Inicio">
                 <img src="~/img/sidebar/homee.png" class="kary-icon" alt="" asp-append-version="true" />
                 <span><strong>INICIO</strong></span>
             </a>
 
-            <!-- VENTAS (solo submenús con iconos) -->
-            <div class="kary-menu__group" data-group="ventas">
-                <button type="button"
-                        class="kary-menu__item js-submenu-toggle"
-                        aria-expanded="false"
-                        aria-controls="sm-ventas">
-                    <img src="~/img/sidebar/VENTAS.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>VENTAS</strong></span>
-                </button>
+            @* ================== VENTAS ================== *@
+            @if (canVentasModulo || canVentasIndex || canHistorialVentas || canCajasIndex)
+            {
+                <div class="kary-menu__group" data-group="ventas">
+                    <button type="button"
+                            class="kary-menu__item js-submenu-toggle"
+                            aria-expanded="@(openVentas.ToString().ToLower())"
+                            aria-controls="sm-ventas">
+                        <img src="~/img/sidebar/VENTAS.png" class="kary-icon" alt="" asp-append-version="true" />
+                        <span class="kary-menu__title"><strong>VENTAS</strong></span>
+                    </button>
 
-                <div id="sm-ventas" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Ventas", "Index")"
-                       asp-controller="Ventas" asp-action="Index">
-                        <i class="fa-solid fa-cart-shopping kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Ventas</span>
-                    </a>
+                    <div id="sm-ventas" class="kary-submenu" @ventasHidden>
+                        @* Sub-módulo: /Ventas/Index *@
+                        @if (canVentasIndex)
+                        {
+                            <a class="kary-submenu__item @active("Ventas", "Index")"
+                               asp-controller="Ventas" asp-action="Index">
+                                <i class="fa-solid fa-cart-shopping kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Ventas</span>
+                            </a>
+                        }
 
-                    <a class="kary-submenu__item @active("HistorialVentas", "Index")"
-                       asp-controller="HistorialVentas" asp-action="Index">
-                        <i class="fa-solid fa-clock-rotate-left kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Historia de ventas</span>
-                    </a>
-                    <a class="kary-submenu__item @active("Cajas", "Index")"
-                       asp-controller="Cajas" asp-action="Index">
-                        <i class="fa-solid fa-cash-register kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Caja</span>
-                    </a>
+                        @* Sub-módulo: /HistorialVentas/Index *@
+                        @if (canHistorialVentas)
+                        {
+                            <a class="kary-submenu__item @active("HistorialVentas", "Index")"
+                               asp-controller="HistorialVentas" asp-action="Index">
+                                <i class="fa-solid fa-clock-rotate-left kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Historia de ventas</span>
+                            </a>
+                        }
 
+                        @* Sub-módulo: /Cajas/Index *@
+                        @if (canCajasIndex)
+                        {
+                            <a class="kary-submenu__item @active("Cajas", "Index")"
+                               asp-controller="Cajas" asp-action="Index">
+                                <i class="fa-solid fa-cash-register kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Caja</span>
+                            </a>
+                        }
+                    </div>
                 </div>
-            </div>
+            }
 
-            <!-- CAJA (fix: aria-controls/id coinciden) -->
-            <div class="kary-menu__group" data-group="caja">
-                <button type="button"
-                        class="kary-menu__item js-submenu-toggle"
-                        aria-expanded="false"
-                        aria-controls="sm-caja">
-                    <img src="~/img/sidebar/Caja.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>CAJA</strong></span>
-                </button>
+            @* ================== INVENTARIO ================== *@
+            @if (canInventarioModulo || canPedidosIndex || canInventariosIndex || canKardexIndex)
+            {
+                <div class="kary-menu__group" data-group="inventario">
+                    <button type="button"
+                            class="kary-menu__item js-submenu-toggle"
+                            aria-expanded="@(openInventario.ToString().ToLower())"
+                            aria-controls="sm-inventario">
+                        <img src="~/img/sidebar/Inventario.png" class="kary-icon" alt="" asp-append-version="true" />
+                        <span class="kary-menu__title"><strong>INVENTARIO</strong></span>
+                    </button>
 
-                <div id="sm-caja" class="kary-submenu" hidden>
-                   @*  <a class="kary-submenu__item @active("Cajas", "Index")"
-                       asp-controller="Cajas" asp-action="Index">
-                        <i class="fa-solid fa-cash-register kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Caja</span>
-                    </a> *@
+                    <div id="sm-inventario" class="kary-submenu" @inventarioHidden>
+                        @if (canPedidosIndex)
+                        {
+                            <a class="kary-submenu__item @active("Pedidos", "Index")"
+                               asp-controller="Pedidos" asp-action="Index">
+                                <i class="fa-solid fa-truck kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Compras</span>
+                            </a>
+                        }
+                        @if (canInventariosIndex)
+                        {
+                            <a class="kary-submenu__item @active("Inventarios", "Index")"
+                               asp-controller="Inventarios" asp-action="Index">
+                                <i class="fa-solid fa-boxes-stacked kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Inventario</span>
+                            </a>
+                        }
+                        @if (canKardexIndex)
+                        {
+                            <a class="kary-submenu__item @active("Kardex", "Index")"
+                               asp-controller="Kardex" asp-action="Index">
+                                <i class="fa-solid fa-arrows-rotate kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Kardex</span>
+                            </a>
+                        }
+                    </div>
                 </div>
-            </div>
+            }
 
-            <!-- INVENTARIO -->
-            <div class="kary-menu__group" data-group="inventario">
-                <button type="button"
-                        class="kary-menu__item js-submenu-toggle"
-                        aria-expanded="false"
-                        aria-controls="sm-inventario">
-                    <img src="~/img/sidebar/Inventario.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>INVENTARIO</strong></span>
-                </button>
+            @* ================== PRODUCTOS ================== *@
+            @if (canProductosModulo || canProductosIndex || canCategoriasIndex || canSubCategoriasIndex || canTipoProductosIndex || canMateriaEnvasesIndex || canTipoEmpaquesIndex || canUnidadesIndex || canMarcasIndex)
+            {
+                <div class="kary-menu__group" data-group="productos">
+                    <button type="button"
+                            class="kary-menu__item js-submenu-toggle"
+                            aria-expanded="@(openProductos.ToString().ToLower())"
+                            aria-controls="sm-productos">
+                        <img src="~/img/sidebar/Productos.png" class="kary-icon" alt="" asp-append-version="true" />
+                        <span class="kary-menu__title"><strong>PRODUCTOS</strong></span>
+                    </button>
 
-                <div id="sm-inventario" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Pedidos", "Index")"
-                       asp-controller="Pedidos" asp-action="Index">
-                        <i class="fa-solid fa-truck kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Compras</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("Inventarios", "Index")"
-                       asp-controller="Inventarios" asp-action="Index">
-                        <i class="fa-solid fa-boxes-stacked kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Inventario</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("Kardex", "Index")"
-                       asp-controller="Kardex" asp-action="Index">
-                        <i class="fa-solid fa-arrows-rotate kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Kardex</span>
-                    </a>
+                    <div id="sm-productos" class="kary-submenu" @productosHidden>
+                        @if (canProductosIndex)
+                        {
+                            <a class="kary-submenu__item @active("Productos", "Index")"
+                               asp-controller="Productos" asp-action="Index">
+                                <i class="fa-solid fa-box-open kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Productos</span>
+                            </a>
+                        }
+                        @if (canCategoriasIndex)
+                        {
+                            <a class="kary-submenu__item @active("Categorias", "Index")"
+                               asp-controller="Categorias" asp-action="Index">
+                                <i class="fa-solid fa-tags kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Categorías</span>
+                            </a>
+                        }
+                        @if (canSubCategoriasIndex)
+                        {
+                            <a class="kary-submenu__item @active("SubCategorias", "Index")"
+                               asp-controller="SubCategorias" asp-action="Index">
+                                <i class="fa-solid fa-tag kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Sub Categorías</span>
+                            </a>
+                        }
+                        @if (canTipoProductosIndex)
+                        {
+                            <a class="kary-submenu__item @active("TipoProductos", "Index")"
+                               asp-controller="TipoProductos" asp-action="Index">
+                                <i class="fa-solid fa-cubes kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Tipo Productos</span>
+                            </a>
+                        }
+                        @if (canMateriaEnvasesIndex)
+                        {
+                            <a class="kary-submenu__item @active("MateriaEnvases", "Index")"
+                               asp-controller="MateriaEnvases" asp-action="Index">
+                                <i class="fa-solid fa-industry kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Material de Envases</span>
+                            </a>
+                        }
+                        @if (canTipoEmpaquesIndex)
+                        {
+                            <a class="kary-submenu__item @active("TipoEmpaques", "Index")"
+                               asp-controller="TipoEmpaques" asp-action="Index">
+                                <i class="fa-solid fa-box kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Tipo de Empaques</span>
+                            </a>
+                        }
+                        @if (canUnidadesIndex)
+                        {
+                            <a class="kary-submenu__item @active("UnidadDeMedidas", "Index")"
+                               asp-controller="UnidadDeMedidas" asp-action="Index">
+                                <i class="fa-solid fa-ruler-combined kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Unidad de Medidas</span>
+                            </a>
+                        }
+                        @if (canMarcasIndex)
+                        {
+                            <a class="kary-submenu__item @active("Marcas", "Index")"
+                               asp-controller="Marcas" asp-action="Index">
+                                <i class="fa-solid fa-registered kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Marcas</span>
+                            </a>
+                        }
+                    </div>
                 </div>
-            </div>
+            }
 
-            <!-- PRODUCTOS -->
-            <div class="kary-menu__group" data-group="productos">
-                <button type="button"
-                        class="kary-menu__item js-submenu-toggle"
-                        aria-expanded="false"
-                        aria-controls="sm-productos">
-                    <img src="~/img/sidebar/Productos.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>PRODUCTOS</strong></span>
-                </button>
+            @* ================== PROVEEDOR ================== *@
+            @if (canProveedorModulo || canProveedoresIndex)
+            {
+                <div class="kary-menu__group" data-group="Proveedor">
+                    <button type="button"
+                            class="kary-menu__item js-submenu-toggle"
+                            aria-expanded="@(openProveedor.ToString().ToLower())"
+                            aria-controls="sm-proveedor">
+                        <img src="~/img/sidebar/proveedor.png" class="kary-icon" alt="" asp-append-version="true" />
+                        <span class="kary-menu__title"><strong>PROVEEDOR</strong></span>
+                    </button>
 
-                <div id="sm-productos" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Productos", "Index")"
-                       asp-controller="Productos" asp-action="Index">
-                        <i class="fa-solid fa-box-open kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Productos</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("Categorias", "Index")"
-                       asp-controller="Categorias" asp-action="Index">
-                        <i class="fa-solid fa-tags kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Categorías</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("SubCategorias", "Index")"
-                       asp-controller="SubCategorias" asp-action="Index">
-                        <i class="fa-solid fa-tag kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Sub Categorías</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("TipoProductos", "Index")"
-                       asp-controller="TipoProductos" asp-action="Index">
-                        <i class="fa-solid fa-cubes kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Tipo Productos</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("MateriaEnvases", "Index")"
-                       asp-controller="MateriaEnvases" asp-action="Index">
-                        <i class="fa-solid fa-industry kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Material de Envases</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("TipoEmpaques", "Index")"
-                       asp-controller="TipoEmpaques" asp-action="Index">
-                        <i class="fa-solid fa-box kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Tipo de Empaques</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("UnidadDeMedidas", "Index")"
-                       asp-controller="UnidadDeMedidas" asp-action="Index">
-                        <i class="fa-solid fa-ruler-combined kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Unidad de Medidas</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("Marcas", "Index")"
-                       asp-controller="Marcas" asp-action="Index">
-                        <i class="fa-solid fa-registered kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Marcas</span>
-                    </a>
+                    <div id="sm-proveedor" class="kary-submenu" @proveedorHidden>
+                        @if (canProveedoresIndex)
+                        {
+                            <a class="kary-submenu__item @active("Proveedores", "Index")"
+                               asp-controller="Proveedores" asp-action="Index">
+                                <i class="fa-solid fa-handshake kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Proveedores</span>
+                            </a>
+                        }
+                    </div>
                 </div>
-            </div>
+            }
 
-            <!-- PROVEEDOR -->
-            <div class="kary-menu__group" data-group="Proveedor">
-                <button type="button"
-                        class="kary-menu__item js-submenu-toggle"
-                        aria-expanded="false"
-                        aria-controls="sm-proveedor">
-                    <img src="~/img/sidebar/proveedor.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>PROVEEDOR</strong></span>
-                </button>
+            @* ================== CLIENTE ================== *@
+            @if (canClienteModulo || canClientesIndex)
+            {
+                <div class="kary-menu__group" data-group="Cliente">
+                    <button type="button"
+                            class="kary-menu__item js-submenu-toggle"
+                            aria-expanded="@(openCliente.ToString().ToLower())"
+                            aria-controls="sm-cliente">
+                        <img src="~/img/sidebar/cliente.png" class="kary-icon" alt="" asp-append-version="true" />
+                        <span class="kary-menu__title"><strong>CLIENTE</strong></span>
+                    </button>
 
-                <div id="sm-proveedor" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Proveedores", "Index")"
-                       asp-controller="Proveedores" asp-action="Index">
-                        <i class="fa-solid fa-handshake kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Proveedores</span>
-                    </a>
+                    <div id="sm-cliente" class="kary-submenu" @clienteHidden>
+                        @if (canClientesIndex)
+                        {
+                            <a class="kary-submenu__item @active("Clientes", "Index")"
+                               asp-controller="Clientes" asp-action="Index">
+                                <i class="fa-solid fa-users kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Clientes</span>
+                            </a>
+                        }
+                    </div>
                 </div>
-            </div>
+            }
 
-            <!-- CLIENTE (fix: id correcto) -->
-            <div class="kary-menu__group" data-group="Cliente">
-                <button type="button"
-                        class="kary-menu__item js-submenu-toggle"
-                        aria-expanded="false"
-                        aria-controls="sm-cliente">
-                    <img src="~/img/sidebar/cliente.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>CLIENTE</strong></span>
-                </button>
+            @* ================== EMPLEADO ================== *@
+            @if (canEmpleadoModulo || canEmpleadosIndex || canPuestoIndex || canAreasIndex)
+            {
+                <div class="kary-menu__group" data-group="Empleado">
+                    <button type="button"
+                            class="kary-menu__item js-submenu-toggle"
+                            aria-expanded="@(openEmpleado.ToString().ToLower())"
+                            aria-controls="sm-empleado">
+                        <img src="~/img/sidebar/trabajar.png" class="kary-icon" alt="" asp-append-version="true" />
+                        <span class="kary-menu__title"><strong>EMPLEADO</strong></span>
+                    </button>
 
-                <div id="sm-cliente" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Clientes", "Index")"
-                       asp-controller="Clientes" asp-action="Index">
-                        <i class="fa-solid fa-users kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Clientes</span>
-                    </a>
+                    <div id="sm-empleado" class="kary-submenu" @empleadoHidden>
+                        @if (canEmpleadosIndex)
+                        {
+                            <a class="kary-submenu__item @active("Empleados", "Index")"
+                               asp-controller="Empleados" asp-action="Index">
+                                <i class="fa-solid fa-id-card kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Empleados</span>
+                            </a>
+                        }
+                        @if (canPuestoIndex)
+                        {
+                            <a class="kary-submenu__item @active("Puesto", "Index")"
+                               asp-controller="Puesto" asp-action="Index">
+                                <i class="fa-solid fa-user-tie kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Puesto</span>
+                            </a>
+                        }
+                        @if (canAreasIndex)
+                        {
+                            <a class="kary-submenu__item @active("Areas", "Index")"
+                               asp-controller="Areas" asp-action="Index">
+                                <i class="fa-solid fa-diagram-project kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Áreas</span>
+                            </a>
+                        }
+                    </div>
                 </div>
-            </div>
+            }
 
-            <!-- EMPLEADO -->
-            <div class="kary-menu__group" data-group="Empleado">
-                <button type="button"
-                        class="kary-menu__item js-submenu-toggle"
-                        aria-expanded="false"
-                        aria-controls="sm-empleado">
-                    <img src="~/img/sidebar/trabajar.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>EMPLEADO</strong></span>
-                </button>
+            @* ================== USUARIO ================== *@
+            @if (canUsuarioModulo || canUsuariosIndex || canRolesIndex)
+            {
+                <div class="kary-menu__group" data-group="Usuario">
+                    <button type="button"
+                            class="kary-menu__item js-submenu-toggle"
+                            aria-expanded="@(openUsuario.ToString().ToLower())"
+                            aria-controls="sm-usuario">
+                        <img src="~/img/sidebar/usuario.png" class="kary-icon" alt="" asp-append-version="true" />
+                        <span class="kary-menu__title"><strong>USUARIO</strong></span>
+                    </button>
 
-                <div id="sm-empleado" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Empleados", "Index")"
-                       asp-controller="Empleados" asp-action="Index">
-                        <i class="fa-solid fa-id-card kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Empleados</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("Puesto", "Index")"
-                       asp-controller="Puesto" asp-action="Index">
-                        <i class="fa-solid fa-user-tie kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Puesto</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("Areas", "Index")"
-                       asp-controller="Areas" asp-action="Index">
-                        <i class="fa-solid fa-diagram-project kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Áreas</span>
-                    </a>
+                    <div id="sm-usuario" class="kary-submenu" @usuarioHidden>
+                        @if (canUsuariosIndex)
+                        {
+                            <a class="kary-submenu__item @active("Usuarios", "Index")"
+                               asp-controller="Usuarios" asp-action="Index">
+                                <i class="fa-solid fa-user-shield kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Usuarios</span>
+                            </a>
+                        }
+                        @if (canRolesIndex)
+                        {
+                            <a class="kary-submenu__item @active("Roles", "Index")"
+                               asp-controller="Roles" asp-action="Index">
+                                <i class="fa-solid fa-user-gear kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Roles</span>
+                            </a>
+                        }
+                    </div>
                 </div>
-            </div>
+            }
 
-            <!-- USUARIO -->
-            <div class="kary-menu__group" data-group="Usuario">
-                <button type="button"
-                        class="kary-menu__item js-submenu-toggle"
-                        aria-expanded="false"
-                        aria-controls="sm-usuario">
-                    <img src="~/img/sidebar/usuario.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>USUARIO</strong></span>
-                </button>
+            @* ================== PERMISO ================== *@
+            @if (canPermisoModulo || canPermisosIndex || canModulosIndex)
+            {
+                <div class="kary-menu__group" data-group="Permisos">
+                    <button type="button"
+                            class="kary-menu__item js-submenu-toggle"
+                            aria-expanded="@(openPermisos.ToString().ToLower())"
+                            aria-controls="sm-permisos">
+                        <img src="~/img/sidebar/permiso.png" class="kary-icon" alt="" asp-append-version="true" />
+                        <span class="kary-menu__title"><strong>PERMISO</strong></span>
+                    </button>
 
-                <div id="sm-usuario" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Usuarios", "Index")"
-                       asp-controller="Usuarios" asp-action="Index">
-                        <i class="fa-solid fa-user-shield kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Usuarios</span>
-                    </a>
-
-                    <a class="kary-submenu__item @active("Roles", "Index")"
-                       asp-controller="Roles" asp-action="Index">
-                        <i class="fa-solid fa-user-gear kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Roles</span>
-                    </a>
+                    <div id="sm-permisos" class="kary-submenu" @permisosHidden>
+                        @* Ajuste el nombre del controlador según su implementación real: "Permisos" vs "Permissions" *@
+                        @if (canPermisosIndex)
+                        {
+                            <a class="kary-submenu__item @active("Permisos", "Index")"
+                               asp-controller="Permisos" asp-action="Index">
+                                <i class="fa-solid fa-key kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Permiso</span>
+                            </a>
+                        }
+                        @if (canModulosIndex)
+                        {
+                            <a class="kary-submenu__item @active("Modulos", "Index")"
+                               asp-controller="Modulos" asp-action="Index">
+                                <i class="fa-solid fa-key kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Modulos</span>
+                            </a>
+                        }
+                    </div>
                 </div>
-            </div>
+            }
 
-            <!-- PERMISO -->
-            <div class="kary-menu__group" data-group="Permisos">
-                <button type="button"
-                        class="kary-menu__item js-submenu-toggle"
-                        aria-expanded="false"
-                        aria-controls="sm-permisos">
-                    <img src="~/img/sidebar/permiso.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>PERMISO</strong></span>
-                </button>
+            @* ================== REPORTES ================== *@
+            @if (canReportesModulo || canReportesIndex)
+            {
+                <div class="kary-menu__group" data-group="Reportes">
+                    <button type="button"
+                            class="kary-menu__item js-submenu-toggle"
+                            aria-expanded="@(openReportes.ToString().ToLower())"
+                            aria-controls="sm-reportes">
+                        <img src="~/img/sidebar/permiso.png" class="kary-icon" alt="" asp-append-version="true" />
+                        <span class="kary-menu__title"><strong>REPORTES</strong></span>
+                    </button>
 
-                <div id="sm-permisos" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Permisos", "Index")"
-                       asp-controller="Permisos" asp-action="Index">
-                        <i class="fa-solid fa-key kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Permiso</span>
-                    </a>
-                    <a class="kary-submenu__item @active("Permisos", "Index")"
-                       asp-controller="Permisos" asp-action="Index">
-                        <i class="fa-solid fa-key kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Modulos</span>
-                    </a>
+                    <div id="sm-reportes" class="kary-submenu" @reportesHidden>
+                        @if (canReportesIndex)
+                        {
+                            <a class="kary-submenu__item @active("Reportes", "Index")"
+                               asp-controller="Reportes" asp-action="Index">
+                                <i class="fa-solid fa-chart-column kary-submenu__icon" aria-hidden="true"></i>
+                                <span>Reportes</span>
+                            </a>
+                        }
+                    </div>
                 </div>
-            </div>
-
-            <!-- REPORTES -->
-            <div class="kary-menu__group" data-group="Reportes">
-                <button type="button"
-                        class="kary-menu__item js-submenu-toggle"
-                        aria-expanded="false"
-                        aria-controls="sm-reportes">
-                    <img src="~/img/sidebar/permiso.png" class="kary-icon" alt="" asp-append-version="true" />
-                    <span class="kary-menu__title"><strong>REPORTES</strong></span>
-                </button>
-
-                <div id="sm-reportes" class="kary-submenu" hidden>
-                    <a class="kary-submenu__item @active("Reportes", "Index")"
-                       asp-controller="Reportes" asp-action="Index">
-                        <i class="fa-solid fa-chart-column kary-submenu__icon" aria-hidden="true"></i>
-                        <span>Reportes</span>
-                    </a>
-                </div>
-            </div>
+            }
 
         </nav>
     </div>

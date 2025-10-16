@@ -1,0 +1,339 @@
+﻿/* ===== Paleta/base igual que CREATE ===== */
+:root {
+    --bg-color: #EBF1EF;
+    --primary-green: #000000;
+    --secondary-green-btn: #A2D0BC;
+    --primary-blue-btn: #6A8D92;
+    --danger-red-btn: #E57373;
+    --card-bg: #FFFFFF;
+    --text-primary: #1F2937;
+    --text-secondary: #4A5568;
+    --border-color: #D1D5DB;
+    --font-family: 'Poppins', system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+}
+
+.permiso-create {
+    color: var(--text-primary);
+    font-family: var(--font-family);
+}
+
+    /* ===== Título ===== */
+    .permiso-create h4 {
+        margin: 1rem 0 1rem;
+        color: var(--primary-green);
+    }
+
+/* ===== Filtros ===== */
+.filters-section {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.filter-group label {
+    display: block;
+    font-size: .9rem;
+    font-weight: 500;
+    margin-bottom: .5rem;
+    color: var(--text-secondary);
+}
+
+.filter-group select {
+    width: 100%;
+    padding: .75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: #fff;
+    font-size: 1rem;
+}
+
+/* ===== Grid principal ===== */
+.permissions-grid {
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 1.25rem;
+}
+
+@media (max-width: 992px) {
+    .permissions-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ===== Paneles ===== */
+.panel {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 1rem;
+}
+
+.modules-panel h3,
+.submodules-panel h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 .75rem;
+    color: var(--primary-green);
+}
+
+/* ===== Módulos (izq) ===== */
+.modules-panel {
+    background: #e4ebe8;
+    border: 1px solid #d7e0dc;
+}
+
+    .modules-panel h3 {
+        color: #000;
+    }
+
+.modules-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.module-item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    padding: .75rem .9rem;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: .5rem;
+    font-weight: 500;
+    background: #fff;
+    border: 1px solid transparent;
+    transition: background-color .2s ease, color .2s ease;
+    position: relative;
+}
+
+    .module-item:hover {
+        background: #f3f6f5;
+    }
+
+    .module-item.active {
+        background: #376A52;
+        color: #fff;
+    }
+
+    /* Etiqueta “Asignado” en lista izquierda (JS añade .assigned o span.tag-assigned) */
+    .module-item.assigned::after {
+        content: "Asignado";
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #A2D0BC;
+        color: #1F2937;
+        font-weight: 700;
+        font-size: .72rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+    .module-item .tag-assigned { /* por si usas el span */
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #A2D0BC;
+        color: #1F2937;
+        font-weight: 700;
+        font-size: .72rem;
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+
+/* ===== Submódulos (der) ===== */
+.submodules-panel {
+    background: #e4ebe8;
+    border: 1px solid #e5e7eb;
+}
+
+.submods-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    margin-bottom: .5rem;
+}
+
+.context-hint {
+    color: #6b7280;
+}
+
+/* ===== Acordeón ===== */
+.kary-accordion {
+    width: 100%;
+}
+
+.acc-item {
+    background: var(--card-bg);
+    border-radius: 8px;
+    margin-bottom: .75rem;
+    box-shadow: 0 1px 2px rgba(0,0,0,.06);
+    border: 1px solid rgba(0,0,0,.06);
+    overflow: hidden;
+}
+
+.acc-hd {
+    width: 100%;
+    padding: .9rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    background: var(--card-bg);
+    border: 0;
+    text-align: left;
+    outline: none;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+    transition: background .2s ease, color .2s ease;
+}
+
+    .acc-hd:hover {
+        background: #d8e0dc;
+    }
+
+.acc-item.open .acc-hd {
+    background: #376A52;
+    color: #fff;
+}
+
+.acc-title {
+    font-weight: 600;
+}
+
+.acc-ic {
+    margin-left: auto;
+    transition: transform .2s ease;
+    color: var(--text-secondary);
+}
+
+.acc-item.open .acc-ic {
+    transform: rotate(180deg);
+    color: #fff;
+}
+
+.acc-item.open .badge {
+    background: rgba(255,255,255,.18);
+    color: #fff;
+}
+
+/* Opcional: marcar cabeceras ya asignadas (además del badge) */
+.acc-hd.assigned {
+    background: #f2f6f4;
+}
+
+/* Body */
+.acc-body {
+    padding: 1rem 1.25rem;
+    border-top: 1px solid #eef2f7;
+    background: #fff;
+}
+
+/* ===== Acciones (grid flexible) ===== */
+.ops-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem 1.5rem;
+}
+
+    .ops-grid .form-check {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        margin: 0;
+    }
+
+    .ops-grid .form-check-input {
+        width: 18px;
+        height: 18px;
+        accent-color: #376A52;
+    }
+
+/* ===== Footer ===== */
+.action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-top: 1rem;
+    padding-top: 1rem;
+    border-top: 1px solid #eef2f7;
+}
+
+.btn {
+    padding: .65rem 1.25rem;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: transform .2s ease, box-shadow .2s ease;
+}
+
+    .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 10px rgba(0,0,0,.12);
+    }
+
+.btn-cancel {
+    background: var(--danger-red-btn);
+    color: #fff;
+}
+
+.btn-save {
+    background: var(--primary-blue-btn);
+    color: #fff;
+}
+
+/* Loader */
+.kary-loader {
+    display: flex;
+    align-items: center;
+    padding: .5rem 0;
+}
+
+/* ===== FIX “nunca bloqueados” en EDIT ===== */
+.submodules-panel .form-check-input,
+.submodules-panel label.form-check {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+}
+
+/* Blindaje por si algún estilo global mete pointer-events:none u opacidades */
+.submodules-panel .acc-body,
+.submodules-panel .acc-body * {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+}
+
+/* Asegura que el body esté por encima del header cuando está abierto */
+.acc-item.open .acc-body {
+    position: relative;
+    z-index: 1;
+}
+
+/* ===== FIX DEFINITIVO: Nunca bloquear checkboxes ===== */
+.submodules-panel .form-check-input,
+.submodules-panel .form-check,
+.submodules-panel .acc-body input[type="checkbox"] {
+    pointer-events: auto !important;
+    opacity: 1 !important;
+    cursor: pointer !important;
+}
+
+/* Asegurar que contenedores no bloqueen */
+.submodules-panel .acc-body,
+.submodules-panel .ops-grid {
+    pointer-events: auto !important;
+}
+
+/* Mantener body accesible cuando está abierto */
+.acc-item.open .acc-body {
+    position: relative;
+    z-index: 10;
+}

@@ -58,6 +58,10 @@ public partial class PERMISOS
     [Unicode(false)]
     public string ESTADO { get; set; } = null!;
 
+    [StringLength(10)]
+    [Unicode(false)]
+    public string? SUBMODULO_ID { get; set; }
+
     [ForeignKey("MODULO_ID")]
     [InverseProperty("PERMISOS")]
     public virtual MODULO MODULO { get; set; } = null!;
@@ -65,4 +69,8 @@ public partial class PERMISOS
     [ForeignKey("ROL_ID")]
     [InverseProperty("PERMISOS")]
     public virtual ROL ROL { get; set; } = null!;
+
+    [ForeignKey("SUBMODULO_ID")]
+    [InverseProperty("PERMISOS")]
+    public virtual SUBMODULO? SUBMODULO { get; set; }
 }

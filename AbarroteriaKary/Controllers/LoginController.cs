@@ -31,39 +31,273 @@ namespace AbarroteriaKary.Controllers
         }
 
         // GET: /Login
-        public IActionResult Index()
+        //public IActionResult Index()
+        //{
+        //    // Prefill "Usuario" si guardamos cookie "KARY_USER"
+        //    if (Request.Cookies.TryGetValue("KARY_USER", out var usuarioCookie))
+        //        ViewBag.UsuarioCookie = usuarioCookie;
+
+        //    // Si venimos de un token vencido/ inválido, mostrar alerta en el form
+        //    if (TempData["LoginError"] is string tokErr && !string.IsNullOrWhiteSpace(tokErr))
+        //        ModelState.AddModelError(string.Empty, tokErr);
+
+        //    return View();
+        //}
+
+
+
+
+        //        // POST: /Login
+        //        [HttpPost]
+        //        [ValidateAntiForgeryToken]
+        //        public async Task<IActionResult> Index(LoginViewModels model)
+        //        {
+        //            if (!ModelState.IsValid)
+        //                return View(model);
+
+
+        //            // ★ 1) NORMALIZAR el usuario de entrada (elige Upper o Lower; aquí uso Upper)
+        //            var inputUser = (model.Usuario ?? string.Empty).Trim().ToUpperInvariant();
+
+        //            // ★ 2) USAR inputUser en la consulta (no model.Usuario)
+        //            var usuario = await _context.USUARIO
+        //                .AsNoTracking()
+        //                .FirstOrDefaultAsync(u => u.USUARIO_NOMBRE == inputUser && u.ELIMINADO == false);
+        //            //// 1) Buscar usuario activo y no eliminado (por nombre de usuario)
+        //            //var usuario = await _context.USUARIO         // ★ async
+        //            //    .AsNoTracking()
+        //            //    .FirstOrDefaultAsync(u => u.USUARIO_NOMBRE == model.Usuario && u.ELIMINADO == false); // ★ async
+
+        //            if (usuario == null)
+        //            {
+        //                AgregarBitacora(null, "LOGIN_FALLIDO", $"Usuario inexistente: {model.Usuario}");
+        //                ModelState.AddModelError("", "El usuario ingresado no existe.");
+        //                return View(model);
+        //            }
+
+        //            // 2) Validar ESTADO textual = 'ACTIVO'
+        //            if (!string.Equals(usuario.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase))
+        //            {
+        //                AgregarBitacora(usuario.USUARIO_ID, "LOGIN_FALLIDO", "Usuario deshabilitado (ESTADO != ACTIVO)");
+        //                ModelState.AddModelError("", "El usuario está deshabilitado. Contacte al administrador.");
+        //                return View(model);
+        //            }
+
+        //            // 3) Validar contraseña contra VARBINARY hash + SALT
+        //            bool passwordOk = false;
+
+        //            // Recargar con tracking para poder MIGRAR hash si hace falta
+        //            var userFull = await _context.USUARIO       // ★ async
+        //                .FirstAsync(u => u.USUARIO_ID == usuario.USUARIO_ID); // ★ async
+
+        //            if (userFull.USUARIO_SALT != null && userFull.USUARIO_SALT.Length > 0)
+        //            {
+        //                // Camino principal: PBKDF2 con TU PasswordHasher (100,000 iter)
+        //                passwordOk = PasswordHasher.Verify(model.Password, userFull.USUARIO_SALT, userFull.USUARIO_CONTRASENA);
+
+        //                // Fallback COMPATIBILIDAD: probar con 120,000 (usuarios creados antes del fix)
+        //                if (!passwordOk)
+        //                {
+        //                    const int OldIterations = 120_000;
+        //                    passwordOk = VerifyWithIterations(model.Password, userFull.USUARIO_SALT, userFull.USUARIO_CONTRASENA, OldIterations);
+
+        //                    if (passwordOk)
+        //                    {
+        //                        // MIGRACIÓN TRANSPARENTE al esquema oficial (100k + nuevo salt)
+        //                        var newSalt = PasswordHasher.GenerateSalt();
+        //                        var newHash = PasswordHasher.Hash(model.Password, newSalt);
+
+        //                        userFull.USUARIO_SALT = newSalt;
+        //                        userFull.USUARIO_CONTRASENA = newHash;
+        //                        userFull.MODIFICADO_POR = userFull.USUARIO_NOMBRE;
+        //                        userFull.FECHA_MODIFICACION = DateTime.Now;
+        //                        await _context.SaveChangesAsync(); // ★ async
+        //                    }
+        //                }
+        //            }
+        //            else
+        //            {
+        //                // Compatibilidad: usuarios legados con SHA256 plano en VARBINARY (SALT NULL)
+        //                passwordOk = PasswordHasher.VerifyLegacySha256(model.Password, userFull.USUARIO_CONTRASENA);
+
+        //                if (passwordOk)
+        //                {
+        //                    // MIGRAR a PBKDF2 (100k) inmediatamente
+        //                    var newSalt = PasswordHasher.GenerateSalt();
+        //                    var newHash = PasswordHasher.Hash(model.Password, newSalt);
+
+        //                    userFull.USUARIO_SALT = newSalt;
+        //                    userFull.USUARIO_CONTRASENA = newHash;
+        //                    userFull.MODIFICADO_POR = userFull.USUARIO_NOMBRE;
+        //                    userFull.FECHA_MODIFICACION = DateTime.Now;
+        //                    await _context.SaveChangesAsync(); // ★ async
+        //                }
+        //            }
+
+        //            if (!passwordOk)
+        //            {
+        //                AgregarBitacora(usuario.USUARIO_ID, "LOGIN_FALLIDO", "Contraseña incorrecta");
+        //                ModelState.AddModelError("", "La contraseña es incorrecta.");
+        //                return View(model);
+        //            }
+
+        //            // 4) Recordarme
+        //            if (model.Recordarme)
+        //            {
+        //                Response.Cookies.Append(
+        //                    "KARY_USER",
+        //                    model.Usuario,
+        //                    new CookieOptions { Expires = DateTimeOffset.Now.AddDays(30), HttpOnly = false, IsEssential = true }
+        //                );
+        //            }
+        //            else
+        //            {
+        //                Response.Cookies.Delete("KARY_USER");
+        //            }
+
+        //            // 5) ¿Cambio inicial obligatorio?
+        //            if (userFull.USUARIO_CAMBIOINICIAL)
+        //            {
+        //                HttpContext.Session.SetString("UsuarioId", userFull.USUARIO_ID);
+        //                AgregarBitacora(userFull.USUARIO_ID, "LOGIN_OK_CAMBIO_INICIAL", "Acceso con cambio inicial requerido");
+        //                return RedirectToAction("CambiarContrasena", "Login");
+        //            }
+
+        //            // 6) Login OK: setear sesión mínima
+        //            HttpContext.Session.SetString("UsuarioId", userFull.USUARIO_ID);
+        //            HttpContext.Session.SetString("UsuarioNombre", userFull.USUARIO_NOMBRE);
+
+        //            // Claims + SignIn
+        //            //var claims = new List<Claim>
+
+
+
+
+        //    //{
+        //    //    new Claim("USUARIO_ID", userFull.USUARIO_ID),
+        //    //    new Claim("UsuarioNombre", userFull.USUARIO_NOMBRE),
+        //    //    new Claim(ClaimTypes.Name, userFull.USUARIO_NOMBRE),
+
+        //            //};
+
+
+
+
+        //            // ... después de validar passwordOk, antes del SignIn:
+
+        //            // ⚠️ Asegure que USUARIO tenga el ROL_ID correcto y (opcional) cargue datos del rol:
+        //var rol = await _context.ROL
+        //    .AsNoTracking()
+        //    .FirstOrDefaultAsync(r => r.ROL_ID == userFull.ROL_ID && r.ELIMINADO == false && r.ESTADO == "ACTIVO");
+
+        //            // ===== CLAIMS =====
+        //            //  - ROL_ID: esencial para que el Sidebar y el filtro de permisos funcionen
+        //            //  - ROL_NOMBRE y ClaimTypes.Role: útil por si luego usa [Authorize(Roles="...")]
+        //            var claims = new List<Claim>
+        //{
+        //    new Claim("USUARIO_ID", userFull.USUARIO_ID),
+        //    new Claim("UsuarioNombre", userFull.USUARIO_NOMBRE ?? userFull.USUARIO_ID),
+        //    new Claim(ClaimTypes.Name, userFull.USUARIO_NOMBRE ?? userFull.USUARIO_ID),
+
+        //    // 🔴 Clave: este claim es el que usa el Sidebar y el filtro KaryAuthorize
+        //    new Claim("ROL_ID", userFull.ROL_ID ?? string.Empty),
+
+        //    // Opcionales (útiles en vistas/políticas)
+        //    new Claim("ROL_NOMBRE", rol?.ROL_NOMBRE ?? string.Empty),
+        //    new Claim(ClaimTypes.Role, rol?.ROL_NOMBRE ?? string.Empty)
+        //};
+
+        //            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        //            var principal = new ClaimsPrincipal(identity);
+
+        //            await HttpContext.SignInAsync(
+        //                CookieAuthenticationDefaults.AuthenticationScheme,
+        //                principal,
+        //                new AuthenticationProperties
+        //                {
+        //                    IsPersistent = model.Recordarme,   // si quiere respetar “Recordarme”
+        //                    AllowRefresh = true,
+        //                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
+        //                }
+        //            );
+
+
+        //            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+        //            var principal = new ClaimsPrincipal(identity);
+
+        //            await HttpContext.SignInAsync(
+        //                CookieAuthenticationDefaults.AuthenticationScheme,
+        //                principal,
+        //                new AuthenticationProperties
+        //                {
+        //                    IsPersistent = false,
+        //                    AllowRefresh = true
+        //                }
+        //            );
+
+        //            AgregarBitacora(userFull.USUARIO_ID, "LOGIN_OK", "Acceso correcto");
+        //            return RedirectToAction("Inicio", "Home");
+        //        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // Verifica PBKDF2/SHA256 con un conteo de iteraciones distinto (compatibilidad)
+
+
+
+        [HttpGet]
+        [IgnoreAntiforgeryToken]
+        public IActionResult Index(string returnUrl = null)
         {
-            // Prefill "Usuario" si guardamos cookie "KARY_USER"
-            if (Request.Cookies.TryGetValue("KARY_USER", out var usuarioCookie))
-                ViewBag.UsuarioCookie = usuarioCookie;
+            ViewData["ReturnUrl"] = returnUrl;
 
-            // Si venimos de un token vencido/ inválido, mostrar alerta en el form
-            if (TempData["LoginError"] is string tokErr && !string.IsNullOrWhiteSpace(tokErr))
-                ModelState.AddModelError(string.Empty, tokErr);
+            var vm = new LoginViewModels();
+            if (Request.Cookies.TryGetValue("KARY_USER", out var lastUser))
+                vm.Usuario = lastUser; // para comodidad
 
-            return View();
+            return View(vm);
         }
 
-        // POST: /Login
+
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(LoginViewModels model)
+        public async Task<IActionResult> Index(LoginViewModels model, string returnUrl = null)
         {
+            ViewData["ReturnUrl"] = returnUrl;
+
             if (!ModelState.IsValid)
                 return View(model);
 
-
-            // ★ 1) NORMALIZAR el usuario de entrada (elige Upper o Lower; aquí uso Upper)
+            // 1) Normalizar usuario de entrada (consistencia con la BD)
             var inputUser = (model.Usuario ?? string.Empty).Trim().ToUpperInvariant();
 
-            // ★ 2) USAR inputUser en la consulta (no model.Usuario)
+            // 2) Buscar usuario por nombre (activo y no eliminado)
             var usuario = await _context.USUARIO
                 .AsNoTracking()
                 .FirstOrDefaultAsync(u => u.USUARIO_NOMBRE == inputUser && u.ELIMINADO == false);
-            //// 1) Buscar usuario activo y no eliminado (por nombre de usuario)
-            //var usuario = await _context.USUARIO         // ★ async
-            //    .AsNoTracking()
-            //    .FirstOrDefaultAsync(u => u.USUARIO_NOMBRE == model.Usuario && u.ELIMINADO == false); // ★ async
 
             if (usuario == null)
             {
@@ -72,7 +306,6 @@ namespace AbarroteriaKary.Controllers
                 return View(model);
             }
 
-            // 2) Validar ESTADO textual = 'ACTIVO'
             if (!string.Equals(usuario.ESTADO, "ACTIVO", StringComparison.OrdinalIgnoreCase))
             {
                 AgregarBitacora(usuario.USUARIO_ID, "LOGIN_FALLIDO", "Usuario deshabilitado (ESTADO != ACTIVO)");
@@ -80,19 +313,19 @@ namespace AbarroteriaKary.Controllers
                 return View(model);
             }
 
-            // 3) Validar contraseña contra VARBINARY hash + SALT
+            // 3) Validación de contraseña (con posible migración transparente)
             bool passwordOk = false;
 
-            // Recargar con tracking para poder MIGRAR hash si hace falta
-            var userFull = await _context.USUARIO       // ★ async
-                .FirstAsync(u => u.USUARIO_ID == usuario.USUARIO_ID); // ★ async
+            // Releer con tracking (por si migramos hash/salt)
+            var userFull = await _context.USUARIO
+                .FirstAsync(u => u.USUARIO_ID == usuario.USUARIO_ID);
 
             if (userFull.USUARIO_SALT != null && userFull.USUARIO_SALT.Length > 0)
             {
-                // Camino principal: PBKDF2 con TU PasswordHasher (100,000 iter)
+                // Camino principal: PBKDF2 con su PasswordHasher (100k)
                 passwordOk = PasswordHasher.Verify(model.Password, userFull.USUARIO_SALT, userFull.USUARIO_CONTRASENA);
 
-                // Fallback COMPATIBILIDAD: probar con 120,000 (usuarios creados antes del fix)
+                // Fallback de compatibilidad (si alguna vez usó 120k iteraciones)
                 if (!passwordOk)
                 {
                     const int OldIterations = 120_000;
@@ -100,7 +333,7 @@ namespace AbarroteriaKary.Controllers
 
                     if (passwordOk)
                     {
-                        // MIGRACIÓN TRANSPARENTE al esquema oficial (100k + nuevo salt)
+                        // Migración transparente al esquema oficial (100k + nuevo salt)
                         var newSalt = PasswordHasher.GenerateSalt();
                         var newHash = PasswordHasher.Hash(model.Password, newSalt);
 
@@ -108,7 +341,7 @@ namespace AbarroteriaKary.Controllers
                         userFull.USUARIO_CONTRASENA = newHash;
                         userFull.MODIFICADO_POR = userFull.USUARIO_NOMBRE;
                         userFull.FECHA_MODIFICACION = DateTime.Now;
-                        await _context.SaveChangesAsync(); // ★ async
+                        await _context.SaveChangesAsync();
                     }
                 }
             }
@@ -119,7 +352,7 @@ namespace AbarroteriaKary.Controllers
 
                 if (passwordOk)
                 {
-                    // MIGRAR a PBKDF2 (100k) inmediatamente
+                    // Migrar a PBKDF2 (100k)
                     var newSalt = PasswordHasher.GenerateSalt();
                     var newHash = PasswordHasher.Hash(model.Password, newSalt);
 
@@ -127,7 +360,7 @@ namespace AbarroteriaKary.Controllers
                     userFull.USUARIO_CONTRASENA = newHash;
                     userFull.MODIFICADO_POR = userFull.USUARIO_NOMBRE;
                     userFull.FECHA_MODIFICACION = DateTime.Now;
-                    await _context.SaveChangesAsync(); // ★ async
+                    await _context.SaveChangesAsync();
                 }
             }
 
@@ -138,12 +371,12 @@ namespace AbarroteriaKary.Controllers
                 return View(model);
             }
 
-            // 4) Recordarme
+            // 4) Recordarme (guarda sólo el último usuario en cookie legible)
             if (model.Recordarme)
             {
                 Response.Cookies.Append(
                     "KARY_USER",
-                    model.Usuario,
+                    inputUser,
                     new CookieOptions { Expires = DateTimeOffset.Now.AddDays(30), HttpOnly = false, IsEssential = true }
                 );
             }
@@ -152,7 +385,7 @@ namespace AbarroteriaKary.Controllers
                 Response.Cookies.Delete("KARY_USER");
             }
 
-            // 5) ¿Cambio inicial obligatorio?
+            // 5) Cambio inicial obligatorio
             if (userFull.USUARIO_CAMBIOINICIAL)
             {
                 HttpContext.Session.SetString("UsuarioId", userFull.USUARIO_ID);
@@ -160,17 +393,29 @@ namespace AbarroteriaKary.Controllers
                 return RedirectToAction("CambiarContrasena", "Login");
             }
 
-            // 6) Login OK: setear sesión mínima
+            // 6) Sesión mínima (si su app usa Session)
             HttpContext.Session.SetString("UsuarioId", userFull.USUARIO_ID);
             HttpContext.Session.SetString("UsuarioNombre", userFull.USUARIO_NOMBRE);
 
-            // Claims + SignIn
+            // 7) Cargar datos del Rol para emitir claims correctos
+            var rol = await _context.ROL
+                .AsNoTracking()
+                .FirstOrDefaultAsync(r => r.ROL_ID == userFull.ROL_ID && r.ELIMINADO == false && r.ESTADO == "ACTIVO");
+
+            // 8) Claims para Cookie Authentication
+            //    IMPORTANTE: ROL_ID es el claim que usa el Sidebar y KaryAuthorize
             var claims = new List<Claim>
-    {
-        new Claim("USUARIO_ID", userFull.USUARIO_ID),
-        new Claim("UsuarioNombre", userFull.USUARIO_NOMBRE),
-        new Claim(ClaimTypes.Name, userFull.USUARIO_NOMBRE),
-    };
+            {
+                new Claim("USUARIO_ID", userFull.USUARIO_ID),
+                new Claim("UsuarioNombre", userFull.USUARIO_NOMBRE ?? userFull.USUARIO_ID),
+                new Claim(ClaimTypes.Name, userFull.USUARIO_NOMBRE ?? userFull.USUARIO_ID),
+
+                new Claim("ROL_ID", userFull.ROL_ID ?? string.Empty),
+                new Claim("ROL_NOMBRE", rol?.ROL_NOMBRE ?? string.Empty),
+
+                // Opcional: habilita [Authorize(Roles="SuperAdmin")] si lo utiliza
+                new Claim(ClaimTypes.Role, rol?.ROL_NOMBRE ?? string.Empty)
+            };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
             var principal = new ClaimsPrincipal(identity);
@@ -180,12 +425,18 @@ namespace AbarroteriaKary.Controllers
                 principal,
                 new AuthenticationProperties
                 {
-                    IsPersistent = false,
-                    AllowRefresh = true
+                    IsPersistent = model.Recordarme,
+                    AllowRefresh = true,
+                    ExpiresUtc = DateTimeOffset.UtcNow.AddHours(8)
                 }
             );
 
             AgregarBitacora(userFull.USUARIO_ID, "LOGIN_OK", "Acceso correcto");
+
+            // 9) Redirección final
+            if (!string.IsNullOrWhiteSpace(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+
             return RedirectToAction("Inicio", "Home");
         }
 
@@ -193,7 +444,9 @@ namespace AbarroteriaKary.Controllers
 
 
 
-        // Verifica PBKDF2/SHA256 con un conteo de iteraciones distinto (compatibilidad)
+
+
+
         private static bool VerifyWithIterations(string password, byte[] salt, byte[] storedHash, int iterations)
         {
             if (salt == null || storedHash == null) return false;

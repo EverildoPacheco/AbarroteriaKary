@@ -17,6 +17,17 @@ namespace AbarroteriaKary.Controllers
         {
             return View();
         }
+
+
+        [HttpGet]
+        public IActionResult AccesoDenegado()
+        {
+            Response.StatusCode = 403; // opcional, útil para logs
+            return View();
+        }
+
+
+
     }
 }
 

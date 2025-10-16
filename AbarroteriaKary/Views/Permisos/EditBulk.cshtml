@@ -1,0 +1,298 @@
+﻿<!-- ===== EditBulk.cshtml ===== -->
+@model AbarroteriaKary.ModelsPartial.PermisoBulkVM
+@{
+    ViewData["Title"] = "Editar permisos por Rol";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- === un cambio en la clase se agrego Page edit===== -->
+<div class="container-fluid permiso-create page-edit">
+    <h4 class="mb-3">Editar permisos</h4>
+
+    <!-- ===== Filtros (Rol / Módulo) ===== -->
+    <section class="filters-section">
+        <div class="filter-group">
+            <label for="ddlRol">Rol <span class="text-danger">*</span></label>
+            @* Si viene preseleccionado, el select va deshabilitado y enviamos hidden *@
+            @if (!string.IsNullOrWhiteSpace(Model.RolId))
+            {
+                <select asp-for="RolId" asp-items="Model.Roles" id="ddlRol" disabled="disabled"></select>
+                <input type="hidden" name="RolId" value="@Model.RolId" />
+            }
+            else
+            {
+                <select asp-for="RolId" asp-items="Model.Roles" id="ddlRol">
+                    <option value="">Seleccione un rol…</option>
+                </select>
+            }
+        </div>
+
+        <div class="filter-group">
+            <label for="ddlModulo">Módulo <span class="text-danger">*</span></label>
+            <select asp-for="ModuloId" asp-items="Model.Modulos" id="ddlModulo">
+                <option value="">Seleccione un módulo…</option>
+            </select>
+        </div>
+    </section>
+
+    <!-- ===== Grid 2 columnas: módulos / submódulos ===== -->
+    <main class="permissions-grid">
+        <!-- Izquierda: módulos -->
+        <aside class="panel modules-panel">
+            <h3>Módulos</h3>
+            <ul id="modList" class="modules-list">
+                @foreach (var m in Model.Modulos)
+                {
+                    var active = (Model.ModuloId == m.Value) ? "active" : "";
+                    <li class="module-item mod-item d-flex justify-content-between align-items-center @active"
+                        data-id="@m.Value" tabindex="0" role="button" aria-pressed="false">
+                        <span>@m.Text</span>
+                        <i class="bi bi-chevron-right opacity-50"></i>
+                    </li>
+                }
+            </ul>
+        </aside>
+
+        <!-- Derecha: submódulos + acciones -->
+        <section class="panel submodules-panel">
+            <div class="submods-header">
+                <h3>Submódulos y Permisos</h3>
+                <div class="w-100 text-center">
+                    <small id="lblContexto" class="context-hint">Seleccione un módulo…</small>
+                </div>
+            </div>
+
+            <!-- FORM -->
+            <form asp-action="SaveBulk" method="post" id="frmBulk">
+            @* <form asp-action="SaveBulk" method="post" id="frmEditBulk"> *@
+
+                @Html.AntiForgeryToken()
+                <div asp-validation-summary="All" class="alert alert-danger mb-3 d-none" id="valSummary" role="alert"></div>
+
+                <input type="hidden" name="RolId" id="hidRol" value="@Model.RolId" />
+                <input type="hidden" name="ModuloId" id="hidModulo" value="@Model.ModuloId" />
+
+                <!-- Acordeón (inyectado por JS) -->
+                <div id="submodsList" class="kary-accordion" aria-live="polite"></div>
+
+                <!-- Footer -->
+                <div class="action-buttons">
+                    <a asp-action="Index" asp-route-rolId="@Model.RolId" class="btn btn-cancel js-leave">
+                        <i class="fa-solid fa-xmark"></i> Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-save" id="btn-guardar">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar cambios
+                    </button>
+                </div>
+            </form>
+        </section>
+    </main>
+</div>
+
+<!-- 🔔 Modal de confirmación (FUERA del form) -->
+<div class="modal fade" id="saveOkModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Permisos</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            </div>
+            <div class="modal-body"><!-- Texto se inyecta por script --></div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/permisos-edit.css" />
+    <style>
+        /* Marca visual cuando una fila ya está asignada */
+        .acc-hd.assigned {
+            background: #2f5f4f;
+            color: #fff;
+        }
+
+            .acc-hd.assigned .badge {
+                background: #a2d0bc !important;
+                color: #1f3a2f !important;
+            }
+    </style>
+}
+
+@* @section Scripts {
+    <script src="~/js/permisos-edit.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+          const el = document.getElementById('saveOkModal');
+          if (!el) return;
+
+          @if (TempData["SwalOk"] != null)
+          {
+                  <text>el.querySelector('.modal-body').textContent = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalOk"].ToString())); new bootstrap.Modal(el).show();</text>
+          }
+          @if (TempData["SwalErr"] != null)
+          {
+                  <text>el.querySelector('.modal-body').textContent = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalErr"].ToString())); new bootstrap.Modal(el).show();</text>
+          }
+          @if (TempData["SwalWarn"] != null)
+          {
+                  <text>el.querySelector('.modal-body').textContent = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalWarn"].ToString())); new bootstrap.Modal(el).show();</text>
+          }
+        });
+
+        // carga inicial si ya vino rol/módulo
+        (function(){
+          const rol = document.getElementById('ddlRol')?.value;
+          const mod = document.getElementById('ddlModulo')?.value;
+          if (rol && mod && window.__PermisosEdit_load) {
+            setTimeout(() => window.__PermisosEdit_load(), 40);
+          }
+        })();
+    </script>
+}
+ *@
+
+
+
+
+
+
+
+
+@* 
+
+@section Scripts {
+    <script src="~/js/permisos-edit.js"></script>
+    <script>
+        (function () {
+          // Botón y form
+          KaryForms.bindSafeSubmit('#frmBulk', '#btn-guardar', {
+            spinnerHtml: '<i class="fa-solid fa-spinner fa-spin ak-icon"></i> Guardando...'
+          });
+
+          // Proteger salida con cambios sin guardar
+          if (window.KarySwal?.guardUnsaved) {
+            KarySwal.guardUnsaved('#frmBulk', '.js-leave');
+          }
+
+          // Cargar al entrar si ya hay valores
+          const rol = document.getElementById('ddlRol')?.value;
+          const mod = document.getElementById('ddlModulo')?.value;
+          if (rol && mod && window.__PermisosEdit_load) {
+            setTimeout(() => window.__PermisosEdit_load(), 40);
+          }
+
+          // SweetAlerts provenientes del controlador (TempData)
+          @if (TempData["SwalOk"] != null)
+          {
+                  <text>
+                    if (window.KarySwal?.saveSuccess) {
+                      KarySwal.saveSuccess({
+                        title: '¡Permisos actualizados!',
+                        text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalOk"].ToString())),
+                        confirmText: 'Aceptar'
+                      });
+                    }
+                  </text>
+          }
+          @if (TempData["SwalWarn"] != null)
+          {
+                  <text>
+                    if (window.KarySwal?.info) {
+                      KarySwal.info({
+                        title: 'Aviso',
+                        text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalWarn"].ToString())),
+                        confirmText: 'Aceptar'
+                      });
+                    }
+                  </text>
+          }
+          @if (TempData["SwalErr"] != null)
+          {
+                  <text>
+                    if (window.KarySwal?.error) {
+                      KarySwal.error({
+                        title: 'Error',
+                        text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalErr"].ToString()))
+                      });
+                    }
+                  </text>
+          }
+        })();
+    </script>
+}
+ *@
+
+
+
+@section Scripts {
+    <script src="~/js/permisos-edit.js"></script>
+    <script>
+        (function () {
+          // Anti doble-submit + spinner
+          KaryForms.bindSafeSubmit('#frmBulk', '#btn-guardar', {
+            spinnerHtml: '<i class="fa-solid fa-spinner fa-spin ak-icon"></i> Guardando...'
+          });
+
+          // Proteger salida con cambios sin guardar
+          if (window.KarySwal?.guardUnsaved) {
+            KarySwal.guardUnsaved('#frmBulk', '.js-leave');
+          }
+
+          // Autocarga si ya vino rol/módulo
+          const rol = document.getElementById('ddlRol')?.value;
+          const mod = document.getElementById('ddlModulo')?.value;
+          if (rol && mod && window.__PermisosEdit_load) {
+            setTimeout(() => window.__PermisosEdit_load(), 40);
+          }
+
+          // ==== SweetAlerts (PRG) ====
+          @if (TempData["SwalOk"] != null)
+          {
+                <text>
+                  if (window.KarySwal?.saveSuccess) {
+                    KarySwal.saveSuccess({
+                      title: '¡Permisos actualizados!',
+                      text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalOk"].ToString())),
+                      confirmText: 'OK',
+                      showDenyButton: false,
+                      // Al cerrar -> Index
+                      indexUrl: '@Url.Action("Index", "Permisos")'
+                    });
+                  }
+                </text>
+          }
+
+          @if (TempData["SwalWarn"] != null)
+          {
+                <text>
+                  if (window.KarySwal?.info) {
+                    KarySwal.info({
+                      title: 'Sin cambios',
+                      text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalWarn"].ToString())),
+                      confirmText: 'OK',
+                      // Al cerrar -> Index
+                      redirectUrl: '@Url.Action("Index", "Permisos")'
+                    });
+                  }
+                </text>
+          }
+
+          @if (TempData["SwalErr"] != null)
+          {
+                <text>
+                  if (window.KarySwal?.error) {
+                    KarySwal.error({
+                      title: 'Error',
+                      text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalErr"].ToString()))
+                      // sin redirección para que el usuario repare el error
+                    });
+                  }
+                </text>
+          }
+        })();
+    </script>
+}
