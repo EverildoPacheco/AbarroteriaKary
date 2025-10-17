@@ -11,6 +11,8 @@
         public string RolId { get; set; }
         public string RolNombre { get; set; }
         public string Estado { get; set; }    // para filtro/etiquetas si lo usas
+        public List<PermisoItem> Permisos { get; set; } = new();
+
         public DateTime? FechaCreacion { get; set; }
     }
 

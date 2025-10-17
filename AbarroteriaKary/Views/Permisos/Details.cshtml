@@ -1,117 +1,122 @@
-﻿@model AbarroteriaKary.Models.PERMISOS
+﻿
 
+
+@model AbarroteriaKary.ModelsPartial.PermisoListVM
 @{
-    Layout = null;
+    ViewData["Title"] = "Detalle de permisos";   // <- antes decía "Permisos (Detalle)"
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var groups = Model.Permisos.GroupBy(p => new { p.ModuloId, p.ModuloNombre })
+                               .OrderBy(g => g.Key.ModuloNombre);
 }
 
-<!DOCTYPE html>
+<div class="container-fluid permiso-create">
+    <h3 class="mb-1">Detalle de permisos</h3>
+    <p class="text-muted mb-3">Rol: <strong>@Model.RolNombre</strong></p>
 
-<html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>Details</title>
-</head>
-<body>
+    @foreach (var g in groups)
+    {
+        <div class="card mb-4 border-0 shadow-sm">
+            <div class="card-header text-white" style="background:#376A52;border-radius:12px 12px 0 0;">
+                <strong>MÓDULO: @g.Key.ModuloNombre.ToUpper()</strong>
+            </div>
 
-<div>
-    <h4>PERMISOS</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PUEDE_VER)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PUEDE_VER)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PUEDE_CREAR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PUEDE_CREAR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PUEDE_EDITAR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PUEDE_EDITAR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.PUEDE_ELIMINAR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.PUEDE_ELIMINAR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.CREADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.CREADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_CREACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_CREACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MODIFICADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MODIFICADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_MODIFICACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_MODIFICACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ELIMINADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ELIMINADO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ELIMINADO_POR)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ELIMINADO_POR)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.FECHA_ELIMINACION)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.FECHA_ELIMINACION)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ESTADO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ESTADO)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.MODULO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.MODULO.MODULO_ID)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.ROL)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.ROL.ROL_ID)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SUBMODULO)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SUBMODULO.SUBMODULO_ID)
-        </dd>
-    </dl>
+            <div class="card-body p-0" style="background:#fff;border:1px solid #e5e7eb;border-top:0;border-radius:0 0 12px 12px;">
+                <table class="table mb-0 align-middle perms-table">
+                    <!-- MISMO LAYOUT PARA TODAS LAS TABLAS -->
+                    <colgroup>
+                        <col style="width:52%">   @* Submódulo *@
+                        <col style="width:12%">   @* Ver *@
+                        <col style="width:12%">   @* Crear *@
+                        <col style="width:12%">   @* Editar *@
+                        <col style="width:12%">   @* Eliminar *@
+                    </colgroup>
+
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-4">Submódulo</th>
+                            <th class="text-center">Ver</th>
+                            <th class="text-center">Crear</th>
+                            <th class="text-center">Editar</th>
+                            <th class="text-center">Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in g)
+                        {
+                            <tr>
+                                <td class="ps-4">
+                                    @if (row.SubmoduloId == null)
+                                    {
+                                        <span class="badge rounded-pill bg-success-subtle text-success-emphasis me-2">Módulo</span>
+                                    }
+                                    @row.SubmoduloNombre
+                                </td>
+                                <td class="text-center">
+                                    <input class="form-check-input chk-ro" type="checkbox" disabled @(row.PuedeVer ? "checked" : null) />
+                                </td>
+                                <td class="text-center">
+                                    <input class="form-check-input chk-ro" type="checkbox" disabled @(row.PuedeCrear ? "checked" : null) />
+                                </td>
+                                <td class="text-center">
+                                    <input class="form-check-input chk-ro" type="checkbox" disabled @(row.PuedeEditar ? "checked" : null) />
+                                </td>
+                                <td class="text-center">
+                                    <input class="form-check-input chk-ro" type="checkbox" disabled @(row.PuedeEliminar ? "checked" : null) />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+
+    <div class="d-flex justify-content-center gap-2 mt-3">
+        <a asp-action="Index" asp-route-rolId="@Model.RolId" class="btn btn-secondary">
+            <i class="fa-solid fa-arrow-left-long"></i> Regresar
+        </a>
+        <a asp-action="EditBulk" asp-route-rolId="@Model.RolId" class="btn btn-primary">
+            <i class="fa-solid fa-pen-to-square"></i> Editar
+        </a>
+    </div>
 </div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.PERMISOS_ID">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div>
-</body>
-</html>
+
+@section Styles {
+    <style>
+        /* Misma rejilla para todas las tablas (alineación perfecta de columnas) */
+        .perms-table {
+            table-layout: fixed;
+            width: 100%;
+        }
+
+            .perms-table th, .perms-table td {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                vertical-align: middle;
+            }
+
+        /* Checkboxes en modo solo-lectura */
+        .chk-ro[disabled] {
+            opacity: .55;
+            cursor: not-allowed;
+        }
+
+        /* Hover suave por fila */
+        .table tbody tr:hover td {
+            background: #f8faf9;
+        }
+
+        /* Badge "Módulo" con tu paleta */
+        .badge.bg-success-subtle {
+            background: #a2d0bc !important;
+            color: #1f3a2f !important;
+            font-weight: 600;
+        }
+
+        /* Centrar inputs en celdas centradas */
+        .perms-table td.text-center .form-check-input {
+            margin: 0;
+        }
+    </style>
+}

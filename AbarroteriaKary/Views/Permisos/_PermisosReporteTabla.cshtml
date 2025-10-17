@@ -1,0 +1,92 @@
+﻿
+
+@model IEnumerable<AbarroteriaKary.ModelsPartial.PermisoReporteRow>
+@using System.Linq;
+
+@{
+    var items = (Model ?? Enumerable.Empty<AbarroteriaKary.ModelsPartial.PermisoReporteRow>()).ToList();
+
+    var grupos = items
+        .GroupBy(x => new { x.ModuloId, x.ModuloNombre })
+        .OrderBy(g => g.Key.ModuloNombre);
+}
+
+@foreach (var g in grupos)
+{
+    // Filtra SOLO las filas con al menos una acción marcada
+    var rows = g
+        .Where(r => r.PuedeVer || r.PuedeCrear || r.PuedeEditar || r.PuedeEliminar)
+        .OrderBy(r => string.IsNullOrWhiteSpace(r.SubmoduloId) ? " " : (r.SubmoduloNombre ?? ""))
+        .ToList();
+
+    // Si el módulo queda sin filas, NO lo pintamos
+    if (!rows.Any()) { continue; }
+
+    <!-- Píldora del MÓDULO -->
+    <div class="mod-row">
+        <span class="mod-pill mod-pill--sm">MÓDULO: @g.Key.ModuloNombre.ToUpper()</span>
+    </div>
+
+    <table class="rpt-table permisos-table">
+        <colgroup>
+            <col style="width:40%" />
+            <col style="width:15%" />
+            <col style="width:15%" />
+            <col style="width:15%" />
+            <col style="width:15%" />
+        </colgroup>
+        <thead>
+            <tr>
+                <th class="th-sub">Submódulo</th>
+                <th class="th-act">Ver</th>
+                <th class="th-act">Crear</th>
+                <th class="th-act">Editar</th>
+                <th class="th-act">Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in rows)
+            {
+                var subNombre = string.IsNullOrWhiteSpace(r.SubmoduloId)
+                ? "Permiso a TODO el módulo"
+                : (r.SubmoduloNombre ?? "-");
+
+                <tr>
+                    <td class="td-sub">@subNombre</td>
+
+                    <td class="td-act">
+                        <span class="cb @(r.PuedeVer ? "cb-on" : null)">
+                            <svg class="cb-tick" viewBox="0 0 12 10" aria-hidden="true" focusable="false">
+                                <path d="M1 5l3 3 7-7"></path>
+                            </svg>
+                        </span>
+                    </td>
+
+                    <td class="td-act">
+                        <span class="cb @(r.PuedeCrear ? "cb-on" : null)">
+                            <svg class="cb-tick" viewBox="0 0 12 10" aria-hidden="true" focusable="false">
+                                <path d="M1 5l3 3 7-7"></path>
+                            </svg>
+                        </span>
+                    </td>
+
+                    <td class="td-act">
+                        <span class="cb @(r.PuedeEditar ? "cb-on" : null)">
+                            <svg class="cb-tick" viewBox="0 0 12 10" aria-hidden="true" focusable="false">
+                                <path d="M1 5l3 3 7-7"></path>
+                            </svg>
+                        </span>
+                    </td>
+
+                    <td class="td-act">
+                        <span class="cb @(r.PuedeEliminar ? "cb-on" : null)">
+                            <svg class="cb-tick" viewBox="0 0 12 10" aria-hidden="true" focusable="false">
+                                <path d="M1 5l3 3 7-7"></path>
+                            </svg>
+                        </span>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

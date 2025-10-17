@@ -157,7 +157,7 @@
 }
 
 .acc-item.open .acc-hd {
-    background: #f2f6f4;
+    background: #376A52;
 }
 
 .acc-title {
@@ -274,7 +274,7 @@
 }
 
     .modules-list .module-item:hover {
-        background: #d8e0dc; /* hover suave */
+        background: #2f5f4f; /* hover suave */
     }
 
     .modules-list .module-item.active {
@@ -285,7 +285,7 @@
 /* Panel DERECHO: submódulos (card blanca) */
 .submodules-panel {
     /*background: #ffffff;*/ /* blanco limpio */
-    background-color: #e4ebe8; /* ← fondo verdoso */
+    background-color: #e4ebe8; /* ← fondo verdoso  IMPORTANTE VERLO DESPES PARA LOS DEMAS VISTAS */ 
 
     border: 1px solid #e5e7eb;
 }
@@ -316,57 +316,90 @@
 }
 
 
-
-
-
-
-
-
-
-
-/* ======== Encabezado de submódulos (acordeón) ======== */
-.acc-hd {
-    background: #ffffff; /* base */
-    color: #1F2937; /* texto base */
-    transition: background .2s ease, color .2s ease;
+/* Oculta cualquier badge inline viejo para que no duplique el texto */
+.modules-list .module-item .mod-badge,
+.modules-list .module-item .tag-assigned {
+    display: none !important;
 }
 
-    .acc-hd:hover {
-        background: #d8e0dc; /* hover suave (mismo tono del panel izq.) */
+
+
+
+
+ /*---- Submódulos: header EN VERDE cuando está abierto ---- */
+
+.submodules-panel .acc-item.open > .acc-hd {
+    background: #2f5f4f !important;  /*mismo verde del header superior */
+    color: #fff !important;
+}
+
+   /*  Icono chevron y badge en blanco sobre el verde */
+    .submodules-panel .acc-item.open > .acc-hd .acc-ic {
+        color: #fff !important;
     }
 
-/* Cuando el submódulo está "seleccionado" (acordeón abierto) */
-.acc-item.open .acc-hd {
-    background: #376A52; /* verde activo igual al panel izquierdo */
-    color: #ffffff; /* texto blanco */
+    .submodules-panel .acc-item.open > .acc-hd .badge {
+        background: rgba(255,255,255,.18) !important;
+        color: #fff !important;
+    }
+
+/* Hover: solo aplica cuando el item está cerrado */
+.submodules-panel .acc-item:not(.open) > .acc-hd:hover {
+    background: #2f5f4f; /*tu hover suave*/
+}
+/* Si está abierto, el hover NO debe cambiar el verde */
+.submodules-panel .acc-item.open > .acc-hd:hover {
+    background: #2f5f4f !important;
 }
 
-.acc-item.open .acc-title {
-    color: #ffffff;
+
+
+/* ==== Color de hover CONSISTENTE (verde + texto blanco) ==== */
+
+/* 1) Módulos (panel izquierdo) */
+.modules-list .module-item:hover {
+    background: #2f5f4f; /* mismo verde que usas al abrir */
+    color: #fff;
 }
 
-.acc-item.open .acc-ic {
-    color: #ffffff;
-}
-/* chevron en blanco */
-.acc-item.open .badge {
-    background: rgba(255,255,255,.18); /* badge sutil */
-    color: #ffffff;
+    .modules-list .module-item:hover > span { /* texto del nombre del módulo */
+        color: #fff;
+    }
+
+    .modules-list .module-item:hover .bi-chevron-right { /* chevron a blanco */
+        color: #fff;
+        opacity: .85;
+    }
+
+    /* Si usas una chapa/badge "Asignado" como span en la izquierda,
+   mantenla legible sobre el fondo verde */
+    .modules-list .module-item:hover .mod-badge,
+    .modules-list .module-item:hover .tag-assigned {
+        background: #a2d0bc;
+        color: #1f3a2f;
+    }
+
+/* 2) Submódulos (cabecera del acordeón, panel derecho) */
+.submodules-panel .acc-hd:hover {
+    background: #2f5f4f !important;
+    color: #fff !important;
 }
 
-/* (Opcional) bordes para que cada item se vea como card */
-.acc-item {
-    border: 1px solid #d7e0dc;
-    border-radius: 8px;
-    overflow: hidden;
+    .submodules-panel .acc-hd:hover .acc-ic { /* chevron blanco */
+        color: #fff !important;
+    }
+
+    .submodules-panel .acc-hd:hover .badge { /* badge en blanco sutil */
+        background: rgba(255,255,255,.18) !important;
+        color: #fff !important;
+    }
+
+/* 3) Mantener el verde cuando el acordeón está abierto */
+.submodules-panel .acc-item.open > .acc-hd {
+    background: #2f5f4f !important;
+    color: #fff !important;
 }
 
-/* Acento de checkboxes en verde (coherente con tema) */
-.ops-grid .form-check-input {
-    accent-color: #376A52;
-}
-
-/* Hint de contexto bajo el título a un gris más sutil */
-.context-hint {
-    color: #6b7280;
-}
+    .submodules-panel .acc-item.open > .acc-hd:hover {
+        background: #2f5f4f !important; /* que el hover no lo apague */
+    }

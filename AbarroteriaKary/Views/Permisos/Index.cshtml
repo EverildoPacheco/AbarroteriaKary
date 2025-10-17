@@ -27,27 +27,7 @@
                 <i class="fa-solid fa-circle-plus"></i><span>Asignar permisos</span>
             </a>
 
-            <!-- Filtros de estado -->
-            <a asp-action="Index" asp-route-estado="TODOS" asp-route-q="@q"
-               asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
-               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
-               class="btn btn-ak-filter btn-ak-square @(estado == "TODOS" ? "active" : "")">
-                <i class="fa-solid fa-layer-group me-1"></i>Todos
-            </a>
 
-            <a asp-action="Index" asp-route-estado="ACTIVO" asp-route-q="@q"
-               asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
-               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
-               class="btn btn-ak-filter btn-ak-square @(estado == "ACTIVO" ? "active" : "")">
-                <i class="fa-solid fa-check me-1"></i>Activo
-            </a>
-
-            <a asp-action="Index" asp-route-estado="INACTIVO" asp-route-q="@q"
-               asp-route-fDesde="@fDesde" asp-route-fHasta="@fHasta"
-               asp-route-page="1" asp-route-pageSize="@Model.PageSize"
-               class="btn btn-ak-filter btn-ak-square @(estado == "INACTIVO" ? "active" : "")">
-                <i class="fa-solid fa-ban me-1"></i>Inactivo
-            </a>
 
             <!-- Buscador + Rango -->
             <form id="frmFiltros" method="get" asp-action="Index"
@@ -55,6 +35,34 @@
                 <input type="hidden" name="estado" value="@estado" />
                 <input type="hidden" name="page" value="1" />
                 <input type="hidden" name="pageSize" value="@Model.PageSize" />
+
+
+
+                @{
+                    var repVm = new AbarroteriaKary.ModelsPartial.ReporteDropdownVM
+                    {
+                        Controller = "Permisos",                 // ← este controlador
+                        ExportAction = "Exportar",               // ← acción que creamos
+                        Label = "Reporte",
+                        SizeCss = "btn btn-ak-primary btn-ak-square",
+
+                        // Aquí solo usamos búsqueda/rango (en este módulo no hay estado)
+                        Estado = "TODOS",                        // el dropdown lo pide; no lo usaremos en el controlador
+                        Q = ViewBag.Q as string,
+                        FDesde = ViewBag.FDesde as string,       // "yyyy-MM-dd"
+                        FHasta = ViewBag.FHasta as string
+                    };
+                }
+                @await Html.PartialAsync("~/Views/Shared/Reportes/_ReporteDropdown.cshtml", repVm)
+
+
+
+
+
+
+
+
+
 
                 <div class="input-group ak-daterange-group" style="width:clamp(220px, 20vw, 260px);">
                     <span class="input-group-text bg-white border-end-0" title="Rango de fechas">
@@ -118,12 +126,20 @@
                         <td>@r.RolNombre</td>
                         <td>@(r.FechaCreacion?.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("es-GT")))</td>
                         <td class="text-center acciones">
-                        
+             
                             <!-- EDITAR: edición masiva por rol -->
                             <a href="@Url.Action("EditBulk", "Permisos", new { rolId = r.RolId })"
                                class="btn btn-sm me-2" title="Editar permisos del rol">
                                 <img src="~/img/Botones/lapiz.png" alt="Editar" class="icono-accion">
                             </a>
+
+                            <a href="@Url.Action("Details", "Permisos", new { rolId = r.RolId })"
+                               class="btn btn-sm me-2" title="Ver permisos del rol">
+                                <img src="~/img/Botones/vision1.png" alt="Ver" class="icono-accion">
+                            </a>
+
+
+
                         </td>
                     </tr>
                 }

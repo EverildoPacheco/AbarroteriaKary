@@ -36,46 +36,101 @@ namespace AbarroteriaKary.Services.Security
         // ===========================
         // Mapeo por ruta Controller/Action
         // ===========================
+        //public async Task<bool> HasPermissionByRouteAsync(string rolId, string controller, string action, string op)
+        //{
+        //    var ruta = $"/{(controller ?? "").Trim()}/{(action ?? "").Trim()}";
+
+        //    // 1) Intentar submódulo por ruta exacta
+        //    var sub = await _db.SUBMODULO
+        //        .AsNoTracking()
+        //        .FirstOrDefaultAsync(s =>
+        //            s.SUBMODULO_RUTA == ruta &&
+        //            s.ELIMINADO == false &&
+        //            s.ESTADO == "ACTIVO");
+
+        //    if (sub != null)
+        //        return await HasPermissionAsync(rolId, sub.MODULO_ID, sub.SUBMODULO_ID, op);
+
+        //    // 2) Fallback por módulo (tolerante singular/plural; sin StringComparison)
+        //    var ctrlUp = (controller ?? "").Trim().ToUpperInvariant();
+        //    var ctrlSing = ToSingular(ctrlUp);
+        //    var ctrlPlur = ToPlural(ctrlUp);
+
+        //    var modulo = await _db.MODULO
+        //        .AsNoTracking()
+        //        .FirstOrDefaultAsync(m =>
+        //            m.ELIMINADO == false &&
+        //            m.ESTADO == "ACTIVO" &&
+        //            (
+        //                m.MODULO_ID.ToUpper() == ctrlUp ||
+        //                m.MODULO_ID.ToUpper() == ctrlSing ||
+        //                m.MODULO_ID.ToUpper() == ctrlPlur ||
+        //                m.MODULO_NOMBRE.ToUpper() == ctrlUp ||
+        //                m.MODULO_NOMBRE.ToUpper() == ctrlSing ||
+        //                m.MODULO_NOMBRE.ToUpper() == ctrlPlur
+        //            ));
+
+        //    if (modulo != null)
+        //        return await HasPermissionAsync(rolId, modulo.MODULO_ID, null, op);
+
+        //    // Si no mapea nada, denegar
+        //    return false;
+        //}
+
+
+
+
         public async Task<bool> HasPermissionByRouteAsync(string rolId, string controller, string action, string op)
         {
             var ruta = $"/{(controller ?? "").Trim()}/{(action ?? "").Trim()}";
 
-            // 1) Intentar submódulo por ruta exacta
-            var sub = await _db.SUBMODULO
-                .AsNoTracking()
+            // 1) Intento exacto (por si algún día quieres tener un submódulo específico)
+            var sub = await _db.SUBMODULO.AsNoTracking()
                 .FirstOrDefaultAsync(s =>
                     s.SUBMODULO_RUTA == ruta &&
-                    s.ELIMINADO == false &&
-                    s.ESTADO == "ACTIVO");
+                    !s.ELIMINADO && s.ESTADO == "ACTIVO");
 
             if (sub != null)
                 return await HasPermissionAsync(rolId, sub.MODULO_ID, sub.SUBMODULO_ID, op);
 
-            // 2) Fallback por módulo (tolerante singular/plural; sin StringComparison)
+            // 2) Fallback al “submódulo raíz” del mismo controlador (/{Controller}/Index)
+            var baseRuta = $"/{(controller ?? "").Trim()}/Index";
+            var subIndex = await _db.SUBMODULO.AsNoTracking()
+                .FirstOrDefaultAsync(s =>
+                    s.SUBMODULO_RUTA == baseRuta &&
+                    !s.ELIMINADO && s.ESTADO == "ACTIVO");
+
+            if (subIndex != null)
+                return await HasPermissionAsync(rolId, subIndex.MODULO_ID, subIndex.SUBMODULO_ID, op);
+
+            // 3) Último fallback: tu lógica de módulo (singular/plural) que ya tenías
             var ctrlUp = (controller ?? "").Trim().ToUpperInvariant();
             var ctrlSing = ToSingular(ctrlUp);
             var ctrlPlur = ToPlural(ctrlUp);
 
-            var modulo = await _db.MODULO
-                .AsNoTracking()
-                .FirstOrDefaultAsync(m =>
-                    m.ELIMINADO == false &&
-                    m.ESTADO == "ACTIVO" &&
-                    (
-                        m.MODULO_ID.ToUpper() == ctrlUp ||
-                        m.MODULO_ID.ToUpper() == ctrlSing ||
-                        m.MODULO_ID.ToUpper() == ctrlPlur ||
-                        m.MODULO_NOMBRE.ToUpper() == ctrlUp ||
-                        m.MODULO_NOMBRE.ToUpper() == ctrlSing ||
-                        m.MODULO_NOMBRE.ToUpper() == ctrlPlur
-                    ));
+            var modulo = await _db.MODULO.AsNoTracking().FirstOrDefaultAsync(m =>
+                !m.ELIMINADO && m.ESTADO == "ACTIVO" &&
+                (m.MODULO_ID.ToUpper() == ctrlUp || m.MODULO_ID.ToUpper() == ctrlSing || m.MODULO_ID.ToUpper() == ctrlPlur ||
+                 m.MODULO_NOMBRE.ToUpper() == ctrlUp || m.MODULO_NOMBRE.ToUpper() == ctrlSing || m.MODULO_NOMBRE.ToUpper() == ctrlPlur));
 
             if (modulo != null)
                 return await HasPermissionAsync(rolId, modulo.MODULO_ID, null, op);
 
-            // Si no mapea nada, denegar
             return false;
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         private static string ToSingular(string s)
         {

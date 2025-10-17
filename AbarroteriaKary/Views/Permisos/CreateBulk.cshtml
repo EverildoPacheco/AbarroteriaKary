@@ -2,13 +2,12 @@
 @{
     ViewData["Title"] = "Asignar permisos por Rol";
     Layout = "~/Views/Shared/_Layout.cshtml";
-
 }
-<!-- === un cambio en la clase se agrego Page Create===== -->
 
 <div class="container-fluid permiso-create page-create">
-    <h4 class="mb-3">Crear  permisos por rol</h4>
+    <h4 class="mb-3">Crear permisos por rol</h4>
 
+    <!-- ===== Filtros (Rol / Módulo) ===== -->
     <section class="filters-section">
         <div class="filter-group">
             <label for="ddlRol">Rol <span class="text-danger">*</span></label>
@@ -46,22 +45,24 @@
         <section class="panel submodules-panel">
             <div class="submods-header">
                 <h3>Submódulos y Permisos</h3>
-
                 <div class="text-center">
                     <small id="lblContexto" class="context-hint">Seleccione un módulo…</small>
-
                 </div>
-               
             </div>
 
-            <!-- FORM: mantiene el mismo post/IDs -->
-            <form asp-action="BulkAssign" method="post" id="frmBulk">
+            <!-- FORM: MultiBulk Create -->
+            <form asp-action="SaveMultiAssign" method="post" id="frmBulk">
                 @Html.AntiForgeryToken()
-                <div asp-validation-summary="All" class="alert alert-danger mb-3" role="alert"></div>
 
+                <div asp-validation-summary="All" class="alert alert-danger mb-3 d-none" id="valSummary" role="alert"></div>
+
+                <!-- Contexto para el POST -->
                 <input type="hidden" name="RolId" id="hidRol" />
-                <input type="hidden" name="ModuloId" id="hidModulo" />
-                <span asp-validation-for="Items" class="text-danger"></span>
+                <!-- Importante: SIN name (el JS construye Modules[i] dinámicamente) -->
+                <input type="hidden" id="hidModulo" />
+
+                <!-- Aquí el JS inyecta TODOS los Modules[i].Items[j] -->
+                <div id="multiPayload" hidden></div>
 
                 <!-- Loader / error -->
                 <div id="loadState" class="kary-loader" hidden>
@@ -75,30 +76,81 @@
 
                 <!-- Footer -->
                 <div class="action-buttons">
-
                     <a asp-action="Index" class="btn btn-cancel js-leave">
                         <i class="fa-solid fa-xmark"></i> Cancelar
                     </a>
-
                     <button type="submit" class="btn btn-save" id="btn-guardar">
                         <i class="fa-solid fa-floppy-disk"></i> Guardar
                     </button>
-
                 </div>
             </form>
         </section>
     </main>
 </div>
 
+
 @section Styles {
-    <link rel="stylesheet" href="~/css/permisos.css" />
+    <style>
+        /* === Lista de módulos (izquierda) === */
+        .modules-list .module-item {
+            position: relative; /* permite ubicar la chapa absoluta */
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+        }
+            /* Píldora "Asignado" alineada a la derecha (sin mover el layout) */
+            .modules-list .module-item.assigned::after {
+                content: "Asignado";
+                position: absolute;
+                right: 10px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: #A2D0BC;
+                color: #1F2937;
+                font-weight: 700;
+                font-size: .72rem;
+                padding: 2px 8px;
+                border-radius: 999px;
+            }
+            /* Ocultar el chevrón cuando hay chapa (evita que se descuadre) */
+            .modules-list .module-item.assigned .bi-chevron-right {
+                display: none;
+            }
+            /* Cuando el módulo está activo (seleccionado) */
+            .modules-list .module-item.active {
+                background: #376A52;
+                color: #fff;
+            }
+
+        /* === Submódulos marcados como asignados (acordeón derecha) === */
+        .acc-hd.assigned {
+            background: #2f5f4f;
+            color: #fff;
+        }
+
+            .acc-hd.assigned .badge {
+                background: #a2d0bc !important;
+                color: #1f3a2f !important;
+            }
+    </style>
 }
 
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 @section Scripts {
-    <script src="~/js/permisos.create.js"></script>
+    <script src="~/js/permisos-create.js"></script>
     <script>
         (function () {
           const formSel = '#frmBulk';
@@ -108,20 +160,46 @@
         })();
     </script>
 
-    @* Modal de éxito tras PRG: leer y CONSUMIR TempData (sin Peek) *@
+    @* PRG (mensajes tras SaveMultiAssign) *@
     @if (TempData["SavedOk"] as bool? == true)
     {
         var rol = (TempData["SavedRol"] as string) ?? "";
-        var modulo = (TempData["SavedModulo"] as string) ?? "";
         var count = (TempData["SavedCount"] as int?) ?? 0;
         <script>
             (function () {
               if (window.KarySwal && typeof KarySwal.saveSuccess === 'function') {
                 KarySwal.saveSuccess({
-                  title: '¡Permisos guardados!',
-                  text: 'Se asignaron @count permiso(s) para el rol "@rol" en el módulo "@modulo".',
-                  indexUrl: '@Url.Action("Index", "Permisos", new { rolId = Model.RolId })',
-                  createUrl: '@Url.Action("Create", "Permisos", new { rolId = Model.RolId, moduloId = Model.ModuloId })'
+                  title: '¡Permisos creados!',
+                  text: 'Se asignaron @count permiso(s) para el rol "@rol" en uno o varios módulos.',
+                  indexUrl: '@Url.Action("Index", "Permisos", new { rolId = Model.RolId })'
+                });
+              }
+            })();
+        </script>
+    }
+    @if (TempData["SwalWarn"] != null)
+    {
+        <script>
+            (function () {
+              if (window.KarySwal?.info) {
+                KarySwal.info({
+                  title: 'Sin cambios',
+                  text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalWarn"].ToString())),
+                  confirmText: 'Aceptar',
+                  redirectUrl: '@Url.Action("Create", "Permisos", new { rolId = Model.RolId })'
+                });
+              }
+            })();
+        </script>
+    }
+    @if (TempData["SwalErr"] != null)
+    {
+        <script>
+            (function () {
+              if (window.KarySwal?.error) {
+                KarySwal.error({
+                  title: 'Error',
+                  text: @Html.Raw(System.Text.Json.JsonSerializer.Serialize(TempData["SwalErr"].ToString()))
                 });
               }
             })();

@@ -1295,6 +1295,179 @@ namespace AbarroteriaKary.Services.Reportes
 
 
 
+        //  / Colores(ajústalos a tu paleta)
+        //private const string HEADER_BG = "#376A52";
+        //    private const string HEADER_INK = "#FFFFFF";
+        //    private const string ZEBRA_BG = "#F6F9F8";
+
+        //public byte[] GenerarExcelPermisosDetalle(IEnumerable<PermisoReporteRow> datos)
+        //{
+        //    var rows = (datos ?? Enumerable.Empty<PermisoReporteRow>())
+        //               .OrderBy(x => x.RolNombre)
+        //               .ThenBy(x => x.ModuloNombre)
+        //               .ThenBy(x => x.SubmoduloNombre)
+        //               .ToList();
+
+        //    using var wb = new XLWorkbook();
+        //    var ws = wb.AddWorksheet("Permisos");
+
+        //    ws.Style.Font.FontName = "Calibri";
+        //    ws.Style.Font.FontSize = 11;
+
+        //    string[] heads = { "Rol", "Módulo", "Submódulo", "Ver", "Crear", "Editar", "Eliminar", "Fecha creación" };
+        //    for (int c = 0; c < heads.Length; c++)
+        //        ws.Cell(1, c + 1).Value = heads[c];
+
+        //    var header = ws.Range(1, 1, 1, heads.Length);
+        //    header.Style.Font.Bold = true;
+        //    header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+        //    header.Style.Fill.BackgroundColor = XLColor.FromHtml(HEADER_BG);
+        //    header.Style.Font.FontColor = XLColor.FromHtml(HEADER_INK);
+
+        //    int r = 2;
+        //    foreach (var x in rows)
+        //    {
+        //        ws.Cell(r, 1).Value = x.RolNombre;
+        //        ws.Cell(r, 2).Value = x.ModuloNombre;
+        //        ws.Cell(r, 3).Value = x.SubmoduloNombre;
+
+        //        ws.Cell(r, 4).Value = x.PuedeVer ? "✓" : "";
+        //        ws.Cell(r, 5).Value = x.PuedeCrear ? "✓" : "";
+        //        ws.Cell(r, 6).Value = x.PuedeEditar ? "✓" : "";
+        //        ws.Cell(r, 7).Value = x.PuedeEliminar ? "✓" : "";
+
+        //        if (x.FechaCreacion.HasValue)
+        //        {
+        //            ws.Cell(r, 8).Value = x.FechaCreacion.Value;
+        //            ws.Cell(r, 8).Style.DateFormat.Format = "dd/MM/yyyy";
+        //        }
+
+        //        if ((r % 2) == 0)
+        //            ws.Range(r, 1, r, heads.Length).Style.Fill.BackgroundColor = XLColor.FromHtml(ZEBRA_BG);
+        //        r++;
+        //    }
+
+        //    var full = ws.Range(1, 1, Math.Max(r - 1, 1), heads.Length);
+        //    full.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+        //    full.Style.Border.InsideBorder = XLBorderStyleValues.Hair;
+
+        //    ws.Columns().AdjustToContents();
+
+        //    using var ms = new MemoryStream();
+        //    wb.SaveAs(ms);
+        //    return ms.ToArray();
+        //}
+
+
+
+
+        public byte[] GenerarExcelPermisosDetalle(IEnumerable<PermisoReporteRow> datos)
+        {
+            // 0) Normaliza y filtra: solo filas con al menos UNA acción
+            var rows = (datos ?? Enumerable.Empty<PermisoReporteRow>())
+                .Where(x => x.PuedeVer || x.PuedeCrear || x.PuedeEditar || x.PuedeEliminar)
+                .OrderBy(x => x.RolNombre)
+                .ThenBy(x => x.ModuloNombre)
+                .ThenBy(x => string.IsNullOrWhiteSpace(x.SubmoduloId) ? " " : (x.SubmoduloNombre ?? ""))
+                .ToList();
+
+            using var wb = new XLWorkbook();
+            var ws = wb.AddWorksheet("Permisos");
+
+            // Tipografía base
+            ws.Style.Font.FontName = "Calibri";
+            ws.Style.Font.FontSize = 11;
+
+            // 1) Encabezados
+            string[] heads = { "Rol", "Módulo", "Submódulo", "Ver", "Crear", "Editar", "Eliminar", "Fecha creación" };
+            for (int c = 0; c < heads.Length; c++)
+                ws.Cell(1, c + 1).Value = heads[c];
+
+            var header = ws.Range(1, 1, 1, heads.Length);
+            header.Style.Font.Bold = true;
+            header.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            header.Style.Fill.BackgroundColor = XLColor.FromHtml(HEADER_BG);   // ej: "#6A8D92"
+            header.Style.Font.FontColor = XLColor.FromHtml(HEADER_INK);        // ej: "#FFFFFF"
+
+            // 2) Filas de datos
+            int r = 2;
+            foreach (var x in rows)
+            {
+                var sub = string.IsNullOrWhiteSpace(x.SubmoduloId)
+                    ? "Permiso a TODO el módulo"
+                    : (x.SubmoduloNombre ?? "-");
+
+                ws.Cell(r, 1).Value = x.RolNombre;
+                ws.Cell(r, 2).Value = x.ModuloNombre;
+                ws.Cell(r, 3).Value = sub;
+
+                ws.Cell(r, 4).Value = x.PuedeVer ? "✓" : "";
+                ws.Cell(r, 5).Value = x.PuedeCrear ? "✓" : "";
+                ws.Cell(r, 6).Value = x.PuedeEditar ? "✓" : "";
+                ws.Cell(r, 7).Value = x.PuedeEliminar ? "✓" : "";
+
+                if (x.FechaCreacion.HasValue)
+                {
+                    ws.Cell(r, 8).Value = x.FechaCreacion.Value;
+                    ws.Cell(r, 8).Style.DateFormat.Format = "dd/MM/yyyy";
+                }
+
+                // Zebra en pares
+                if ((r % 2) == 0)
+                    ws.Range(r, 1, r, heads.Length).Style.Fill.BackgroundColor = XLColor.FromHtml(ZEBRA_BG); // ej: "#F2F6F4"
+
+                r++;
+            }
+
+            // 3) Si no hay filas, dejamos encabezado y una línea informativa
+            if (rows.Count == 0)
+            {
+                ws.Cell(2, 1).Value = "Sin datos para los filtros seleccionados.";
+                ws.Range(2, 1, 2, heads.Length).Merge();
+                ws.Cell(2, 1).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                ws.Cell(2, 1).Style.Font.Italic = true;
+                r = 3; // siguiente fila libre
+            }
+
+            // 4) Bordes, alineaciones y anchos
+            var full = ws.Range(1, 1, Math.Max(r - 1, 1), heads.Length);
+            full.Style.Border.OutsideBorder = XLBorderStyleValues.Thin;
+            full.Style.Border.InsideBorder = XLBorderStyleValues.Hair;
+
+            // Alineación: texto a la izquierda en 1-3, centrado en 4-7, fecha centrada
+            ws.Range(2, 1, r - 1, 3).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+            ws.Range(2, 4, r - 1, 7).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+            ws.Range(2, 8, r - 1, 8).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+
+            // Ancho: ajusta 1-3 y fecha; fija ancho de columnas de acción para que queden parejas
+            ws.Columns(1, 3).AdjustToContents();
+            ws.Column(8).AdjustToContents();
+            ws.Column(4).Width = 9; // Ver
+            ws.Column(5).Width = 9; // Crear
+            ws.Column(6).Width = 9; // Editar
+            ws.Column(7).Width = 11; // Eliminar (un poco más)
+
+            // 5) AutoFilter + freeze encabezado
+            ws.Range(1, 1, Math.Max(r - 1, 1), heads.Length).SetAutoFilter();
+            ws.SheetView.FreezeRows(1);
+
+            // 6) (Opcional) resaltar checks con un verde suave
+            var checkRange = ws.Range(2, 4, Math.Max(r - 1, 2), 7);
+            var cf = checkRange.AddConditionalFormat();
+            cf.WhenEquals("✓").Fill.SetBackgroundColor(XLColor.FromHtml("#E8F5E9")); // verde muy suave
+
+            using var ms = new MemoryStream();
+            wb.SaveAs(ms);
+            return ms.ToArray();
+        }
+
+
+
+
+
+
+
+
 
 
 

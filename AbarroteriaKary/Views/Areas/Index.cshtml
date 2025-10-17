@@ -20,6 +20,7 @@
     <div class="ak-toolbar__row">
         <h1 class="ak-toolbar__title m-0">Áreas</h1>
 
+
         <div class="ak-toolbar__right">
             <!-- Agregar -->
             <a asp-action="Create"
@@ -51,10 +52,7 @@
                 <i class="fa-solid fa-ban me-1"></i>Inactivo
             </a>
 
-            <!-- Aquí necesito que este el boton o drawlist del reporte  -->
-            <!-- Aquí necesito que este el boton o drawlist del reporte  -->
-            <!-- Aquí necesito que este el boton o drawlist del reporte  -->
-            <!-- Aquí necesito que este el boton o drawlist del reporte  -->
+
             @{
                 var repVm = new AbarroteriaKary.ModelsPartial.ReporteDropdownVM
                 {
@@ -174,6 +172,7 @@
                                 @(esActivo ? "Activo" : "Inactivo")
                             </span>
                         </td>
+
 
                         <td class="text-center acciones">
                             <a href="@Url.Action("Edit", "Areas", new { id = area.areaId })" class="btn btn-sm me-2" title="Editar">

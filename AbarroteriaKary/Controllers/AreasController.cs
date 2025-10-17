@@ -4,7 +4,7 @@ using AbarroteriaKary.Models;
 using AbarroteriaKary.ModelsPartial;
 using AbarroteriaKary.Services.Auditoria;
 using AbarroteriaKary.Services.Correlativos;
-using AbarroteriaKary.Services.Extensions;                // ToPagedAsync extension
+using AbarroteriaKary.Services.Extensions;                
 using AbarroteriaKary.Services.Reportes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -16,21 +16,13 @@ using System.Globalization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using AbarroteriaKary.Filters;                 // <<★ importante: trae [KaryAuthorize]
+using AbarroteriaKary.Filters;                 
 
-//using AbarroteriaKary.ModelsPartial.Paginacion;           // PaginadoViewModel<T>
-//using System.Threading.Tasks;
-//using Microsoft.AspNetCore.Http;
-//using System.Linq;
-//using System.Collections.Generic;
-//using Microsoft.AspNetCore.Mvc.Rendering;
-//using DocumentFormat.OpenXml.Spreadsheet;
 
 
 
 namespace AbarroteriaKary.Controllers
 {
-    [KaryAuthorize("VER")]
 
     public class AreasController : Controller
     {
@@ -52,12 +44,10 @@ namespace AbarroteriaKary.Controllers
         }
 
 
+        [KaryAuthorize("VER")]
 
         [HttpGet]
-        public async Task<IActionResult> Index(
-    string? estado, string? q = null,
-    string? fDesde = null, string? fHasta = null,
-    int page = 1, int pageSize = 10)
+        public async Task<IActionResult> Index(string? estado, string? q = null, string? fDesde = null, string? fHasta = null, int page = 1, int pageSize = 10)
         {
             // 0) Estado
             var estadoNorm = (estado ?? "ACTIVO").Trim().ToUpperInvariant();
@@ -217,6 +207,7 @@ namespace AbarroteriaKary.Controllers
             return "Admin";
         }
 
+        [KaryAuthorize("VER")]
 
         [HttpGet]
         public async Task<IActionResult> Exportar(
@@ -320,6 +311,8 @@ namespace AbarroteriaKary.Controllers
 
 
         // GET: Areas/Details/AREA000123
+        [KaryAuthorize("VER")]
+
         [HttpGet]
         public async Task<IActionResult> Details(string id)
         {
@@ -348,7 +341,6 @@ namespace AbarroteriaKary.Controllers
 
         // GET: /Areas/Create
         [KaryAuthorize("CREAR")]
-
         [HttpGet] 
         public async Task<IActionResult> Create()
         {
@@ -366,8 +358,8 @@ namespace AbarroteriaKary.Controllers
 
 
         // POST: /Areas/Create
-        [KaryAuthorize("CREAR")]
         //[HttpPost]
+        [KaryAuthorize("CREAR")]
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(AreasViewModel vm)
         {
@@ -446,9 +438,10 @@ namespace AbarroteriaKary.Controllers
         }
 
         // POST: Areas/Edit/5
-        [KaryAuthorize("EDITAR")]
 
         //[HttpPost]
+        [KaryAuthorize("EDITAR")]
+
         [HttpPost, ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, AreasViewModel vm)
         {

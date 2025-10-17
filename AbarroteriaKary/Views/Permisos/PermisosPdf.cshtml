@@ -1,0 +1,186 @@
+﻿
+
+@model IEnumerable<AbarroteriaKary.ModelsPartial.PermisoReporteRow>
+@{
+    Layout = "~/Views/Shared/Reportes/_PdfLayout.cshtml";
+    ViewData["Title"] = "Reporte de Permisos";
+
+    var baseUrl = $"{Context.Request.Scheme}://{Context.Request.Host}";
+
+    string q = ViewBag.Filtro_Q as string;
+    string desdeTxt = ViewBag.Filtro_Desde as string;
+    string hastaTxt = ViewBag.Filtro_Hasta as string;
+    bool hayQ = !string.IsNullOrWhiteSpace(q);
+    bool hayRango = !string.IsNullOrWhiteSpace(desdeTxt) || !string.IsNullOrWhiteSpace(hastaTxt);
+
+    var gruposRol = (Model ?? Enumerable.Empty<AbarroteriaKary.ModelsPartial.PermisoReporteRow>())
+                    .GroupBy(x => new { x.RolId, x.RolNombre })
+                    .OrderBy(g => g.Key.RolNombre);
+}
+
+<style>
+    /* ===== Píldora del módulo (se usa en el parcial) ===== */
+    .mod-row {
+        margin: 10px 0 6px;
+    }
+
+    .mod-pill {
+        display: inline-block;
+        padding: 4px 12px;
+        background: #95b5c0;
+        color: #000000;
+        border-radius: 9999px;
+        font-weight: 500;
+        letter-spacing: .3px;
+    }
+
+
+
+    .mod-pill--sm {
+        font-size: 10px;
+        padding: 2px 8px;
+        line-height: 1.2;
+    }
+
+    .mod-row--tight {
+        margin: 6px 0 4px;
+    }
+
+
+    /* ===== Tabla de permisos (alineación perfecta) ===== */
+    .rpt-table {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: fixed;
+        margin-bottom: 12px;
+    }
+
+        .rpt-table thead th {
+            background: #95b5c0;
+            color: #000000;
+            text-align: center;
+            font-weight: 700;
+            padding: 8px 6px;
+            /* border: 1px solid #90a4ae; */
+            border: 0.5px solid #9b9b9b;
+        }
+
+        .rpt-table tbody td {
+            /* border: 1px solid #cfd8dc; */
+            border: 0.5px solid #9b9b9b;
+            padding: 8px 6px;
+            vertical-align: middle;
+        }
+
+        .rpt-table tbody tr:nth-child(odd) {
+            background: #ffff;
+        }
+
+    .th-sub, .td-sub {
+        text-align: left;
+    }
+
+    .th-act, .td-act {
+        text-align: center;
+    }
+
+
+
+    /* ===== Checks finos ===== */
+    /* Check “fino” con SVG (robusto en wkhtmltopdf) */
+    .cb {
+        width: 14px;
+        height: 14px;
+        display: inline-block;
+        border: 1.6px solid #6A8D92;
+        border-radius: 3px;
+        background: #fff;
+        position: relative;
+        vertical-align: middle;
+    }
+
+        .cb .cb-tick {
+            position: absolute;
+            left: 1px;
+            top: 2px; /* ajusta fino si lo quieres más centrado */
+            width: 12px;
+            height: 10px;
+            display: none;
+            stroke: #2f6e59;
+            stroke-width: 2;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .cb.cb-on .cb-tick {
+            display: block;
+        }
+
+
+
+
+    /* Encabezados / metadatos vienen del layout; solo retoques menores */
+    .rpt-section-title {
+        margin: 10px 0 6px;
+        font-weight: 800;
+    }
+</style>
+
+<header class="rpt-header rpt-botline">
+    <div class="rpt-header__row">
+        <div class="rpt-header__cell rpt-header__cell--logo">
+            <img class="rpt-header__logo" src="@($"{baseUrl}/img/logologo.png")" alt="Logo" />
+        </div>
+        <div class="rpt-header__cell">
+            <h1 class="rpt-title">ABARROTERÍA KARY</h1>
+            <div class="rpt-sub">Reporte de Permisos</div>
+        </div>
+    </div>
+</header>
+<br />
+
+<table class="meta-outer">
+    <tr>
+        <td class="col-left">
+            <table class="meta-box">
+                <tr><th>Generado por:</th><td>@((ViewBag.Usuario as string) ?? "Admin")</td></tr>
+            </table>
+        </td>
+        <td class="col-right">
+            <table class="meta-box">
+                <tr><th>Fecha / hora:</th><td>@DateTime.Now.ToString("dd/MM/yyyy HH:mm")</td></tr>
+            </table>
+        </td>
+    </tr>
+    <tr>
+        <td class="col-left">
+            @if (hayQ)
+            {
+                <table class="meta-box"><tr><th>Búsqueda:</th><td>@q</td></tr></table>
+            }
+        </td>
+        <td class="col-right">
+            @if (hayRango)
+            {
+                <table class="meta-box"><tr><th>Rango:</th><td>@($"{desdeTxt} - {hastaTxt}")</td></tr></table>
+            }
+        </td>
+    </tr>
+</table>
+
+<div class="rpt-divider"></div>
+
+@if (!gruposRol.Any())
+{
+    <p class="t-center"><em>Sin datos para los filtros seleccionados.</em></p>
+}
+else
+{
+    foreach (var rol in gruposRol)
+    {
+        <h4 class="rpt-section-title">Rol: @rol.Key.RolNombre</h4>
+        @* El parcial agrupa por MÓDULO y dibuja la tabla con columnas fijas + checks finos *@
+        @await Html.PartialAsync("_PermisosReporteTabla", rol)
+    }
+}

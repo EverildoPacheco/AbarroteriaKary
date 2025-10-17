@@ -37,5 +37,19 @@ namespace AbarroteriaKary.Services.Reportes
         byte[] GenerarExcelPedidoCerrado(PedidoCerradoVM pedido);
 
 
+
+
+        byte[] GenerarExcelPermisosDetalle(IEnumerable<PermisoReporteRow> datos);
+
+
+
+
+
+
+
+
+
+
+
     }
 }
